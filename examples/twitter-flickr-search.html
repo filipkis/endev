@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS Twitter API Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="lib/endev.js"></script>
+</head>
+<body>
+<h1>Endev.js Demo</h1>
+Search:
+<input ng-model="query" placeholder="Search for something...">
+
+<h2>Twitter results:</h2>
+<data from="twitter.search.tweets tst" where="tst.q = query AND tst.consumer_key='08ZNcNfdoCgYTzR7qcW1HQ' AND tst.consumer_secret='PTMIdmhxAavwarH3r4aTnVF7iYbX6BRfykNBHIaB8' AND tst.access_token='1181240586-JIgvJe4ev3NHdHnAqnovHINWfpo0qB2S2kZtVRI' AND tst.access_token_secret='1nodv0LBsi7jS93e38KiW8cHOA5iUc6FT4L6De7kgk'">
+	<div ng-repeat="s in tst.json.statuses">
+		{{s.text}}
+	</div>
+	<div ng-if="$pending">
+		Loading...
+	</div>
+</data>
+
+<h2>Flickr results:</h2>
+<data from="flickr.photos.search fps" where="fps.text=query AND fps.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'">
+	<div ng-repeat="photo in fps.photo">
+		<img ng-src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg">
+	</div>
+	<div ng-if="$pending">
+		Loading...
+	</div>
+</data>
+</body>
+</html>
