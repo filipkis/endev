@@ -6,9 +6,9 @@
     <sampleQuery>select * from {table} where username='rickymontalvo'</sampleQuery>
   </meta>
   <bindings>
-    <select itemPath="tumblr.posts" produces="XML">
+    <select itemPath="mbrain.search" produces="JSON">
        <urls>
-          <url>http://{username}.tumblr.com/api/read</url>
+          <url>http://api.m-brain.com/mapi-lab/v1.1/search/search.json</url>
        </urls>
        <inputs>
          <key id="api_key" type="xs:string" paramType="path" required="true" />
