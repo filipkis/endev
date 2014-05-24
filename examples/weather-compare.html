@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS Weather Compare API Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="lib/endev.js"></script>
+</head>
+<body>
+<h1>Endev.js Demo</h1>
+Search:
+<input ng-model="q1" placeholder="Enter your place...">
+<input ng-model="q2" placeholder="Enter destination place...">
+<button ng-click="query1 = q1; query2 = q2">Go!</button>
+
+<h2>Weather results:</h2>
+<data from="geo.places gp1" where="gp1.text = query1">
+	<data from="geo.places gp2" where="gp2.text = query2">
+		<data from="weather.forecast wf1" where="wf1.woeid = gp1.place[0].woeid AND wf1.u = 'c'">
+			<data from="weather.forecast wf2" where="wf2.woeid = gp2.place[0].woeid AND wf2.u = 'c'">
+			{{query1}} high: {{wf1.channel.item.forecast[0].high}} <br>
+			{{query2}} high: {{wf2.channel.item.forecast[0].high}} <br>
+			The difference: {{wf1.channel.item.forecast[0].high - wf2.channel.item.forecast[0].high}}
+			</data>
+		</data>
+		<div ng-if="$pending">
+			Loading...
+		</div>
+	</data>
+</data>
+</body>
+</html>

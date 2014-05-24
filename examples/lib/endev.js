@@ -50,6 +50,7 @@
 						scope.$eval(attrs.pending); 
 						scope.$pending = true;
 						scope.$error = null;
+						scope.$success = false;
 
 						var pWhere = attrs.where;
 
@@ -62,10 +63,12 @@
 					      scope[label] = data.query.results;
 					      scope.$eval(attrs.success);
 						  scope.$pending = false;
+						  scope.$success = true;
 					    }).
 					    error(function(data, status, headers, config) {
 					      scope.$eval(attrs.error);
 						  scope.$pending = false;
+						  scope.$success = false;
 						  scope.$error = data.description;
 					      // called asynchronously if an error occurs
 					      // or server returns response with an error status.
