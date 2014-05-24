@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <author>Filip Kis</author>
+    <documentationURL>http://api.m-brain.com/mapi-lab/index.jsp</documentationURL>
+    <sampleQuery>select * from {table} where username='rickymontalvo'</sampleQuery>
+  </meta>
+  <bindings>
+    <select itemPath="tumblr.posts" produces="XML">
+       <urls>
+          <url>http://{username}.tumblr.com/api/read</url>
+       </urls>
+       <inputs>
+         <key id="api_key" type="xs:string" paramType="path" required="true" />
+         <key id="query" type="xs:string" paramType="query" required="ture" />
+         <key id="cateogry" type="xs:string" paramType="query" required="true" />
+       </inputs>
+    </select> 
+ </bindings>
+</table>

@@ -27,7 +27,8 @@
 				restrict:'E',
 				scope:true,
 				link: function (scope,element,attrs) {
-					var provider = attrs.provider ? $injector.get(attrs.from.split(" ")[0].split(".")[0]) : $injector.get('$yql');
+					var provider = attrs.provider ? $injector.get(attrs.provider) :
+						attrs.from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
 					var label = attrs.from.split(" ")[1];
 					var operators = new RegExp(/ AND | OR  /i);
 					var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
@@ -52,14 +53,7 @@
 						scope.$error = null;
 						scope.$success = false;
 
-						var pWhere = attrs.where;
-
-						for(var i = 0; i<params.length; i++) {
-							var value = scope.$eval(params[i].rhs);
-							pWhere = pWhere.replace(params[i].expression, params[i].replace("'" + value + "'"));
-						}
-
-						provider.query(attrs.from,pWhere).success(function(data) {
+						provider.query(scope,attrs.from,attrs.where,params).success(function(data) {
 					      scope[label] = data.query.results;
 					      scope.$eval(attrs.success);
 						  scope.$pending = false;
@@ -91,17 +85,42 @@
 
 		this.app.service("$yql", ['$http', function($http){ 
 			return {
-				query: function(from,where) {
+				query: function($scope,from,where,params) {
+					var pWhere = where;
+					for(var i = 0; i<params.length; i++) {
+						var value = $scope.$eval(params[i].rhs);
+						pWhere = pWhere.replace(params[i].expression, params[i].replace("'" + value + "'"));
+					}
 					var type = from.split(" ")[0];
-					var lable = from.split(" ")[1];
 					var label = from.split(" ")[1];
 					var patt = new RegExp(label + ".", "g");
-					var filteredWhere = where.replace(patt,"");
+					var filteredWhere = pWhere.replace(patt,"");
 					var query = "select * from " + type + " where " + filteredWhere;
 					return $http.get("https://query.yahooapis.com/v1/public/yql?q=" + encodeURIComponent(query) + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json");
 				}
 			}
 		}]);
+
+		this.app.service("$endev-rest", ['$http', function($http){ 
+			return {
+				query: function($scope,from,where,params) {
+					var pWhere = "";
+					for(var i = 0; i<params.length; i++) {
+						var value = $scope.$eval(params[i].rhs);
+						pWhere += params[i].lhs + "='" + value + "'";
+						if(i < params.length-1) {
+							pWhere += "&";
+						}
+					}
+					var type = from.split(" ")[0];
+					var label = from.split(" ")[1]; 
+					var patt = new RegExp(label + ".", "g");
+					var filteredWhere = pWhere.replace(patt,"");
+					return $http.get(type + "?" + encodeURIComponent(filteredWhere));
+				}
+			}
+		}]);
+
 
 		this.app.run();
 	}
