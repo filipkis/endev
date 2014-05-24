@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd" >
+  <meta>
+    <author>Filip Kis</author>
+
+    <documentationURL>https://dev.twitter.com/docs/api/1.1/get/search/tweets</documentationURL>
+
+    <!-- you may want to create your own oauth keys ... -->
+    <sampleQuery>select * FROM {table} WHERE from='201405220800' AND unitl='201405220801' AND username = 'your_username' AND password = 'your_password'"</sampleQuery>
+
+  </meta>
+  <bindings>
+    <select produces="JSON">
+      <urls>
+        <url>https://api.720.fi/hackathon</url>
+      </urls>
+      <inputs>
+        <key id="from" type="xs:string" paramType="query" required="true"/>
+        <key id="until" type="xs:string" paramType="query" required="true"/>
+
+        <key id="username" type="xs:string" paramType="variable" required="true"/>
+        <key id="password" type="xs:string" paramType="variable" required="true"/>
+      </inputs>
+      <execute>
+        <![CDATA[
+		y.include("http://yqlblog.net/samples/base64.js");
+		var authheader = "Basic "+Base64.encode(username+":"+password);
+		response.object = request.header("Authorization",authheader).get().response;
+        ]]>
+      </execute>
+    </select>
+  </bindings>
+</table>
