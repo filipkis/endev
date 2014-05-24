@@ -24,6 +24,7 @@
       <execute>
         <![CDATA[
 		y.include("http://yqlblog.net/samples/base64.js");
+		y.log(username);
 		var authheader = "Basic "+Base64.encode(username+":"+password);
 		response.object = request.header("Authorization",authheader).get().response;
         ]]>
