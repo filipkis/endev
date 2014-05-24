@@ -9,7 +9,7 @@ Usage
 
 Download and include [endev.js](https://raw.githubusercontent.com/filipkis/endev/master/dist/endev.js) as well as AngularJS in your project and add it to your HTML file:
 
-```
+```html
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.16/angular.min.js"></script>
 <script src="path_to_downloaded_file/endev.js"/>
 ```
@@ -23,7 +23,7 @@ To find out what data is available, how to compose the queries and what will the
 
 The following example demonstrates how to get the images from Flickr:
 
-```
+```html
 <data from="flickr.photos.search fps" 
       where="fps.text = 'cats' AND 
                  fps.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'">
@@ -45,6 +45,7 @@ To access the web service data, you should use __from__ and __where__ attributes
 
 * __from__ (required) is used to define the source of the data. The `flickr.photos.search` defines which web service, or more precisely data table from YQL is used (see [YQL Console](https://developer.yahoo.com/yql/console) for example of other data tables). The `fps` represents the label that you will use in the rest of the code to define the parameters or access results of your query. You can use any name for the label.
 * __where__ (optional) is used to specify the parameters required by the web service. Most web services require some parameters to specify your query further (in this example that is the text parameter to search for photos of cats) and often other security parameters to identify the calls your application is making (in Flickr case that is the API key). Checking the documentation for the specific service or using [YQL Console](https://developer.yahoo.com/yql/console) should help in understanding what parameters are available and required.
+* __refresh__ (optional) specifies the milliseconds in which the request should be repeated. Use this attribute with caution as some APIs have limited number of request in some time interval, so you might reach that limit if you put a low value.  
 
 ##### Using the results
 
@@ -66,6 +67,18 @@ As it takes some time to access the web service and retrieve the data it is good
 To take the advantage of these variables we can use the [ng-if](https://code.angularjs.org/1.2.16/docs/api/ng.directive:ngIf) directive on HTML tags that will contain the information for each of the states. 
 
 In the Flickr example, we have put the ``ng-if='$pending'`` on the div tag that will display _Loading..._ message only when the data is being loaded.
+
+
+Accessing any API
+---
+If the API you need is not available in the YQL - fear not. You can still use Endev to access (almost) any API that returns JSON as a result. The only requirement is that the API has Access-Control-Allow-Origin turned on. 
+
+To use any API, just replace the YQL source data with the address you want to access. For instance:
+
+```html
+<data from="http://www.example.com/data.json data" where="data.q = query">
+</data>
+```
 
 
 Built on top of AngularJS

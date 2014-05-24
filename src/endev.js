@@ -21,7 +21,7 @@
 		// 	}
 		// }]);
 
-		this.app.directive("data", ['$rootScope','$http','$injector', function($rootScope,$http,$injector) {
+		this.app.directive("data", ['$rootScope','$http','$injector','$interval', function($rootScope,$http,$injector,$interval) {
 			return {
 				restrict:'E',
 				scope:true,
@@ -53,7 +53,11 @@
 						scope.$success = false;
 
 						provider.query(scope,attrs.from,attrs.where,params).success(function(data) {
-					      scope[label] = data.query.results;
+						  if (data.query) {
+						    scope[label] = data.query.results;
+						  } else {
+						  	scope[label] = data;
+						  }	
 					      scope.$eval(attrs.success);
 						  scope.$pending = false;
 						  scope.$success = true;
@@ -71,6 +75,9 @@
 
 					execute();
 
+					if(attrs.refresh) {
+						$interval(execute,attrs.refresh);
+					}
 
 					for(var i = 0; i<params.length; i++) {
 						scope.$watch(params[i].rhs,function() {
@@ -106,7 +113,7 @@
 					var pWhere = "";
 					for(var i = 0; i<params.length; i++) {
 						var value = $scope.$eval(params[i].rhs);
-						pWhere += params[i].lhs + "='" + value + "'";
+						pWhere += params[i].lhs + "=" + encodeURIComponent(value);
 						if(i < params.length-1) {
 							pWhere += "&";
 						}
@@ -115,13 +122,16 @@
 					var label = from.split(" ")[1]; 
 					var patt = new RegExp(label + ".", "g");
 					var filteredWhere = pWhere.replace(patt,"");
-					return $http.get(type + "?" + encodeURIComponent(filteredWhere));
+					return $http.get(type + "?" + filteredWhere);
 				}
 			}
 		}]);
 
 
-		this.app.run();
+		this.app.run(["$rootScope", function($rootScope) {
+			$rootScope.Date = Date;
+			$rootScope.Math = Math;
+		}]);
 	}
 	
 	endev = window.endev = new Endev();

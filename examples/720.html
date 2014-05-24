@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS 720 API Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="lib/endev.js"></script>
+	<script>
+		endev.app.controller("SevenTwentyCtrl", function($scope, $filter) {
+			$scope.date = function() {
+				var result = new Date();
+				return $filter('date')(result,'yyyyMMddHHmm');
+			}
+		});
+	</script>
+</head>
+<body ng-controller="SevenTwentyCtrl">
+<h1>Endev.js Demo</h1>
+<h2>720 results:</h2>
+<data from="http://powerful-badlands-2614.herokuapp.com/720.json t720" where="t720.from = date() AND t720.until= date() " refresh="1000">
+	<div ng-repeat="d in t720.data['3BDDED2B642']">
+	{{d.temperature_celsius}}
+	{{d.co2}}
+	</div>
+</data>
+</body>
+</html>
+<!-- AND mb.lang='en,fi' AND mb.showSentiment=true AND mb.sentimentTarget=query AND mb.showSnippet=true  -->
