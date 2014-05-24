@@ -12,7 +12,7 @@
        </urls>
        <inputs>
          <key id="api_key" type="xs:string" paramType="path" required="true" />
-         <key id="query" type="xs:string" paramType="query" required="ture" />
+         <key id="query" type="xs:string" paramType="query" required="true" />
          <key id="cateogry" type="xs:string" paramType="query" required="true" />
        </inputs>
     </select> 
