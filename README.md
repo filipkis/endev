@@ -17,7 +17,7 @@ Download and include [endev.js](https://raw.githubusercontent.com/filipkis/endev
 
 2. Accessing the data
 
-Endev uses [Yahoo! Query Language (YQL)](https://developer.yahoo.com/yql/) to access popular web services by using a simple query notation instead of dealing with the complex JavaScript AJAX calls.
+Endev can access any REST endpoint that returns JSON or XML. It was originally designed to use [Yahoo! Query Language (YQL)](https://developer.yahoo.com/yql/) to access popular web services by using a simple query notation instead of dealing with the complex JavaScript AJAX calls. However, if you want more generic REST access, check Accessing any API section bellow.
 
 To find out what data is available, how to compose the queries and what will the returned results look like, check out [YQL Console](https://developer.yahoo.com/yql/console).
 
@@ -46,6 +46,7 @@ To access the web service data, you should use __from__ and __where__ attributes
 * __from__ (required) is used to define the source of the data. The `flickr.photos.search` defines which web service, or more precisely data table from YQL is used (see [YQL Console](https://developer.yahoo.com/yql/console) for example of other data tables). The `fps` represents the label that you will use in the rest of the code to define the parameters or access results of your query. You can use any name for the label.
 * __where__ (optional) is used to specify the parameters required by the web service. Most web services require some parameters to specify your query further (in this example that is the text parameter to search for photos of cats) and often other security parameters to identify the calls your application is making (in Flickr case that is the API key). Checking the documentation for the specific service or using [YQL Console](https://developer.yahoo.com/yql/console) should help in understanding what parameters are available and required.
 * __refresh__ (optional) specifies the milliseconds in which the request should be repeated. Use this attribute with caution as some APIs have limited number of request in some time interval, so you might reach that limit if you put a low value.  
+* __log__ (optional) if set to true will log the data returned by the service in the console. This helps when debugging and trying to understand how the returned data is organized.
 
 ##### Using the results
 
@@ -80,6 +81,12 @@ To use any API, just replace the YQL source data with the address you want to ac
 </data>
 ```
 
+Additionally, if you need to set specific HTTP headers (for instance Authorization), you can do that by specifying headers tag and giving it a JSON object.
+
+```html
+<data from="http://www.example.com/data.json data" where="data.q = query" headers="{Authorization: 'Access token example'}">
+</data>
+```
 
 Built on top of AngularJS
 ---

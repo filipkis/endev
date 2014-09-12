@@ -21,30 +21,39 @@
 		// 	}
 		// }]);
 
-		this.app.directive("data", ['$rootScope','$http','$injector','$interval', function($rootScope,$http,$injector,$interval) {
+		this.app.directive("data", ['$rootScope','$http','$injector','$interval','$timeout','$log','$interpolate', function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate) {
 			return {
 				restrict:'E',
 				scope:true,
 				link: function (scope,element,attrs) {
+					var from = $interpolate(attrs.from,false,null,true)(scope)
 					var provider = attrs.provider ? $injector.get(attrs.provider) :
-						attrs.from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
+						from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
 					var label = attrs.from.split(" ")[1];
 					var operators = new RegExp(/ AND | OR  /i);
 					var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
-					var exprs = attrs.where.split(operators);
-					var params = []
-					for (var i=0; i<exprs.length; i++) {
-						var expr = {
-							expression: exprs[i],
-							lhs: exprs[i].split(comparison)[0].trim(),
-							rhs: exprs[i].split(comparison)[1].trim(),
-							operator: comparison.exec(exprs[i]),
-							replace: function(value) {
-								return this.lhs + this.operator + value;
+					var params = [];
+					var delay = attrs.delay ? scope.$eval(attrs.delay) : 0;
+					if (attrs.where) {
+						var exprs = attrs.where.split(operators);
+						for (var i=0; i<exprs.length; i++) {
+							var expr = {
+								expression: exprs[i],
+								lhs: exprs[i].split(comparison)[0].trim(),
+								rhs: exprs[i].split(comparison)[1].trim(),
+								operator: comparison.exec(exprs[i]),
+								replace: function(value) {
+									return this.lhs + this.operator + value;
+								}
 							}
-						}
-						params.push(expr);
+							params.push(expr);
+						} 
 					}
+
+					scope.$eval(attrs.pending); 
+					scope.$pending = true;
+					scope.$error = null;
+					scope.$success = false;
 
 					var execute = function() {
 						scope.$eval(attrs.pending); 
@@ -52,7 +61,14 @@
 						scope.$error = null;
 						scope.$success = false;
 
-						provider.query(scope,attrs.from,attrs.where,params).success(function(data) {
+						if(attrs.log) {
+							var log = new EndevLog();
+							log.query = new EndevQuery();
+							log.query.from = from;
+							log.query.where = attrs.where;
+						}
+
+						provider.query(scope,from,attrs.where,params,attrs).success(function(data) {
 						  if (data.query) {
 						    scope[label] = data.query.results;
 						  } else {
@@ -61,19 +77,32 @@
 					      scope.$eval(attrs.success);
 						  scope.$pending = false;
 						  scope.$success = true;
+
+						  if(attrs.log) {
+							log.results = scope[label]
+							$log.info(log);
+						  }
 					    }).
 					    error(function(data, status, headers, config) {
 					      scope.$eval(attrs.error);
 						  scope.$pending = false;
 						  scope.$success = false;
 						  scope.$error = data.description;
+						  if(attrs.retry) {
+						  	scope.$pending = true;
+						  	$timeout(execute,delay);
+						  }
+						  if(attrs.log) {
+							log.data = data;
+							$log.error(log);
+						  }
 					      // called asynchronously if an error occurs
 					      // or server returns response with an error status.
 					    });
 
 					};
 
-					execute();
+					$timeout(execute,delay);
 
 					if(attrs.refresh) {
 						$interval(execute,attrs.refresh);
@@ -91,7 +120,7 @@
 
 		this.app.service("$yql", ['$http', function($http){ 
 			return {
-				query: function($scope,from,where,params) {
+				query: function($scope,from,where,params,attrs) {
 					var pWhere = where;
 					for(var i = 0; i<params.length; i++) {
 						var value = $scope.$eval(params[i].rhs);
@@ -100,7 +129,11 @@
 					var type = from.split(" ")[0];
 					var label = from.split(" ")[1];
 					var patt = new RegExp(label + ".", "g");
-					var filteredWhere = pWhere.replace(patt,"");
+					if (pWhere) {
+						var filteredWhere = pWhere.replace(patt,"");
+					} else {
+						var filteredWhere = "";
+					}
 					var query = "select * from " + type + " where " + filteredWhere;
 					return $http.get("https://query.yahooapis.com/v1/public/yql?q=" + encodeURIComponent(query) + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json");
 				}
@@ -109,7 +142,7 @@
 
 		this.app.service("$endev-rest", ['$http', function($http){ 
 			return {
-				query: function($scope,from,where,params) {
+				query: function($scope,from,where,params,attrs) {
 					var pWhere = "";
 					for(var i = 0; i<params.length; i++) {
 						var value = $scope.$eval(params[i].rhs);
@@ -122,7 +155,25 @@
 					var label = from.split(" ")[1]; 
 					var patt = new RegExp(label + ".", "g");
 					var filteredWhere = pWhere.replace(patt,"");
-					return $http.get(type + "?" + filteredWhere);
+					var headers = $scope.$eval(attrs.headers)
+					var config = {
+						headers: headers,
+						transformResponse: function(data, headersGetter) {
+							if (headersGetter()['content-type']=="application/atom+xml") {
+								var x2js = new X2JS();
+								return x2js.xml_str2json(data);
+							} else {
+								return data;
+							}
+						}
+					}
+					var url = type
+					if (url.indexOf('?') != -1) {
+						url = url + "&" + filteredWhere;
+					} else {
+						url = url + "?" + filteredWhere;
+					}
+					return $http.get(url, config);
 				}
 			}
 		}]);
@@ -132,6 +183,14 @@
 			$rootScope.Date = Date;
 			$rootScope.Math = Math;
 		}]);
+	}
+
+	function EndevLog() {
+
+	}
+
+	function EndevQuery() {
+
 	}
 	
 	endev = window.endev = new Endev();

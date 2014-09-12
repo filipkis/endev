@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS Weather API Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="lib/endev.js"></script>
+</head>
+<body>
+<h1>Endev.js Demo</h1>
+Search:
+
+<input ng-model="query" placeholder="Enter your place...">
+
+<data from="geo.places gp" where="gp.text = query">
+	<data from="weather.forecast wf" where="wf.woeid = gp.place[0].woeid AND wf.u = 'c'">
+		{{wf.channel.item.forecast[0].high}} 
+		<div ng-if="$pending">
+			Loading...
+		</div>
+	</data>
+</data>
+
+</body>
+</html>

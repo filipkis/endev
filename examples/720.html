@@ -2,26 +2,145 @@
 <html>
 <head>
 	<title>EndevJS 720 API Demo</title>
+	<script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
 	<script src="lib/angular/angular.js"></script>
 	<script src="lib/endev.js"></script>
+	<script src="http://code.highcharts.com/stock/highstock.js"></script>
 	<script>
 		endev.app.controller("SevenTwentyCtrl", function($scope, $filter) {
+			Highcharts.setOptions({
+		        global: {
+		            useUTC: false
+		        }
+		    });
 			$scope.date = function() {
 				var result = new Date();
 				return $filter('date')(result,'yyyyMMddHHmm');
 			}
+			getDateRange = function(starth) {
+				var date = new Date();
+				var results = [];
+				for(var i = starth; i<date.getHours()+1; i++) {
+					var value = {
+						from: $filter('date')(date, 'yyyyMMdd') + (i<10 ? '0' + i : i) + '00',
+						until: $filter('date')(date, 'yyyyMMdd') + (i+1<10 ? '0' + (i+1) : i+1) + '00'
+					}
+					results.push(value);
+				}
+				return results;
+			};
+
+			$scope.addPoints = function(points) {
+				if(points) {
+					for(var i=0; i<points.length; i++){
+						s = points[i].timestamp;
+						d = new Date();
+						d.setFullYear(s.substr(0,4));
+						d.setMonth(s.substr(4,2)-1);
+						d.setDate(s.substr(6,2));
+						d.setHours(s.substr(8,2));
+						d.setMinutes(s.substr(10,2));
+						$('#container').highcharts().series[0].addPoint([d.getTime(),points[i].temperature_celsius],false,false,false);
+						$('#container').highcharts().series[1].addPoint([d.getTime(),points[i].co2],false,false,false);
+						$('#container').highcharts().series[2].addPoint([d.getTime(),points[i].relative_humidity_percent],false,false,false);
+					}
+					$('#container').highcharts().redraw();
+				}
+			}
+
+			$scope.chart = $('#container').highcharts('StockChart', {
+	          rangeSelector : {
+	            selected : 1
+	          },
+
+	          title : {
+	            text : "EIT ICT Labs Sensor Data"
+	          },
+	          yAxis: [{
+		        labels: {
+		    		align: 'right',
+		    		x: -3
+		    	},
+		        title: {
+		            text: 'Temp'
+		        },
+		        height: '30%'
+		    }, {
+		    	labels: {
+		    		align: 'right',
+		    		x: -3
+		    	},
+		        title: {
+		            text: 'CO2'
+		        },
+		        top: '35%',
+		        height: '30%'
+		    }, {
+		    	labels: {
+		    		align: 'right',
+		    		x: -3
+		    	},
+		        title: {
+		            text: 'Humidity'
+		        },
+		        top: '70%',
+		        height: '30%'
+		    }],
+          
+	          series : [
+	          	{
+		          	id : 'temp',
+		            name : "Temperature",
+		            data : new Array(),
+		            tooltip: {
+		              valueDecimals: 2
+		          	}
+	            },
+	            {
+		          	id : 'co2',
+		            name : "CO2",
+		            data : new Array(),
+		            yAxis : 1,
+		            tooltip: {
+		              valueDecimals: 2
+		          	}
+	            },
+	            {
+		          	id : 'humid',
+		            name : "Humidity",
+		            data : new Array(),
+		            yAxis : 2,
+		            tooltip: {
+		              valueDecimals: 2
+		          	}
+	            }
+	           ]
+	       });
+
+			$scope.dateRange = getDateRange(8);
 		});
 	</script>
 </head>
 <body ng-controller="SevenTwentyCtrl">
 <h1>Endev.js Demo</h1>
 <h2>720 results:</h2>
-<data from="http://powerful-badlands-2614.herokuapp.com/720.json t720" where="t720.from = date() AND t720.until= date() " refresh="1000">
-	<div ng-repeat="d in t720.data['3BDDED2B642']">
-	{{d.temperature_celsius}}
-	{{d.co2}}
+<data from="http://powerful-badlands-2614.herokuapp.com/720.json t720" where="t720.from = date() AND t720.until= date() " refresh="15000" success="addPoints(t720.data['3BDDED2B7A8'])">
+	<div ng-repeat="d in t720.data['3BDDED2B7A8']">
+	Temp: {{d.temperature_celsius - 5}} C <br>
+	CO2: {{d.co2}} ppm
+	</div>
+	<div ng-if="$pending && !t720">
+		Waiting for current data
 	</div>
 </data>
+
+<div id="container"></div>
+<!-- <div ng-repeat="s in ['3BDDED2B7A8', '3BDDED2B756','3BDDED2B642','3BDDED2B8A2'] "> -->
+	<div ng-repeat="h in dateRange | orderBy:'from':true">
+		<data from="http://powerful-badlands-2614.herokuapp.com/720.json t720" where="t720.from = h.from AND t720.until= h.until " delay="($index + 2) * 1200" success="addPoints(t720.data['3BDDED2B7A8'])">
+
+		</data>
+	</div>
+<!-- </div> -->
 </body>
 </html>
-<!-- AND mb.lang='en,fi' AND mb.showSentiment=true AND mb.sentimentTarget=query AND mb.showSnippet=true  -->

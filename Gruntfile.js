@@ -34,7 +34,7 @@ module.exports = function(grunt) {
         options: {
           banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
         },
-        src: ["src/<%= pkg.name %>.js"],
+        src: ["src/<%= pkg.name %>.js", "src/xml2json.js"],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -54,6 +54,12 @@ module.exports = function(grunt) {
         src: 'src/<%= pkg.name %>.js',
         dest: 'dist/<%= pkg.name %>.min.js'
       }
+    },
+    watch: {
+      scripts: {
+        files: 'src/**/*.js',
+        tasks: [ 'default' ]
+      },
     }
   });
 

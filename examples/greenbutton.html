@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS GreenButton API Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="lib/endev.js"></script>
+</head>
+<body>
+<h1>Endev.js Demo</h1>
+Search:
+
+<input ng-model="query" placeholder="Enter your place...">
+
+<data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+	{{mr.entry.title.toString()}}
+	<div ng-repeat="l in mr.entry.link | filter:'IntervalBlock'">
+		<data from="{{l._href}}/1 ib" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+			Start: {{ib.entry.content.IntervalBlock.interval.start.toString()*1000 | date:'yyyy-MM-dd hh:mm'}}
+			<br/>
+			Duration: {{ib.entry.content.IntervalBlock.interval.duration.toString()}} sec
+			<div ng-repeat="ir in ib.entry.content.IntervalBlock.IntervalReading">
+				Cost: {{ir.cost.toString()}} Value: {{ir.value.toString()}} Start:{{ir.timePeriod.start.toString() | date:'hh:mm:ss'}} Duration: {{ir.timePeriod.duration.toString()}} sec
+			</div>
+		</data>
+	</div>
+	</div>
+
+</data>
+
+</body>
+</html>

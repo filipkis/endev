@@ -11,7 +11,7 @@ Search:
 <input ng-model="query" placeholder="Search">
 
 <h2>M-Brain results:</h2>
-<data use="https://raw.githubusercontent.com/filipkis/endev/master/examples/mbrain.xml mb" where="mb.api_key = 'hackathon_team_15_e90eh7hht447tfkdgu4ce1attj_1400583544' AND mb.query=query AND mb.category= 'twitter,facebook' ">
+<data use="https://raw.githubusercontent.com/filipkis/endev/master/examples/mbrain.xml" from="" where="mb.api_key = 'hackathon_team_15_e90eh7hht447tfkdgu4ce1attj_1400583544' AND mb.query=query AND mb.category= 'twitter,facebook' ">
 	<div ng-repeat="doc in mb.docs">
 	{{doc.rankScore}}
 	</div>
