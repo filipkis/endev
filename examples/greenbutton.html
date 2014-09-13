@@ -11,7 +11,7 @@ Search:
 
 <input ng-model="query" placeholder="Enter your place...">
 
-<data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+<!-- <data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
 	{{mr.entry.title.toString()}}
 	<div ng-repeat="l in mr.entry.link | filter:'IntervalBlock'">
 		<data from="{{l._href}}/1 ib" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
@@ -24,7 +24,10 @@ Search:
 		</data>
 	</div>
 	</div>
+</data> -->
 
+<data from="https://energimolnetv2.apiary-mock.com/api/2.0/users/53294e5ae9cada3306001735 user" headers="{Authorization: 'OAuth 2f9bf2cccd808358e6850e41c5a765ed'}" log="true">
+	{{user.data.name}}
 </data>
 
 </body>

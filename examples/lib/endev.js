@@ -1,4 +1,4 @@
-/*! endev 0.1.0 2014-09-12 */
+/*! endev 0.1.0 2014-09-13 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -141,7 +141,7 @@
 			}
 		}]);
 
-		this.app.service("$endev-rest", ['$http', function($http){ 
+		this.app.service("$endev-rest", ['$http','$interpolate', function($http,$interpolate){ 
 			return {
 				query: function($scope,from,where,params,attrs) {
 					var pWhere = "";
@@ -164,7 +164,7 @@
 								var x2js = new X2JS();
 								return x2js.xml_str2json(data);
 							} else {
-								return data;
+								return $scope.$eval(data);
 							}
 						}
 					}
