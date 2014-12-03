@@ -1,6 +1,6 @@
 {
   "name": "endev",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "The simplest way to work with data",
   "repository": {
     "type": "git",
@@ -12,6 +12,9 @@
     "url": "https://github.com/filipkis/endev/issues"
   },
   "homepage": "https://github.com/filipkis/endev",
+  "dependencies":{
+    "angular": "1.2.x || 1.3.x"
+  },
   "devDependencies": {
     "grunt": "~0.4.4",
     "grunt-contrib-jshint": "~0.10.0",

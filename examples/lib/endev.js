@@ -1,4 +1,4 @@
-/*! endev 0.1.0 2014-09-13 */
+/*! endev 0.1.0 2014-09-14 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -27,79 +27,110 @@
 				restrict:'E',
 				scope:true,
 				link: function (scope,element,attrs) {
-					var from = $interpolate(attrs.from,false,null,true)(scope)
-					var provider = attrs.provider ? $injector.get(attrs.provider) :
-						from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
-					var label = attrs.from.split(" ")[1];
-					var operators = new RegExp(/ AND | OR  /i);
-					var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
-					var params = [];
+
 					var delay = attrs.delay ? scope.$eval(attrs.delay) : 0;
-					if (attrs.where) {
-						var exprs = attrs.where.split(operators);
-						for (var i=0; i<exprs.length; i++) {
-							var expr = {
-								expression: exprs[i],
-								lhs: exprs[i].split(comparison)[0].trim(),
-								rhs: exprs[i].split(comparison)[1].trim(),
-								operator: comparison.exec(exprs[i]),
-								replace: function(value) {
-									return this.lhs + this.operator + value;
-								}
-							}
-							params.push(expr);
-						} 
-					}
 
 					scope.$eval(attrs.pending); 
 					scope.$pending = true;
 					scope.$error = null;
 					scope.$success = false;
 
+					var count = 0;
+
 					var execute = function() {
-						scope.$eval(attrs.pending); 
-						scope.$pending = true;
-						scope.$error = null;
-						scope.$success = false;
 
-						if(attrs.log) {
-							var log = new EndevLog();
-							log.query = new EndevQuery();
-							log.query.from = from;
-							log.query.where = attrs.where;
+						if (!scope.$parent.$pending) {
+
+							var from = $interpolate(attrs.from,false,null,true)(scope)
+							var provider = attrs.provider ? $injector.get(attrs.provider) :
+								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
+							var label = attrs.from.split(" ")[1];
+							var operators = new RegExp(/ AND | OR  /i);
+							var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
+							var params = [];
+							if (attrs.where) {
+								var exprs = attrs.where.split(operators);
+								for (var i=0; i<exprs.length; i++) {
+									var expr = {
+										expression: exprs[i],
+										lhs: exprs[i].split(comparison)[0].trim(),
+										rhs: exprs[i].split(comparison)[1].trim(),
+										operator: comparison.exec(exprs[i]),
+										replace: function(value) {
+											return this.lhs + this.operator + value;
+										}
+									}
+									params.push(expr);
+								} 
+							}
+
+							scope.$eval(attrs.pending); 
+							scope.$pending = true;
+							scope.$error = null;
+							scope.$success = false;
+
+							if(attrs.log) {
+								var log = new EndevLog();
+								log.query = new EndevQuery();
+								log.query.from = from;
+								log.query.where = attrs.where;
+							}
+
+							provider.query(scope,from,attrs.where,params,attrs).success(function(data) {
+							  if (data.query) {
+							    scope[label] = data.query.results;
+							  } else {
+							  	scope[label] = data;
+							  }	
+						      scope.$eval(attrs.success);
+							  scope.$pending = false;
+							  scope.$success = true;
+
+							  if(attrs.log) {
+								log.results = scope[label]
+								$log.info(log);
+							  }
+						    }).
+						    error(function(data, status, headers, config) {
+						      scope.$eval(attrs.error);
+							  scope.$pending = false;
+							  scope.$success = false;
+							  scope.$error = data.description;
+							  if(attrs.retry) {
+							  	scope.$pending = true;
+							  	$timeout(execute,delay);
+							  }
+							  if(attrs.log) {
+								log.data = data;
+								$log.error(log);
+							  }
+						      // called asynchronously if an error occurs
+						      // or server returns response with an error status.
+						    });
+
+						    if (count == 0) {
+						    	for(var i = 0; i<params.length; i++) {
+									scope.$watch(params[i].rhs,function() {
+										execute();
+									})
+								}
+
+								attrs.$observe("from",function(newValue,oldValue){
+									console.log(newValue)
+									execute()
+								})
+
+						    }
+						    count ++;
+						}else{
+							// scope.$watch(scope.$parent.$pending, function(newValue,oldValue) {
+							// 	if (newValue != oldValue && !newValue) {
+							// 		execute();
+							// 	}
+							// }); 
+							// TODO: Fix hack!
+							$timeout(execute,100);
 						}
-
-						provider.query(scope,from,attrs.where,params,attrs).success(function(data) {
-						  if (data.query) {
-						    scope[label] = data.query.results;
-						  } else {
-						  	scope[label] = data;
-						  }	
-					      scope.$eval(attrs.success);
-						  scope.$pending = false;
-						  scope.$success = true;
-
-						  if(attrs.log) {
-							log.results = scope[label]
-							$log.info(log);
-						  }
-					    }).
-					    error(function(data, status, headers, config) {
-					      scope.$eval(attrs.error);
-						  scope.$pending = false;
-						  scope.$success = false;
-						  scope.$error = data.description;
-						  if(attrs.retry) {
-						  	scope.$pending = true;
-						  	$timeout(execute,delay);
-						  }
-						  if(attrs.log) {
-							log.data = data;
-							$log.error(log);
-						  }
-					      // called asynchronously if an error occurs
-					      // or server returns response with an error status.
-					    });
 
 					};
 
@@ -107,12 +138,6 @@
 
 					if(attrs.refresh) {
 						$interval(execute,attrs.refresh);
-					}
-
-					for(var i = 0; i<params.length; i++) {
-						scope.$watch(params[i].rhs,function() {
-							execute();
-						})
 					}
 					
 				}

@@ -4,6 +4,7 @@
 	<title>EndevJS GreenButton API Demo</title>
 	<script src="lib/angular/angular.js"></script>
 	<script src="lib/endev.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
 </head>
 <body>
 <h1>Endev.js Demo</h1>
@@ -11,6 +12,7 @@ Search:
 
 <input ng-model="query" placeholder="Enter your place...">
 
+<input type="button" value="Hello" class="btn btn-default">
 <!-- <data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
 	{{mr.entry.title.toString()}}
 	<div ng-repeat="l in mr.entry.link | filter:'IntervalBlock'">

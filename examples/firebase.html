@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS Tobe Demo</title>
+	<script src="lib/angular/angular.js"></script>
+	<script src="https://cdn.firebase.com/js/client/1.1.2/firebase.js"></script>
+	<script src="lib/angularfire.min.js"></script>
+	<script src="lib/endev.js"></script>
+	<link rel="stylesheet" href="bootstrap/css/bootstrap.css"/>
+	<style>
+		.main-text {
+			font-size: 24px;
+			font-weight: 200;
+		}
+
+		.small-text {
+			font-size: 20px;
+			font-weight: 200;
+		}
+
+		.difference-number {
+			font-size: 52px;
+			font-weight: 700;
+		}
+		.difference-currency {
+			font-size: 40px;
+		}
+
+		.price {
+			font-size: 36px;
+			font-weight: 400;
+		}
+
+
+	</style>
+	<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="bootstrap/js/bootstrap.js"></script>
+	<script>
+		var monthlyFee = 18.33;
+		var hourlyAddon = 0.4711;
+		var currencyConversion = 9.24110;
+
+		endev.app.controller("TobeCtrl", function($scope) {
+			$scope.compare = false;
+			$scope.calculation = function(prices,energy){
+				if(prices && prices.length > 0 && energy && energy.length > 0){
+					aggr = [];
+					for(key in prices) {
+						p = prices[key];
+						month = p.startTime.substring(5,7);
+						if (!aggr[month]) {
+							aggr[month] = {values:[]}
+							aggr[month].totalPrice = 0
+							aggr[month].totalEnergy = 0
+							aggr[month].totalPriceHourly = 0
+						}
+						value = {price:p.price/1000*currencyConversion+hourlyAddon,energy:energy[prices.indexOf(p)]};
+						aggr[month].values.push(value);
+						aggr[month].totalPrice += value.price;
+						aggr[month].totalEnergy += value.energy;
+						aggr[month].totalPriceHourly += value.price * value.energy;
+					}
+					totalPrice = 0
+					totalPriceHourly = 0
+					for(key in aggr) {
+						totalPrice +=  (aggr[key].totalPrice/aggr[key].values.length) * aggr[key].totalEnergy + monthlyFee
+						totalPriceHourly += aggr[key].totalPriceHourly + monthlyFee
+						console.log(key + ": " + ((aggr[key].totalPrice/aggr[key].values.length) * aggr[key].totalEnergy + monthlyFee) + " on fixed " + " vs. " + (aggr[key].totalPriceHourly + monthlyFee) + " hourly")
+
+					}
+					$scope.priceFixed = totalPrice;
+					$scope.priceHourly = totalPriceHourly;
+					$scope.difference = Math.abs(totalPrice - totalPriceHourly);
+					$scope.differenceText = totalPrice < totalPriceHourly ? 'more expensive' : 'cheaper'
+					$scope.showResults = true;
+
+				}
+			}
+		});
+	</script>
+	<title>ToBE2</title>
+</head>
+<body ng-controller="TobeCtrl">
+
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">ToBe2</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#"><i class="fa fa-home"></i> Home</a></li>
+        <li><a href="#"><i class="fa fa-cog"></i> Settings</a></li>
+        <li><a href="#"><i class="fa fa-calendar"></i> Explore</a></li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+
+<div class="container" ng-init="selectedTariff = 'monthly'" ng-show="!compare">
+	<div class="row">
+		<div class="col-sm-4 col-sm-offset-4">
+			<form role="form">
+				<fieldset>
+					<div class="form-group">
+						<lable class="main-text">My electricity provider</lable>
+						<select class="form-control">
+							<option selected="selected">Karlstad Energi</option>
+							<option disabled="disabled">Fortum</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<lable class="main-text">Current electricity plan</lable>
+						<select ng-model="selectedTariff" class="form-control">
+							<option selected="selected" value="monthly">Variable monthly</option>
+							<option value="hourly">Variable hourly</option>
+						</select>
+					</div>
+				</fieldset>
+			</form>
+		</div>
+	</div>
+	<div class="row" style="margin-top:30px;">
+		<div class="col-sm-4 col-sm-offset-4">
+			<div class="text-center main-text">
+			<em>
+				What would the difference in cost have been over the last year with an 
+				<span ng-if="selectedTariff != 'hourly'">hourly</span>
+				<span ng-if="selectedTariff != 'monthly'">monthly</span>
+				tariff?
+			</em>
+			</div>
+		</div>
+	</div>
+	<div class="row" style="margin-top:20px;">
+		<div class="col-sm-4 col-sm-offset-4">
+			<div class="text-center">
+				<button class="btn btn-primary" ng-click="compare=true">Compare</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+<div class="container" ng-if="compare && !showResults">
+	<data from="http://ev.csc.kth.se/eprice/api/market.jsp?region=SE3 market" log="true">
+			<div class="row">
+				<div class="col-sm-4 col-sm-offset-4 text-center main-text">
+					Calculating...
+					<div ng-if="$success">
+						from {{market.prices[0].startTime.substring(0,10)}}
+						<br>
+						to {{market.prices[market.prices.length-49].startTime.substring(0,10)}}
+					</div>
+				</div>
+			</div>
+		<data from="http://localhost:5000/energimolnet/series/5135bcda56beef07000015cb?query=%5B%5B{{market.prices[0].startTime.substring(0,4)}}{{market.prices[0].startTime.substring(5,7)}}{{market.prices[0].startTime.substring(8,10)}}%2C{{market.prices[market.prices.length-49].startTime.substring(0,4)}}{{market.prices[market.prices.length-49].startTime.substring(5,7)}}{{market.prices[market.prices.length-49].startTime.substring(8,10)}}%5D%5D&resolution=hour energy" log="true" success="calculation(market.prices,energy[0])">
+	<!-- 		This is the result for period {{market.prices[0].startTime.substring(0,10)}} - {{market.prices[market.prices.length-49].startTime.substring(0,10)}}:<br>
+			Fixed price: {{priceFixed}} SEK
+			<br>
+			Hourly price: {{priceHourly}} SEK -->
+		</div>
+		<div ng-show="$success && energy.length > 0 && prices.length > 0">
+			<div class="row">
+
+			</div>
+		</div>
+
+	<!-- 	<div ng-repeat="p in market.prices">
+			<div>{{p.startTime}}: {{energy[0][$index]}} kWh at {{(p.price/1000*9.24110) + 0.4545}}  SEK/kWh</div>
+		</div> -->
+		</data>
+	</data>
+</div>
+
+<div class="container" ng-if="showResults">
+	<div class="row">	
+		<div class="col-sm-4 col-sm-offset-4 text-center">
+
+		<p class="main-text">An 	<span ng-if="selectedTariff != 'hourly'">hourly</span>
+			<span ng-if="selectedTariff != 'monthly'">monthly</span> tariff would have been...</p>
+
+		<p class="main-text">
+		<span class="text-primary"><span class="difference-number">{{difference | number: 0}}</span> <span class="difference-currency">kr</span></span> {{differenceText}}
+		</p>
+
+		<div class="row small-text">
+			<div class="col-xs-10 col-xs-offset-1 text-right">
+				Variable monthly: <span class="text-primary"><span class="price">{{priceFixed | number: 0}}</span> kr/year</span>
+			</div>
+		</div>
+		<div class="row small-text">
+			<div class="col-xs-10 col-xs-offset-1 text-right">
+				Variable hourly: <span class="text-primary"><span class="price">{{priceHourly | number: 0}}</span> kr/year</span>
+			</div>
+		</div>
+		<p class="main-text" style="margin-top:30px;">
+			<em>Could it have been different if you had changed the time of use?
+			</em>
+		</p>
+		<button class="btn btn-success">Explore</button>
+		</div>
+	</div>
+</div>
+
+<!-- <data from="https://openexchangerates.org/api/time-series.json currency" where="app_id='1123acb4e9c841ae8e010a3a4e4aae12' AND start = '2013-11-08' AND end = '2014-09-13' AND base = 'SEK' AND symbols = 'EUR'" log="true"></data>
+ -->
+<!-- <data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+	{{mr.entry.title.toString()}}
+	<div ng-repeat="l in mr.entry.link | filter:'IntervalBlock'">
+		<data from="{{l._href}}/1 ib" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+			Start: {{ib.entry.content.IntervalBlock.interval.start.toString()*1000 | date:'yyyy-MM-dd hh:mm'}}
+			<br/>
+			Duration: {{ib.entry.content.IntervalBlock.interval.duration.toString()}} sec
+			<div ng-repeat="ir in ib.entry.content.IntervalBlock.IntervalReading">
+				Cost: {{ir.cost.toString()}} Value: {{ir.value.toString()}} Start:{{ir.timePeriod.start.toString() | date:'hh:mm:ss'}} Duration: {{ir.timePeriod.duration.toString()}} sec
+			</div>
+		</data>
+	</div>
+	</div>
+</data> -->
+
+</body>
+</html>
