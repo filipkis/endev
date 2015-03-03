@@ -11,16 +11,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.9.0/moment.js"></script>
 <script src="lib/endev.js"></script>
 </head>
+<body>
 <div id="__endev_helper__">
   <button ng-click="$annotation = !$annotation">Annotations {{$annotation ? 'off' : 'on'}}</button>
 </div>
-
-<div data-object="queue = from('queues2').findOrCreate({name:'iprog'},{positions:[]})">
+<input data-evalue="newQueueName"/>
+<button data-click="from('queues').insert({name:newQueueName})">Add new queue</button>
+<select data-evalue="queuename">
+  <option data-list="q in from('queues')" value="{{q.name}}">{{q.name}}</option>
+  <!-- <option value="iprog">iprog</option>
+  <option value="mdid">mdid</option> -->
+</select>
+<div data-object="queue = from('queues').findOrCreate({name:queuename},{positions:[]})">
 Queue: {{queue.name}}
   <div data-object="myPosition = queue.positions.findOrNew({username:'filip'},{name:'Filip Kis'})">
-    Location: <input data-value="myPosition.location" />
+    Location: <input data-evalue="myPosition.location" />
     <br/>
-    Comment: <input data-value="myPosition.comment" />
+    Comment: <input data-evalue="myPosition.comment" />
     <div data-if="myPosition.$new">
       <button data-click="queue.positions.insert(myPosition)">Join</button>
     </div>
@@ -50,9 +57,9 @@ Queue: {{queue.name}}
         <td>{{$index + 1}}/{{queue.positions.length}}</td>
         <td>{{moment(position.createdAt).fromNow()}}</td>
         <td>
-          <!-- <div data-if="q.positions.$canEdit()"> -->
+          <div data-if="q.positions.$canEdit()">
             <button data-click="queue.positions.remove(position)">X</button>
-          <!-- </div> -->
+          </div>
         </td>
       </tr>
     </tbody>

@@ -12,6 +12,33 @@
 		var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
 		var PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
 
+		/*
+		// Use to debug catching
+		_.memoize = function(func, hasher) {
+			console.log('Created memoized function:');
+			console.log(func.toString().substring(0,func.toString().indexOf("\n")))
+	    var memoize = function(key) {
+	      var cache = memoize.cache;
+	      var address = '' + (hasher ? hasher.apply(this, arguments) : key);
+	      if (!_.has(cache, address)) {
+	      	console.log("Executed:");
+	      	cache[address] = func.apply(this, arguments);
+	      } else {
+	      	console.log("From cache:")
+	      }
+	      console.log(address);
+	      console.log(arguments);
+	      console.log(this);
+	      return cache[address];
+	    };
+	    memoize.cache = {};
+	    return memoize;
+	  };*/
+
+	  var hasherWithThis = function() {
+	  	return JSON.stringify({this:this,args:arguments});
+	  }; 
+
 		function Expr(expr) {
 			this.expression = expr;
 			this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
@@ -200,7 +227,7 @@
 			}
 		}]);
 
-		_.each([['if','ng-show'],['click','ng-click'],['value','ng-model']],function(pair){
+		_.each([['if','ng-show'],['click','ng-click'],['evalue','ng-model']],function(pair){
       this.app.directive(pair[0],['$compile',function($compile){
         return {
           terminal: true,
@@ -282,20 +309,20 @@
               attrs.$addClass("ng-hide");
               var lhs = attrs.object.split('=')[0].trim();
               var rhs = attrs.object.split('=')[1].trim();
-              var path = rhs.match(PATH_REGEX)[0];
-              if (rhs.charAt(path.length)==="(") {
-                if (path.lastIndexOf(".") > 0) {
-                  path = path.substring(0,path.lastIndexOf("."));
-                } else {
-                  path = null;
-                }
-              }
-              if (path) {
-                console.log(path)
-                scope.$watch(path,function(newValue,oldValue){
-                  eval();
-                });
-              }
+              // var path = rhs.match(PATH_REGEX)[0];
+              // if (rhs.charAt(path.length)==="(") {
+              //   if (path.lastIndexOf(".") > 0) {
+              //     path = path.substring(0,path.lastIndexOf("."));
+              //   } else {
+              //     path = null;
+              //   }
+              // }
+              // if (path) {
+              //   console.log(path)
+              //   scope.$watch(path,function(newValue,oldValue){
+              //     eval();
+              //   });
+              // }
               function eval() {
                 $q.when(scope.$eval(rhs)).then(function(value){
                   if(value && value["$bindTo"]) {
@@ -319,22 +346,31 @@
                   attrs.$removeClass("__endev_annotated__");
                 }
               });
-              // scope.$watch(rhs,function(newValue,oldValue){
-              //   $q.when(newValue).then(function(value){
-              //     if(value && value["$bindTo"]) {
-              //       value.$bindTo(scope,lhs);
-              //     } else {
-              //       scope[lhs] = value;
-              //     }
-              //   });
-              // });
-              eval();
+              element.on("click",function(){
+              	console.log("Clicked object");
+              });
+
+              var unbind;
+              scope.$watch(rhs,function(newValue,oldValue){
+                $q.when(newValue).then(function(value){
+                  if(value && value["$bindTo"]) {
+                  	if(unbind) {
+                  		unbind();
+                  	}
+                    value.$bindTo(scope,lhs).then(function(unb){
+                    	unbind = unb;
+                    });
+                  } else {
+                    scope[lhs] = value;
+                  }
+                });
+              });
+              // eval();
             }
           }
         }
       }
     }]);
-
 
   	this.app.run(["$rootScope","$FirebaseArray","$FirebaseObject","$firebase","$q",function($rootScope,$FirebaseArray,$FirebaseObject,$firebase,$q) {
       $rootScope.Date = Date;
@@ -355,28 +391,32 @@
                 deferred.resolve(result);
               });
               return result;
-            }),
+            },JSON.stringify),
             findOrCreate: _.memoize(function(find,init) {
               var deferred = $q.defer();
               this.$list.$loaded().then(function(list){
                 var result = _.findWhere(list,find);
-                var objectRef;
                 if(!result) {
                   list.$add(_.extend(find,init)).then(function(ref){
-                    objectRef = ref;
+                    $firebase(ref).$asObject().$loaded().then(function(object){
+		                  _.extend(object,_.pick(init,function(value,key){
+		                    return !object[key] && angular.isArray(value) && value.length === 0;
+		                  }));
+		                  deferred.resolve(object);
+		                });
                   });
                 }else{
                   var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
+                  $firebase(ref).$asObject().$loaded().then(function(object){
+	                  _.extend(object,_.pick(init,function(value,key){
+	                    return !object[key] && angular.isArray(value) && value.length === 0;
+	                  }));
+	                  deferred.resolve(object);
+	                });
                 }
-                $firebase(ref).$asObject().$loaded().then(function(object){
-                  _.extend(object,_.pick(init,function(value,key){
-                    return !object[key] && angular.isArray(value) && value.length === 0;
-                  }));
-                  deferred.resolve(object);
-                });
               });
               return deferred.promise;
-            }),
+            },JSON.stringify),
             insert: function(obj) {
               this.$list.$add(obj);
             },
@@ -423,14 +463,15 @@
         
       });
 
-      Array.prototype.findOrNew = _.memoize(function(find,init){
+
+      Array.prototype.findOrNew = _.memoize(function(find,init){    	
         var result = _.findWhere(this,find);
         if(!result) {
           result = _.extend(find,init)
           result.$new = true;
         }
         return result;
-      });
+      },hasherWithThis);
 
       Array.prototype.findOrCreate = _.memoize(function(find,init){
         var result = _.findWhere(this,find);
@@ -439,7 +480,7 @@
           this.push(result);
         }
         return result;
-      });
+      },hasherWithThis);
 
       Array.prototype.insert = function(obj) {
         obj['$new'] = undefined;
