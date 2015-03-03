@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>EndevJS Weather Compare API Demo</title>
+		<script src="lib/angular/angular.js"></script>
+		<script src="lib/endev.js"></script>
+		<script src="lib/chess.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+		<script type="text/javascript">
+			endev.app.controller("ChessCtrl", function($scope) {
+				$scope.categories = [
+					{name: "Monitor", products: [
+						{name: "M1", price: 100},
+						{name: "M2", price: 120},
+						{name: "M3", price: 150},
+					]},
+					{name: "Keyboard", products: [
+						{name: "K1", price: 10},
+						{name: "K2", price: 12},
+						{name: "K3", price: 15},
+					]}
+				]
+
+				$scope.cart = []
+
+				$scope.category = {}
+				
+			})
+		</script>
+		<style>
+		</style>
+	</head>
+	<body class="container" ng-controller="ChessCtrl">
+		<h1>Endev.js Shopping Cart Demo</h1>
+		<h2>Categories</h2>
+		<div ng-repeat="cat in categories">
+			<input type="radio" ng-model="$parent.category" ng-value="cat" name="categry"/> {{cat.name}}
+		</div>
+		<div ng-if="category.products.length>0">
+			<h2>Product</h2>
+			<div ng-repeat="prod in category.products">
+				<input type="radio" ng-model="$parent.product" ng-value="prod" name="product"/> {{prod.name}}
+			</div>
+			<button ng-click="cart.push(product)">Add</button>
+		</div>
+		<div ng-if="cart.length>0">
+			<h2>Cart</h2>
+			<div ng-repeat="prod in cart">
+				<span type="radio" ng-model="$parent.product" ng-value="prod" name="product"/> {{prod.name}}
+			</div>
+			<button ng-click="cart.push(product)">Add</button> 
+		</div>
+		sum(p.price) from cart.products p
+
+	</body>
+</html>

@@ -1,4 +1,4 @@
-/*! endev 0.1.0 2014-09-14 */
+/*! endev 0.2.0 2014-12-03 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -7,6 +7,19 @@
 (function (window,document,undefined) {
 
 	function Endev(){
+
+		var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+		var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
+
+		function Expr(expr) {
+			this.expression = expr;
+			this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
+			this.rhs = expr.split(COMPARISON_REGEX)[1].trim();
+			this.operator = COMPARISON_REGEX.exec(expr);
+			this.replace = function(value) {
+				return this.lhs + this.operator + value;
+			}
+		}
 
 		this.app = angular.module("Endev", []);
 
@@ -45,23 +58,11 @@
 							var provider = attrs.provider ? $injector.get(attrs.provider) :
 								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
 							var label = attrs.from.split(" ")[1];
-							var operators = new RegExp(/ AND | OR  /i);
-							var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
 							var params = [];
 							if (attrs.where) {
-								var exprs = attrs.where.split(operators);
-								for (var i=0; i<exprs.length; i++) {
-									var expr = {
-										expression: exprs[i],
-										lhs: exprs[i].split(comparison)[0].trim(),
-										rhs: exprs[i].split(comparison)[1].trim(),
-										operator: comparison.exec(exprs[i]),
-										replace: function(value) {
-											return this.lhs + this.operator + value;
-										}
-									}
-									params.push(expr);
-								} 
+								params = attrs.where.split(OPERATORS_REGEX).map( function(expr) {
+									return new Expr(expr);
+								});
 							}
 
 							scope.$eval(attrs.pending); 
@@ -110,9 +111,7 @@
 
 						    if (count == 0) {
 						    	for(var i = 0; i<params.length; i++) {
-									scope.$watch(params[i].rhs,function() {
-										execute();
-									})
+									scope.$watch(params[i].rhs,execute);
 								}
 
 								attrs.$observe("from",function(newValue,oldValue){
@@ -162,6 +161,14 @@
 					}
 					var query = "select * from " + type + " where " + filteredWhere;
 					return $http.get("https://query.yahooapis.com/v1/public/yql?q=" + encodeURIComponent(query) + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json");
+				}
+			}
+		}]);
+
+		this.app.service("$firebase", ['$http','$injector', function($http,$injector){ 
+			return {
+				query: function($scope,from,where,params,attrs) {
+					$injector.get("$firebase");
 				}
 			}
 		}]);

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>EndevJS Weather Compare API Demo</title>
+		<script src="lib/angular/angular.js"></script>
+		<script src="lib/endev.js"></script>
+		<script src="lib/chess.js"></script>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+		<script type="text/javascript">
+			endev.app.controller("ChessCtrl", function($scope) {
+				$scope.chess = new Chess()
+			})
+		</script>
+		<style>
+			.chess-column {
+				float: left;
+				width: 64px;
+			}
+
+			.square {
+				width: 64px;
+				height: 64px;
+				background: #D18B47;
+				float: left;
+				text-align: center;
+				padding: 10px;
+			}
+			.square.white {
+				background: #FFCE9E;
+			}
+			.figure {	
+				font-size: 20px;	
+				font-weight: bold;			
+			}
+
+			.figure.w {
+				color: #fff;
+			}
+			.figure.b {
+				color: #000;
+			}
+		</style>
+	</head>
+	<body class="container" ng-controller="ChessCtrl">
+		<h1>Endev.js Chess Demo</h1>
+		Move (in <a href="http://en.wikipedia.org/wiki/Algebraic_notation_%28chess%29">SAN</a>): <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move)">
+		
+		<div ng-repeat="c in ['a','b','c','d','e','f','g','h']" class="chess-column">
+			<!-- Square -->
+			<div ng-repeat="r in [8,7,6,5,4,3,2,1]" class="square" ng-class="{white: $parent.$odd ? $odd : !$odd }">
+				<!-- Figure -->
+				<span drop-class="square" on-drop="chess.move({from: c+r, to:target.c + target.r})" class="figure {{chess.get(c + r).color}}">{{chess.get(c + r).type}}</span>
+			</div>
+		</div>
+	</body>
+</html>

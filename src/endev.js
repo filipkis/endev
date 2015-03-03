@@ -7,6 +7,19 @@
 
 	function Endev(){
 
+		var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+		var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
+
+		function Expr(expr) {
+			this.expression = expr;
+			this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
+			this.rhs = expr.split(COMPARISON_REGEX)[1].trim();
+			this.operator = COMPARISON_REGEX.exec(expr);
+			this.replace = function(value) {
+				return this.lhs + this.operator + value;
+			}
+		}
+
 		this.app = angular.module("Endev", []);
 
 
@@ -44,23 +57,11 @@
 							var provider = attrs.provider ? $injector.get(attrs.provider) :
 								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
 							var label = attrs.from.split(" ")[1];
-							var operators = new RegExp(/ AND | OR  /i);
-							var comparison = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
 							var params = [];
 							if (attrs.where) {
-								var exprs = attrs.where.split(operators);
-								for (var i=0; i<exprs.length; i++) {
-									var expr = {
-										expression: exprs[i],
-										lhs: exprs[i].split(comparison)[0].trim(),
-										rhs: exprs[i].split(comparison)[1].trim(),
-										operator: comparison.exec(exprs[i]),
-										replace: function(value) {
-											return this.lhs + this.operator + value;
-										}
-									}
-									params.push(expr);
-								} 
+								params = attrs.where.split(OPERATORS_REGEX).map( function(expr) {
+									return new Expr(expr);
+								});
 							}
 
 							scope.$eval(attrs.pending); 
@@ -108,17 +109,10 @@
 						    });
 
 						    if (count == 0) {
-						    	for(var i = 0; i<params.length; i++) {
-									scope.$watch(params[i].rhs,function() {
-										execute();
-									})
-								}
-
-								attrs.$observe("from",function(newValue,oldValue){
-									console.log(newValue)
-									execute()
-								})
-
+						    	params.forEach( function(param) {
+									scope.$watch(params[param].rhs,execute);
+								});
+								attrs.$observe("from",execute)
 						    }
 						    count ++;
 						}else{
