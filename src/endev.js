@@ -334,134 +334,111 @@
       }
     }]);
 
-    this.app.service("PathMap",[function(){
-      var map = [];
-      return function(object,callback) {
-        var result = _.find(map,function(elem){
-          return _.isEqual(elem.key,this);
-        },object);
-        if(!result){
-          result = {key:object,value:callback(object)};
-          map.push(result)
-        }
-        return result.value;
-      };
-    }])
 
-
-  	this.app.run(["$rootScope","$FirebaseArray","$FirebaseObject","$firebase","$q","PathMap",function($rootScope,$FirebaseArray,$FirebaseObject,$firebase,$q,PathMap) {
+  	this.app.run(["$rootScope","$FirebaseArray","$FirebaseObject","$firebase","$q",function($rootScope,$FirebaseArray,$FirebaseObject,$firebase,$q) {
       $rootScope.Date = Date;
       $rootScope.Math = Math;
       $rootScope.$annotation = false;
-      $rootScope.from = function(path) {
-        return PathMap({from:path},function(args){
-          var ref = new Firebase("https://endev.firebaseio.com");
-          var sync = $firebase(ref.child(args.from),{
-            arrayFactory: $FirebaseArray.$extendFactory({
-              findOrNew: function(find,init) {
-                return PathMap({object:this,find:find,init:init},function(args){
-                  var deferred = $q.defer();
-                  args.object.$list.$loaded().then(function(list){
-                    var result = _.findWhere(list,args.find);
-                    if(!result) {
-                      result = _.extend(args.find,args.init);
-                      result.$new = true;
-                    }
-                    deferred.resolve(result);
-                  });
-                  return result;
-                });
-              },
-              findOrCreate: function(find,init) {
-                return PathMap({object:this,find:find,init:init},function(args){
-                  var deferred = $q.defer();
-                  args.object.$list.$loaded().then(function(list){
-                    var result = _.findWhere(list,args.find);
-                    var objectRef;
-                    if(!result) {
-                      list.$add(_.extend(args.find,args.init)).then(function(ref){
-                        objectRef = ref;
-                      });
-                    }else{
-                      var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
-                    }
-                    $firebase(ref).$asObject().$loaded().then(function(object){
-                      _.extend(object,_.pick(args.init,function(value,key){
-                        return !object[key] && angular.isArray(value) && value.length === 0;
-                      }));
-                      deferred.resolve(object);
-                    });
-                  });
-                  return deferred.promise;
-                });
-              },
-              insert: function(obj) {
-                this.$list.$add(obj);
-              },
-              remove: function(obj) {
-                this.$list.$remove(obj);
-              }
+      $rootScope.from =  _.memoize(function(path) {
+        var ref = new Firebase("https://endev.firebaseio.com");
+        var sync = $firebase(ref.child(path),{
+          arrayFactory: $FirebaseArray.$extendFactory({
+            findOrNew: _.memoize(function(find,init) {
+              var deferred = $q.defer();
+              this.$list.$loaded().then(function(list){
+                var result = _.findWhere(list,find);
+                if(!result) {
+                  result = _.extend(find,init);
+                  result.$new = true;
+                }
+                deferred.resolve(result);
+              });
+              return result;
             }),
-            objectFactory: $FirebaseArray.$extendFactory({
-              findOrNew: function(find,init) {
-                var deferred = $q.defer();
-                this.$loaded().then(function(list){
-                  var result = _.findWhere(list,find);
-                  if(!result) {
-                    result = _.extend(find,init);
-                    result.$new = true;
-                  }
+            findOrCreate: _.memoize(function(find,init) {
+              var deferred = $q.defer();
+              this.$list.$loaded().then(function(list){
+                var result = _.findWhere(list,find);
+                var objectRef;
+                if(!result) {
+                  list.$add(_.extend(find,init)).then(function(ref){
+                    objectRef = ref;
+                  });
+                }else{
+                  var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
+                }
+                $firebase(ref).$asObject().$loaded().then(function(object){
+                  _.extend(object,_.pick(init,function(value,key){
+                    return !object[key] && angular.isArray(value) && value.length === 0;
+                  }));
+                  deferred.resolve(object);
+                });
+              });
+              return deferred.promise;
+            }),
+            insert: function(obj) {
+              this.$list.$add(obj);
+            },
+            remove: function(obj) {
+              this.$list.$remove(obj);
+            }
+          }),
+          objectFactory: $FirebaseArray.$extendFactory({
+            findOrNew: function(find,init) {
+              var deferred = $q.defer();
+              this.$loaded().then(function(list){
+                var result = _.findWhere(list,find);
+                if(!result) {
+                  result = _.extend(find,init);
+                  result.$new = true;
+                }
+                deferred.resolve(result);
+              });
+              return result;
+            },
+            findOrCreate: function(find,init) {
+              var deferred = $q.defer();
+              this.$list.$loaded().then(function(list){
+                var result = _.findWhere(list,find);
+                if(!result) {
+                  list.$add(_.extend(find,init)).then(function(ref){
+                    deferred.resolve($firebase(ref).$asObject());
+                  });
+                }else{
                   deferred.resolve(result);
-                });
-                return result;
-              },
-              findOrCreate: function(find,init) {
-                var deferred = $q.defer();
-                this.$list.$loaded().then(function(list){
-                  var result = _.findWhere(list,find);
-                  if(!result) {
-                    list.$add(_.extend(find,init)).then(function(ref){
-                      deferred.resolve($firebase(ref).$asObject());
-                    });
-                  }else{
-                    deferred.resolve(result);
-                  }
-                });
-                return deferred.promise;
-              },
-              insert: function(obj) {
-                this.$list.$add(obj);
-              },
-              remove: function(obj) {
-                this.$list.$remove(obj);
-              }
-            })
-          });
-          return sync.$asArray();
+                }
+              });
+              return deferred.promise;
+            },
+            insert: function(obj) {
+              this.$list.$add(obj);
+            },
+            remove: function(obj) {
+              this.$list.$remove(obj);
+            }
+          })
         });
-      };
+        return sync.$asArray();
+        
+      });
 
-      Array.prototype.findOrNew = function(find,init){
-        return PathMap({list:this,find:find,init:init},function(args){
-          var result = _.findWhere(args.list,args.find);
-          if(!result) {
-            result = _.extend(args.find,args.init)
-            result.$new = true;
-          }
-          return result;
-        });
-      }
+      Array.prototype.findOrNew = _.memoize(function(find,init){
+        var result = _.findWhere(this,find);
+        if(!result) {
+          result = _.extend(find,init)
+          result.$new = true;
+        }
+        return result;
+      });
 
-      Array.prototype.findOrCreate = function(find,init){
-        return PathMap({list:this,find:find,init:init},function(args){
-          var result = _.findWhere(args.list,args.find);
-          if(!result) {
-            result = _.extend(args.find,args.init)
-            this.push(result);
-          }
-          return result;
-        });
-      }
+      Array.prototype.findOrCreate = _.memoize(function(find,init){
+        var result = _.findWhere(this,find);
+        if(!result) {
+          result = _.extend(find,init)
+          this.push(result);
+        }
+        return result;
+      });
 
       Array.prototype.insert = function(obj) {
         obj['$new'] = undefined;
