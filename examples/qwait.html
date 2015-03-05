@@ -22,12 +22,25 @@
   <!-- <option value="iprog">iprog</option>
   <option value="mdid">mdid</option> -->
 </select>
+<!-- <div data-object="queue = from('queues').find({name:queuename}).getOrInsert({name:queuename, positions:[]})"> -->
 <div data-object="queue = from('queues').findOrCreate({name:queuename},{positions:[]})">
 Queue: {{queue.name}}
+<!-- <div data-object="myPosition = queue.positions.find({username:'filip'}).getOrElse({username:'filip',name:'Filip Kis'})"> -->
   <div data-object="myPosition = queue.positions.findOrNew({username:'filip'},{name:'Filip Kis'})">
     Location: <input data-evalue="myPosition.location" />
     <br/>
     Comment: <input data-evalue="myPosition.comment" />
+    <br/>
+    Search for avatar: <input data-evalue="query"/>
+    <data from="flickr.photos.search fps" where="fps.text=query AND fps.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" style="float:right">
+      <div data-list="photo in fps.photo">
+        <img ng-src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg">
+        <button data-click="myPosition.avatar = 'http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '.jpg' ">Choose</button>
+      </div>
+      <div data-if="$pending">
+        Loading...
+      </div>
+    </data>
     <div data-if="myPosition.$new">
       <button data-click="queue.positions.insert(myPosition)">Join</button>
     </div>
@@ -40,22 +53,21 @@ Queue: {{queue.name}}
     <thead>
       <tr>
         <th>#</th>
+        <th>Avatar</th>
         <th>User</th>
         <th>Location</th>
         <th>Comment</th>
         <th>Position</th>
-        <th>Time in queue</th>
-        <th></th>
       </tr>
     </thead>
     <tbody>
       <tr data-list="position in queue.positions">
         <td>{{$index + 1}}</td>
+        <td><img ng-src="{{position.avatar}}" height="100"/></td>
         <td>{{position.name}}</td>
         <td>{{position.location}}</td>
         <td>{{position.comment}}</td>
         <td>{{$index + 1}}/{{queue.positions.length}}</td>
-        <td>{{moment(position.createdAt).fromNow()}}</td>
         <td>
           <div data-if="q.positions.$canEdit()">
             <button data-click="queue.positions.remove(position)">X</button>
@@ -65,5 +77,6 @@ Queue: {{queue.name}}
     </tbody>
   </table>
 </div>
+
 </body>
 </html>

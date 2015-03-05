@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-03-03 */
+/*! endev 0.2.0 2015-03-04 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -26,7 +26,7 @@
 	      } else {
 	      	console.log("From cache:")
 	      }
-	      console.log(address);
+	      console.log(func.toString().substring(0,func.toString().indexOf("\n")))
 	      console.log(arguments);
 	      console.log(this);
 	      return cache[address];
@@ -140,7 +140,7 @@
 
 						    if (count == 0) {
 						    	params.forEach( function(param) {
-									scope.$watch(params[param].rhs,execute);
+									scope.$watch(param.rhs,execute);
 								});
 								attrs.$observe("from",execute)
 						    }
@@ -376,89 +376,90 @@
       $rootScope.Date = Date;
       $rootScope.Math = Math;
       $rootScope.$annotation = false;
-      $rootScope.from =  _.memoize(function(path) {
-        var ref = new Firebase("https://endev.firebaseio.com");
-        var sync = $firebase(ref.child(path),{
-          arrayFactory: $FirebaseArray.$extendFactory({
-            findOrNew: _.memoize(function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  result = _.extend(find,init);
-                  result.$new = true;
-                }
-                deferred.resolve(result);
-              });
-              return result;
-            },JSON.stringify),
-            findOrCreate: _.memoize(function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  list.$add(_.extend(find,init)).then(function(ref){
-                    $firebase(ref).$asObject().$loaded().then(function(object){
-		                  _.extend(object,_.pick(init,function(value,key){
-		                    return !object[key] && angular.isArray(value) && value.length === 0;
-		                  }));
-		                  deferred.resolve(object);
-		                });
-                  });
-                }else{
-                  var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
-                  $firebase(ref).$asObject().$loaded().then(function(object){
+			var extendedFactory = {
+	      arrayFactory: $FirebaseArray.$extendFactory({
+	        findOrNew: _.memoize(function(find,init) {
+	          var deferred = $q.defer();
+	          this.$list.$loaded().then(function(list){
+	            var result = _.findWhere(list,find);
+	            if(!result) {
+	              result = _.extend(find,init);
+	              result.$new = true;
+	            }
+	            deferred.resolve(result);
+	          });
+	          return result;
+	        },JSON.stringify),
+	        findOrCreate: _.memoize(function(find,init) {
+	          var deferred = $q.defer();
+	          this.$list.$loaded().then(function(list){
+	            var result = _.findWhere(list,find);
+	            if(!result) {
+	              list.$add(_.extend(find,init)).then(function(ref){
+	                $firebase(ref).$asObject().$loaded().then(function(object){
 	                  _.extend(object,_.pick(init,function(value,key){
 	                    return !object[key] && angular.isArray(value) && value.length === 0;
 	                  }));
 	                  deferred.resolve(object);
 	                });
-                }
-              });
-              return deferred.promise;
-            },JSON.stringify),
-            insert: function(obj) {
-              this.$list.$add(obj);
-            },
-            remove: function(obj) {
-              this.$list.$remove(obj);
-            }
-          }),
-          objectFactory: $FirebaseArray.$extendFactory({
-            findOrNew: function(find,init) {
-              var deferred = $q.defer();
-              this.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  result = _.extend(find,init);
-                  result.$new = true;
-                }
-                deferred.resolve(result);
-              });
-              return result;
-            },
-            findOrCreate: function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  list.$add(_.extend(find,init)).then(function(ref){
-                    deferred.resolve($firebase(ref).$asObject());
-                  });
-                }else{
-                  deferred.resolve(result);
-                }
-              });
-              return deferred.promise;
-            },
-            insert: function(obj) {
-              this.$list.$add(obj);
-            },
-            remove: function(obj) {
-              this.$list.$remove(obj);
-            }
-          })
-        });
+	              });
+	            }else{
+	              var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
+	              $firebase(ref).$asObject().$loaded().then(function(object){
+	                _.extend(object,_.pick(init,function(value,key){
+	                  return !object[key] && angular.isArray(value) && value.length === 0;
+	                }));
+	                deferred.resolve(object);
+	              });
+	            }
+	          });
+	          return deferred.promise;
+	        },JSON.stringify),
+	        insert: function(obj) {
+	          this.$list.$add(obj);
+	        },
+	        remove: function(obj) {
+	          this.$list.$remove(obj);
+	        }
+	      }),
+	      objectFactory: $FirebaseArray.$extendFactory({
+	        findOrNew: function(find,init) {
+	          var deferred = $q.defer();
+	          this.$loaded().then(function(list){
+	            var result = _.findWhere(list,find);
+	            if(!result) {
+	              result = _.extend(find,init);
+	              result.$new = true;
+	            }
+	            deferred.resolve(result);
+	          });
+	          return result;
+	        },
+	        findOrCreate: function(find,init) {
+	          var deferred = $q.defer();
+	          this.$list.$loaded().then(function(list){
+	            var result = _.findWhere(list,find);
+	            if(!result) {
+	              list.$add(_.extend(find,init)).then(function(ref){
+	                deferred.resolve($firebase(ref,extendedFactory).$asObject());
+	              });
+	            }else{
+	              deferred.resolve(result);
+	            }
+	          });
+	          return deferred.promise;
+	        },
+	        insert: function(obj) {
+	          this.$list.$add(obj);
+	        },
+	        remove: function(obj) {
+	          this.$list.$remove(obj);
+	        }
+	      })
+	    }; 
+      $rootScope.from =  _.memoize(function(path) {
+        var ref = new Firebase("https://endev.firebaseio.com");
+        var sync = $firebase(ref.child(path),extendedFactory);
         return sync.$asArray();
         
       });
