@@ -137,23 +137,17 @@
 
               var queryParameters = _.defaults({from:type,where:attrs.where,params:params},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
 							provider.query(queryParameters).then(function(data) {
-                console.log(data);
-							  if (data.query) {
-							    scope[label] = data.query.results;
-							  } else {
-							  	scope[label] = data;
-							  }	
-						      scope.$eval(attrs.success);
+						  	scope[label] = data;
+					      scope.$eval(attrs.success);
 							  scope.$pending = false;
 							  scope.$success = true;
 
 							  if(attrs.log) {
-								log.results = scope[label]
-								$log.info(log);
-							  }
-						    }).
-						    catch(function(data, status, headers, config) {
-						      scope.$eval(attrs.error);
+								  log.results = scope[label]
+								  $log.info(log);
+							   }
+						  }).catch(function(data, status, headers, config) {
+						    scope.$eval(attrs.error);
 							  scope.$pending = false;
 							  scope.$success = false;
 							  scope.$error = data.description;
@@ -162,20 +156,18 @@
 							  	$timeout(execute,delay);
 							  }
 							  if(attrs.log) {
-								log.data = data;
-								$log.error(log);
+  								log.data = data;
+  								$log.error(log);
 							  }
-						      // called asynchronously if an error occurs
-						      // or server returns response with an error status.
-						    });
+						  });
 
-						    if (count == 0) {
-						    	params.forEach( function(param) {
-									scope.$watch(param.rhs,execute);
-								});
-								attrs.$observe("from",execute)
-						    }
-						    count ++;
+					    if (count == 0) {
+					    	params.forEach( function(param) {
+  								scope.$watch(param.rhs,execute);
+  							});
+                attrs.$observe("from",execute)
+					    }
+					    count ++;
 						}else{
 							// scope.$watch(scope.$parent.$pending, function(newValue,oldValue) {
 							// 	if (newValue != oldValue && !newValue) {
@@ -214,7 +206,7 @@
             + encodeURIComponent(query) 
             + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
             .success(function(data){
-              result.resolve(data);
+              result.resolve(data.query.results);
             }).error(function(data){
               result.reject(data);
             });
