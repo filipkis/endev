@@ -46,6 +46,28 @@ module.exports = function(grunt) {
         dest: 'examples/lib/',
       },
     },
+    jasmine: {
+      src: 'src/**/*.js',
+      options: {
+        specs: 'spec/**/*.js',
+        vendor: [
+          "test/lib/*.js",
+        ]
+      }
+    },
+    karma: {
+      options: {
+        configFile: 'conf.js'
+      },
+      dev: {
+        singleRun: false
+      },
+      unit: {
+        singleRun: false,
+        browsers: ['PhantomJS'],
+        background: true
+      }
+    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
@@ -56,6 +78,14 @@ module.exports = function(grunt) {
       }
     },
     watch: {
+      spec: {
+        files: ['src/**/*.js','spec/*.js'],
+        tasks: ['karma:unit:run']
+      },
+      test: {
+        files: ['test/unit_tests.html'],
+        tasks: ['default']
+      },
       scripts: {
         files: 'src/**/*.js',
         tasks: [ 'default' ]
@@ -68,6 +98,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
+  grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-karma');
+
+  grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
   // Default task(s).
   grunt.registerTask('default', ['concat','uglify','copy']);

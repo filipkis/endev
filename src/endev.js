@@ -3,7 +3,7 @@
 //! authors: Filip Kis
 //! license: MIT 
 
-(function (window,document,undefined) {
+(function (window,_,document,undefined) {
 
 	function Endev(){
 
@@ -38,6 +38,26 @@
 	  	return JSON.stringify({this:this,args:arguments});
 	  }; 
 
+
+    this.from = function(args) {
+      if(_.isObject(args)){
+        //multiple from
+        var froms = attrs.from ? _.map(args.from.split(","), function(from){
+          return {
+            source: from.split(" ")[0],
+            label: from.split(" ")[1]
+          }
+        }) : [];
+
+        var params = attrs.where ? _.map(attrs.where.split(OPERATORS_REGEX), function(expr){
+          return new Expr(expr);
+        }) : [];
+
+
+      }
+    }
+
+
 		function Expr(expr) {
 			this.expression = expr;
 			this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
@@ -48,7 +68,14 @@
 			}
 		}
 
-    this.app = angular.module("Endev", ["firebase"]);
+    //checking if angularFire is loaded
+    try{ 
+      angular.module("firebase")
+      this.app = angular.module("Endev", ["firebase"]);  
+    } catch(err) {
+      this.app = angular.module("Endev",[]);
+    }
+    
     var $injector = angular.injector(["ng","Endev"]);
 
 
@@ -62,6 +89,8 @@
 				}
 			}
 		}]);
+
+		
 
 		this.app.directive("data", ['$rootScope','$http','$injector','$interval','$timeout','$log','$interpolate', function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate) {
 			return {
@@ -83,8 +112,8 @@
 						if (!scope.$parent.$pending) {
 
 							var from = $interpolate(attrs.from,false,null,true)(scope)
-							var provider = attrs.provider ? $injector.get(attrs.provider) :
-								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endev-rest") : $injector.get('$yql');
+							var provider = attrs.provider ? $injector.get('$endev' + attrs.provider[0].toUpperCase() + attrs.provider.slice(1)) :
+								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endevRest") : $injector.get('$endevYql');
 							var label = attrs.from.split(" ")[1];
 							var params = [];
 							if (attrs.where) {
@@ -105,7 +134,8 @@
 								log.query.where = attrs.where;
 							}
 
-							provider.query(scope,from,attrs.where,params,attrs).success(function(data) {
+							provider.query(scope,from,attrs.where,params,attrs).then(function(data) {
+                console.log(data);
 							  if (data.query) {
 							    scope[label] = data.query.results;
 							  } else {
@@ -120,7 +150,7 @@
 								$log.info(log);
 							  }
 						    }).
-						    error(function(data, status, headers, config) {
+						    catch(function(data, status, headers, config) {
 						      scope.$eval(attrs.error);
 							  scope.$pending = false;
 							  scope.$success = false;
@@ -166,7 +196,9 @@
 			}
 		}]);
 
-		this.app.service("$yql", ['$http', function($http){ 
+
+
+		this.app.service("$endevYql", ['$http','$q', function($http,$q){ 
 			return {
 				query: function($scope,from,where,params,attrs) {
 					var pWhere = where;
@@ -183,12 +215,21 @@
 						var filteredWhere = "";
 					}
 					var query = "select * from " + type + " where " + filteredWhere;
-					return $http.get("https://query.yahooapis.com/v1/public/yql?q=" + encodeURIComponent(query) + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json");
+          var result = $q.defer()
+          $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
+            + encodeURIComponent(query) 
+            + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
+            .success(function(data){
+              result.resolve(data);
+            }).error(function(data){
+              result.reject(data);
+            });
+					return result.promise
 				}
 			}
 		}]);
 
-		this.app.service("$endev-rest", ['$http','$interpolate', function($http,$interpolate){ 
+		this.app.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){ 
 			return {
 				query: function($scope,from,where,params,attrs) {
 					var pWhere = "";
@@ -221,7 +262,14 @@
 					} else {
 						url = url + "?" + filteredWhere;
 					}
-					return $http.get(url, config);
+          var result = $q.defer()
+					$http.get(url, config)
+            .success(function(data){
+              result.resolve(data);
+            }).error(function(data){
+              result.reject(data);
+            });
+          return result.promise;
 				}
 			}
 		}]);
@@ -371,171 +419,192 @@
       }
     }]);
 
-  	this.app.run(["$rootScope","$FirebaseArray","$FirebaseObject","$firebase","$q",function($rootScope,$FirebaseArray,$FirebaseObject,$firebase,$q) {
+
+    //The basic run
+    this.app.run(["$rootScope",function($rootScope){
       $rootScope.Date = Date;
       $rootScope.Math = Math;
       $rootScope.$annotation = false;
-      $rootScope.from =  _.memoize(function(path) {
-        var ref = new Firebase("https://endev.firebaseio.com");
-        var sync = $firebase(ref.child(path),{
-          arrayFactory: $FirebaseArray.$extendFactory({
-            findOrNew: _.memoize(function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  result = _.extend(find,init);
-                  result.$new = true;
-                }
-                deferred.resolve(result);
-              });
-              return result;
-            },JSON.stringify),
-            findOrCreate: _.memoize(function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  list.$add(_.extend(find,init)).then(function(ref){
-                    $firebase(ref).$asObject().$loaded().then(function(object){
-		                  _.extend(object,_.pick(init,function(value,key){
-		                    return !object[key] && angular.isArray(value) && value.length === 0;
-		                  }));
-		                  deferred.resolve(object);
-		                });
-                  });
-                }else{
-                  var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
-                  $firebase(ref).$asObject().$loaded().then(function(object){
-	                  _.extend(object,_.pick(init,function(value,key){
-	                    return !object[key] && angular.isArray(value) && value.length === 0;
-	                  }));
-	                  deferred.resolve(object);
-	                });
-                }
-              });
-              return deferred.promise;
-            },JSON.stringify),
-            insert: function(obj) {
-              this.$list.$add(obj);
-            },
-            remove: function(obj) {
-              this.$list.$remove(obj);
-            }
-          }),
-          objectFactory: $FirebaseArray.$extendFactory({
-            findOrNew: function(find,init) {
-              var deferred = $q.defer();
-              this.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  result = _.extend(find,init);
-                  result.$new = true;
-                }
-                deferred.resolve(result);
-              });
-              return result;
-            },
-            findOrCreate: function(find,init) {
-              var deferred = $q.defer();
-              this.$list.$loaded().then(function(list){
-                var result = _.findWhere(list,find);
-                if(!result) {
-                  list.$add(_.extend(find,init)).then(function(ref){
-                    deferred.resolve($firebase(ref).$asObject());
-                  });
-                }else{
-                  deferred.resolve(result);
-                }
-              });
-              return deferred.promise;
-            },
-            insert: function(obj) {
-              this.$list.$add(obj);
-            },
-            remove: function(obj) {
-              this.$list.$remove(obj);
-            }
-          })
-        });
-        return sync.$asArray();
-        
-      });
-
-
-      Array.prototype.findOrNew = _.memoize(function(find,init){    	
-        var result = _.findWhere(this,find);
-        if(!result) {
-          result = _.extend(find,init)
-          result.$new = true;
-        }
-        return result;
-      },hasherWithThis);
-
-      Array.prototype.findOrCreate = _.memoize(function(find,init){
-        var result = _.findWhere(this,find);
-        if(!result) {
-          result = _.extend(find,init)
-          this.push(result);
-        }
-        return result;
-      },hasherWithThis);
-
-      Array.prototype.insert = function(obj) {
-        obj['$new'] = undefined;
-        obj['$deleted'] = undefined;
-        obj['createdAt'] = new Date().getTime();
-        this.push(obj);
-      }
-
-      Array.prototype.remove = function(obj) {
-        this.splice(this.indexOf(obj),1);
-        obj['$new'] = true;
-        obj['$deleted'] = true;
-      }
-
-      if(this.document.getElementById('__endev_helper__')){
-	      var style = this.document.createElement('style');
-	      style.innerHTML = "  .__endev_annotated__ {" +
-					"    outline: 1px solid rgba(255,0,0,0.5);" +
-					"    border: 1px solid rgba(255,0,0,0.5);" +
-					"    padding-top: 15px;" +
-					"    margin-top:5px;" +
-					"  }" +
-					"  .__endev_annotation__ {" +
-					"    display: none;" +
-					"  }" +
-					"  .__endev_annotated__ > .__endev_annotation__ {" +
-					"    display: block;" +
-					"    position: absolute;" +
-					"    margin-top: -17px;" +
-					"    font-size: 10px;" +
-					"    font-family: monospace;" +
-					"    background: rgba(255,255,125,0.5);" +
-					"    color: #666;" +
-					"    padding: 1px 3px;" +
-					"    border: 1px dashed rgba(255,0,0,0.5);" +
-					"    margin-left: 5px;" +
-					"    cursor: pointer;" +
-					"  }" +
-					"  .__endev_annotated__ > .__endev_annotation__:hover {" +
-					"    background: rgba(255,255,125,0.9);" +
-					"  }" +
-					"  .__endev_annotated__ > .__endev_list_item_annotated__ {" +
-					"    outline: 1px dashed rgba(255,0,0,0.5);" +
-					"  }" +
-					"  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  {" +
-					"    /*border: 1px solid red;*/" +
-					"    padding-top: 10px;" +
-					"    margin-top: 10px;" +
-					"  }" +
-					"  table .__endev_annotated__ > .__endev_annotation__ {" +
-					"    margin-top: -1px;" +
-					"  }";
-				this.document.head.appendChild(style);
-			}
-
     }]);
+
+    //Firebase dependent features
+    if ($injector.has('$firebase')) {
+      
+      this.app.service("$endevFirebase",['$http','$firebase','$window', function($http,$firebase,$window){
+        return {
+          query: function($scope,from,where,params,attrs) {
+            var ref = new $window.Firebase("https://endev.firebaseio.com");
+
+            var type = from.split(" ")[0];
+            type = type.replace(".","/");
+
+            return $firebase(ref.child(type)).$asArray().$loaded();
+          }
+        }
+      }]);
+      
+      this.app.run(["$rootScope","$FirebaseArray","$FirebaseObject","$firebase","$q",function($rootScope,$FirebaseArray,$FirebaseObject,$firebase,$q) {
+        $rootScope.from =  _.memoize(function(path) {
+          var ref = new Firebase("https://endev.firebaseio.com");
+          var sync = $firebase(ref.child(path),{
+            arrayFactory: $FirebaseArray.$extendFactory({
+              findOrNew: _.memoize(function(find,init) {
+                var deferred = $q.defer();
+                this.$list.$loaded().then(function(list){
+                  var result = _.findWhere(list,find);
+                  if(!result) {
+                    result = _.extend(find,init);
+                    result.$new = true;
+                  }
+                  deferred.resolve(result);
+                });
+                return result;
+              },JSON.stringify),
+              findOrCreate: _.memoize(function(find,init) {
+                var deferred = $q.defer();
+                this.$list.$loaded().then(function(list){
+                  var result = _.findWhere(list,find);
+                  if(!result) {
+                    list.$add(_.extend(find,init)).then(function(ref){
+                      $firebase(ref).$asObject().$loaded().then(function(object){
+                        _.extend(object,_.pick(init,function(value,key){
+                          return !object[key] && angular.isArray(value) && value.length === 0;
+                        }));
+                        deferred.resolve(object);
+                      });
+                    });
+                  }else{
+                    var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
+                    $firebase(ref).$asObject().$loaded().then(function(object){
+                      _.extend(object,_.pick(init,function(value,key){
+                        return !object[key] && angular.isArray(value) && value.length === 0;
+                      }));
+                      deferred.resolve(object);
+                    });
+                  }
+                });
+                return deferred.promise;
+              },JSON.stringify),
+              insert: function(obj) {
+                this.$list.$add(obj);
+              },
+              remove: function(obj) {
+                this.$list.$remove(obj);
+              }
+            }),
+            objectFactory: $FirebaseArray.$extendFactory({
+              findOrNew: function(find,init) {
+                var deferred = $q.defer();
+                this.$loaded().then(function(list){
+                  var result = _.findWhere(list,find);
+                  if(!result) {
+                    result = _.extend(find,init);
+                    result.$new = true;
+                  }
+                  deferred.resolve(result);
+                });
+                return result;
+              },
+              findOrCreate: function(find,init) {
+                var deferred = $q.defer();
+                this.$list.$loaded().then(function(list){
+                  var result = _.findWhere(list,find);
+                  if(!result) {
+                    list.$add(_.extend(find,init)).then(function(ref){
+                      deferred.resolve($firebase(ref).$asObject());
+                    });
+                  }else{
+                    deferred.resolve(result);
+                  }
+                });
+                return deferred.promise;
+              },
+              insert: function(obj) {
+                this.$list.$add(obj);
+              },
+              remove: function(obj) {
+                this.$list.$remove(obj);
+              }
+            })
+          });
+          return sync.$asArray();
+          
+        });
+
+        Array.prototype.findOrNew = _.memoize(function(find,init){    	
+          var result = _.findWhere(this,find);
+          if(!result) {
+            result = _.extend(find,init)
+            result.$new = true;
+          }
+          return result;
+        },hasherWithThis);
+
+        Array.prototype.findOrCreate = _.memoize(function(find,init){
+          var result = _.findWhere(this,find);
+          if(!result) {
+            result = _.extend(find,init)
+            this.push(result);
+          }
+          return result;
+        },hasherWithThis);
+
+        Array.prototype.insert = function(obj) {
+          obj['$new'] = undefined;
+          obj['$deleted'] = undefined;
+          obj['createdAt'] = new Date().getTime();
+          this.push(obj);
+        }
+
+        Array.prototype.remove = function(obj) {
+          this.splice(this.indexOf(obj),1);
+          obj['$new'] = true;
+          obj['$deleted'] = true;
+        }
+
+        if(this.document.getElementById('__endev_helper__')){
+  	      var style = this.document.createElement('style');
+  	      style.innerHTML = "  .__endev_annotated__ {" +
+  					"    outline: 1px solid rgba(255,0,0,0.5);" +
+  					"    border: 1px solid rgba(255,0,0,0.5);" +
+  					"    padding-top: 15px;" +
+  					"    margin-top:5px;" +
+  					"  }" +
+  					"  .__endev_annotation__ {" +
+  					"    display: none;" +
+  					"  }" +
+  					"  .__endev_annotated__ > .__endev_annotation__ {" +
+  					"    display: block;" +
+  					"    position: absolute;" +
+  					"    margin-top: -17px;" +
+  					"    font-size: 10px;" +
+  					"    font-family: monospace;" +
+  					"    background: rgba(255,255,125,0.5);" +
+  					"    color: #666;" +
+  					"    padding: 1px 3px;" +
+  					"    border: 1px dashed rgba(255,0,0,0.5);" +
+  					"    margin-left: 5px;" +
+  					"    cursor: pointer;" +
+  					"  }" +
+  					"  .__endev_annotated__ > .__endev_annotation__:hover {" +
+  					"    background: rgba(255,255,125,0.9);" +
+  					"  }" +
+  					"  .__endev_annotated__ > .__endev_list_item_annotated__ {" +
+  					"    outline: 1px dashed rgba(255,0,0,0.5);" +
+  					"  }" +
+  					"  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  {" +
+  					"    /*border: 1px solid red;*/" +
+  					"    padding-top: 10px;" +
+  					"    margin-top: 10px;" +
+  					"  }" +
+  					"  table .__endev_annotated__ > .__endev_annotation__ {" +
+  					"    margin-top: -1px;" +
+  					"  }";
+  				this.document.head.appendChild(style);
+  			}
+
+      }]);
+    }
 	}
 
 	function EndevLog() {
@@ -548,7 +617,7 @@
 	
 	endev = window.endev = new Endev();
 
-}(window || this));
+}(window || this,_));
 
 angular.element(document).ready(function() {
 	angular.bootstrap(document, ['Endev']);
