@@ -64,7 +64,7 @@
 			this.rhs = expr.split(COMPARISON_REGEX)[1].trim();
 			this.operator = COMPARISON_REGEX.exec(expr);
 			this.replace = function(value) {
-				return this.lhs + this.operator + value;
+				return (this.attribute || this.lhs) + this.operator + value;
 			}
 		}
 
@@ -111,30 +111,32 @@
 
 						if (!scope.$parent.$pending) {
 
-							var from = $interpolate(attrs.from,false,null,true)(scope)
-							var provider = attrs.provider ? $injector.get('$endev' + attrs.provider[0].toUpperCase() + attrs.provider.slice(1)) :
-								from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endevRest") : $injector.get('$endevYql');
-							var label = attrs.from.split(" ")[1];
-							var params = [];
-							if (attrs.where) {
-								params = attrs.where.split(OPERATORS_REGEX).map( function(expr) {
-									return new Expr(expr);
-								});
-							}
+              var from = $interpolate(attrs.from,false,null,true)(scope)
+              var type = from.split(" ")[0];
+              var provider = attrs.provider ? $injector.get('$endev' + attrs.provider[0].toUpperCase() + attrs.provider.slice(1)) :
+                from.search(/http(s)?:\/\//) == 0 ? $injector.get("$endevRest") : $injector.get('$endevYql');
+              var label = attrs.from.split(" ")[1];
+              var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
+                  var exp = new Expr(expr);
+                  exp.value = scope.$eval(exp.rhs);
+                  exp.attribute = exp.lhs.replace(new RegExp("^" + label + ".", "g"),"");
+                  return exp;
+                }) : [];
 
-							scope.$eval(attrs.pending); 
-							scope.$pending = true;
-							scope.$error = null;
-							scope.$success = false;
+              scope.$eval(attrs.pending); 
+              scope.$pending = true;
+              scope.$error = null;
+              scope.$success = false;
 
-							if(attrs.log) {
-								var log = new EndevLog();
-								log.query = new EndevQuery();
-								log.query.from = from;
-								log.query.where = attrs.where;
-							}
+              if(attrs.log) {
+                var log = new EndevLog();
+                log.query = new EndevQuery();
+                log.query.from = from;
+                log.query.where = attrs.where;
+              }
 
-							provider.query(scope,from,attrs.where,params,attrs).then(function(data) {
+              var queryParameters = _.defaults({from:type,where:attrs.where,params:params},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
+							provider.query(queryParameters).then(function(data) {
                 console.log(data);
 							  if (data.query) {
 							    scope[label] = data.query.results;
@@ -200,21 +202,13 @@
 
 		this.app.service("$endevYql", ['$http','$q', function($http,$q){ 
 			return {
-				query: function($scope,from,where,params,attrs) {
-					var pWhere = where;
-					for(var i = 0; i<params.length; i++) {
-						var value = $scope.$eval(params[i].rhs);
-						pWhere = pWhere.replace(params[i].expression, params[i].replace("'" + value + "'"));
+				query: function(attrs) {
+					var where = "";
+					for(var i = 0; i<attrs.params.length; i++) {
+						where = attrs.where.replace(attrs.params[i].expression, attrs.params[i].replace("'" + attrs.params[i].value + "'"));
 					}
-					var type = from.split(" ")[0];
-					var label = from.split(" ")[1];
-					var patt = new RegExp(label + ".", "g");
-					if (pWhere) {
-						var filteredWhere = pWhere.replace(patt,"");
-					} else {
-						var filteredWhere = "";
-					}
-					var query = "select * from " + type + " where " + filteredWhere;
+					
+					var query = "select * from " + attrs.from + " where " + where;
           var result = $q.defer()
           $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
             + encodeURIComponent(query) 
@@ -229,38 +223,40 @@
 			}
 		}]);
 
+    function prependTransform(defaults, transform) {
+      // We can't guarantee that the transform transformation is an array
+      transform = angular.isArray(transform) ? transform : [transform];
+      // Append the new transformation to the defaults
+      return transform.concat(defaults);
+    }
+
 		this.app.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){ 
 			return {
-				query: function($scope,from,where,params,attrs) {
-					var pWhere = "";
-					for(var i = 0; i<params.length; i++) {
-						var value = $scope.$eval(params[i].rhs);
-						pWhere += params[i].lhs + "=" + encodeURIComponent(value);
-						if(i < params.length-1) {
-							pWhere += "&";
+				query: function(attrs) {
+					var where = "";
+					for(var i = 0; i<attrs.params.length; i++) {
+						where += attrs.params[i].attribute + "=" + encodeURIComponent(attrs.params[i].value);
+						if(i < attrs.params.length-1) {
+							where += "&";
 						}
 					}
-					var type = from.split(" ")[0];
-					var label = from.split(" ")[1]; 
-					var patt = new RegExp(label + ".", "g");
-					var filteredWhere = pWhere.replace(patt,"");
-					var headers = $scope.$eval(attrs.headers)
 					var config = {
-						headers: headers,
-						transformResponse: function(data, headersGetter) {
+						headers: angular.isString(attrs.headers) ? angular.fromJson(attrs.headers) : 
+              angular.isObject(attrs.headers) ? attrs.headers : undefined,
+						transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
 							if (headersGetter()['content-type']=="application/atom+xml") {
 								var x2js = new X2JS();
 								return x2js.xml_str2json(data);
 							} else {
-								return $scope.$eval(data);
+								return data;
 							}
-						}
+						})
 					}
-					var url = type
+					var url = attrs.from
 					if (url.indexOf('?') != -1) {
-						url = url + "&" + filteredWhere;
+						url = url + "&" + where;
 					} else {
-						url = url + "?" + filteredWhere;
+						url = url + "?" + where;
 					}
           var result = $q.defer()
 					$http.get(url, config)
