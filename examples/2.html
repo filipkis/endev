@@ -12,6 +12,11 @@
 <script src="lib/endev.js"></script>
 </head>
 <body>
+<div id="__endev_helper__">
+  Endev Tools:
+  <button ng-click="$annotation = !$annotation">Annotations {{$annotation ? 'off' : 'on'}}</button>
+</div>
+
 <input data-value="newQueueName"/>
 <input data-value="name"/>
 <button data-insert-into="Queues" data-provider="firebase" data-click="insert({name: newQueueName})">Add new queue</button>

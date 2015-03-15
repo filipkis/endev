@@ -3,6 +3,7 @@
 <head>
 	<title>EndevJS GreenButton API Demo</title>
 	<script src="lib/angular/angular.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore.js"></script>
 	<script src="lib/endev.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
 </head>
@@ -13,7 +14,7 @@ Search:
 <input ng-model="query" placeholder="Enter your place...">
 
 <input type="button" value="Hello" class="btn btn-default">
-<!-- <data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
+<data from="https://services.greenbuttondata.org:443/DataCustodian/espi/1_1/resource/MeterReading/1 mr" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
 	{{mr.entry.title.toString()}}
 	<div ng-repeat="l in mr.entry.link | filter:'IntervalBlock'">
 		<data from="{{l._href}}/1 ib" headers="{Authorization:'Bearer 688b026c-665f-4994-9139-6b21b13fbeee'}" log="true">
@@ -26,11 +27,11 @@ Search:
 		</data>
 	</div>
 	</div>
-</data> -->
-
-<data from="https://energimolnetv2.apiary-mock.com/api/2.0/users/53294e5ae9cada3306001735 user" headers="{Authorization: 'OAuth 2f9bf2cccd808358e6850e41c5a765ed'}" log="true">
-	{{user.data.name}}
 </data>
+
+<!-- <data from="https://energimolnetv2.apiary-mock.com/api/2.0/users/53294e5ae9cada3306001735 user" headers="{Authorization: 'OAuth 2f9bf2cccd808358e6850e41c5a765ed'}" log="true">
+	{{user.data.name}}
+</data> -->
 
 </body>
 </html>

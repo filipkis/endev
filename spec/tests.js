@@ -17,7 +17,7 @@ describe('Testing data directive', function() {
     $timeout = _$timeout_;
 
     geoPlacesHandler = $httpBackend.when('GET', 'https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20geo.places%20where%20text%3D\'Stockholm\'&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json').respond(200,{query: { results: "Geo result"}});
-    restHandler = $httpBackend.when('GET', 'http://fake.rest.com?id=1&page=10').respond(200,'{result: "Rest result"}');
+    restHandler = $httpBackend.when('GET', 'http://fake.rest.com?id=1&page=10').respond(200,{result: "Rest result"});
 
   }));
 

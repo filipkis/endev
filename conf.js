@@ -23,6 +23,7 @@ module.exports = function(config) {
       // 'spec/lib/mockfirebase.module.js',
       'spec/lib/angularfire.min.js',
       'spec/*.js',
+      'tmp/templates.js',
       'src/**/*.js'
     ],
 

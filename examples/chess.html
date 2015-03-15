@@ -7,13 +7,8 @@
 		<script src="https://cdn.firebase.com/js/client/2.1.2/firebase.js"></script>
 		<script src="https://cdn.firebase.com/libs/angularfire/0.9.2/angularfire.min.js"></script>
 		<script src="lib/endev.js"></script>
-		<script src="lib/chess.js"></script>
+		<script src="lib/chess.js"></script>0
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
-		<script type="text/javascript">
-			endev.app.controller("ChessCtrl", function($scope) {
-				$scope.chess = new Chess()
-			})
-		</script>
 		<style>
 			.chess-column {
 				float: left;
@@ -44,7 +39,7 @@
 			}
 		</style>
 	</head>
-	<body class="container" ng-controller="ChessCtrl" import="chess">
+	<body class="container" import="Chess">
 	<!-- <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move)">
 		
 		<div ng-repeat="c in ['a','b','c','d','e','f','g','h']" class="chess-column">
@@ -56,8 +51,9 @@
 		</div> -->
 		<h1>Endev.js Chess Demo</h1>
 
-		<div data-object="savedMoves = from('chess').findOrCreate('').$$testingMap(chess.move)">
-		Move (in <a href="http://en.wikipedia.org/wiki/Algebraic_notation_%28chess%29">SAN</a>): <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move); savedMoves.fen = chess.fen()" >
+		<div endev data-from="chess game" data-select="logic = Chess(game.fen)" data-update="game.fen = logic.fen()">
+		<!-- <div data-object="savedMoves = from('chess').findOrCreate('').$$testingMap(chess.move)"> -->
+		Move (in <a href="http://en.wikipedia.org/wiki/Algebraic_notation_%28chess%29">SAN</a>): <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move); game.update()" >
 		
 		<div ng-repeat="c in ['a','b','c','d','e','f','g','h']" class="chess-column">
 			<!-- Square -->
@@ -66,6 +62,6 @@
 				<span drop-class="square" data-on-drop="chess.move({from: c+r, to:target.c + target.r})" class="figure {{chess.get(c + r).color}}" draggable="true">{{chess.get(c + r).type}}</span>
 			</div>
 		</div>
-		</div>
+		<!-- </div> -->
 	</body>
 </html>

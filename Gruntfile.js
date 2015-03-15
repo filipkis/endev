@@ -32,9 +32,10 @@ module.exports = function(grunt) {
     concat: {
       dist: {
         options: {
+          sourceMap: true,
           banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
         },
-        src: ["src/<%= pkg.name %>.js", "src/xml2json.js"],
+        src: ["tmp/templates.js","src/<%= pkg.name %>.js", "src/xml2json.js"],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -44,6 +45,16 @@ module.exports = function(grunt) {
         cwd: 'dist/',
         src: '**',
         dest: 'examples/lib/',
+      },
+    },
+    html2js: {
+      options: {
+        module: "endev-templates",
+        base: "src/templates"
+      },
+      main: {
+        src: ['src/**/*.tpl.html'],
+        dest: 'tmp/templates.js'
       },
     },
     jasmine: {
@@ -70,6 +81,7 @@ module.exports = function(grunt) {
     },
     uglify: {
       options: {
+        sourceMap: true,
         banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
       build: {
@@ -78,16 +90,16 @@ module.exports = function(grunt) {
       }
     },
     watch: {
+      templates: {
+        files: ['src/**/*.tpl.html'],
+        tasks: ['default']
+      },
       spec: {
         files: ['src/**/*.js','spec/*.js'],
         tasks: ['karma:unit:run']
       },
-      test: {
-        files: ['test/unit_tests.html'],
-        tasks: ['default']
-      },
       scripts: {
-        files: 'src/**/*.js',
+        files: ['src/**/*.js'],
         tasks: [ 'default' ]
       },
     }
@@ -101,10 +113,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-notify');
   grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-html2js');
 
   grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
   // Default task(s).
-  grunt.registerTask('default', ['concat','uglify','copy']);
+  grunt.registerTask('default', ['html2js','concat','uglify','copy']);
 
 };
