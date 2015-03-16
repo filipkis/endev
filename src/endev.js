@@ -356,6 +356,40 @@
       }]);
     },this);
 
+    this.app.directive("new",['$compile',function($compile){
+      return {
+        terminal: true,
+        priority: 1000,
+        compile: function(element, attrs) {
+          element.attr("ng-if", "$isDefault");
+          element.removeAttr("data-new");
+          return {
+            pre: function preLink(scope, iElement, iAttrs, controller) {  },
+            post: function postLink(scope, iElement, iAttrs, controller) {  
+              $compile(iElement)(scope);
+            }
+          };
+        }
+      }
+    }]);
+
+    this.app.directive("edit",['$compile',function($compile){
+      return {
+        terminal: true,
+        priority: 1000,
+        compile: function(element, attrs) {
+          element.attr("ng-if", "!$isDefault");
+          element.removeAttr("data-edit");
+          return {
+            pre: function preLink(scope, iElement, iAttrs, controller) {  },
+            post: function postLink(scope, iElement, iAttrs, controller) {  
+              $compile(iElement)(scope);
+            }
+          };
+        }
+      }
+    }]);
+
     this.app.directive("value",['$compile',function($compile){
       return {
         priority: 1000, 
@@ -509,12 +543,14 @@
           // annotation: "=endevAnnotation",
           // data: "=endevAnnotationData"
         },
-        template: "<span class='__endev_annotation__' ng-if='$annotation'>{{annotation}}</span>" +
-                  "<div>{{formatedData}}</div>",
         link: function (scope,element,attrs) {
-          scope.$watch("data",function(value){
-            scope["formatedData"] = angular.toJson(value,true);
+          scope.$on("$endevData_" + attrs.endevAnnotation,function(event,data){
+            element.append(angular.toJson(data,true));
+            event.stopPropagation();
           })
+          // scope.$watch("data",function(value){
+          //   scope["formatedData"] = angular.toJson(value,true);
+          // })
         }
       }
     }]);
@@ -582,7 +618,7 @@
             tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
             tAttributes.$set("endev-item",tAttributes.from)
             var container
-            getRoot(tElement).wrap("<span class='__endev_annotated__'></span>").parent().prepend("<span class='__endev_annotation__'>" + annotation + "</span>");
+            getRoot(tElement).wrap("<span class='__endev_annotated__'></span>").parent().prepend("<span endev-annotation='" + label + "' class='__endev_annotation__'>" + annotation + "</span>");
             // tElement.parent().prepend("<span></span>")
 
           }
@@ -637,22 +673,27 @@
 
                 var unbind;
 
-                var callback = function(data,dataToBind) {
+                var callback = function(data) {
                   // if(!_.isEqual(scope["_data_"],data))
                   if(unbind) unbind();
-                  if(!(_.keys(data).length >3) && attrs.default){
+                  if(!(data.length >0) && attrs.default){
+                  // if(!(_.keys(data).length >3) && attrs.default){
                     var def = scope.$eval(attrs.default);
-                    data['default'] = scope.$eval(attrs.default);
+                    data.push(def);
+                    // data['default'] = def;
                     scope['$isDefault'] = true;
                   } else {
                     scope['$isDefault'] = false;
                   }
                   scope["$endevData_" + label] = data;
-                  if(dataToBind) {
-                    dataToBind.$bindTo(scope,"$endevDataFull_" + label).then(function(unb){
-                      unbind = unb;
-                    });
+                  if(scope["$endevAnnotation"]){
+                    scope.$emit("$endevData_" + label, data);
                   }
+                  // if(dataToBind) {
+                  //   dataToBind.$bindTo(scope,"$endevDataFull_" + label).then(function(unb){
+                  //     unbind = unb;
+                  //   });
+                  // }
                   // }
                 };
 
@@ -682,6 +723,11 @@
                 
               }
             }
+          }
+        },
+        controller: function($scope, $element, $attrs){
+          $scope.count = function(object){
+            return _.size(object);
           }
         }
       }
@@ -778,13 +824,6 @@
       $rootScope.Date = Date;
       $rootScope.Math = Math;
       $rootScope.$endevAnnotation = false;
-      // $rootScope.$watch("$endevAnnotation",function(value){
-      //   if(value){
-      //     angular.element($document[0].body).addClass("__endev_annotated__");
-      //   }else{
-      //     angular.element($document[0].body).removeClass("__endev_annotated__");
-      //   }
-      // })
       angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
       angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
     }]);
@@ -797,8 +836,9 @@
         
         function getObjectRef(type,parentLabel,parentObject,parentData){
           if(parentData){
-            path = parentLabel ? _.findKey(parentData,function(value){return value == parentObject}) 
-              + "/" + type.substring(parentLabel.length + 1) :  _.findKey(parentData,function(value){return value == parentObject}) ;
+            // var key = _.findKey(parentData,function(value){return value == parentObject}) 
+            var key = _.find(parentData,function(value){return value == parentObject}).$id 
+            path = parentLabel ? key + "/" + type.substring(parentLabel.length + 1) : key ;
             console.log("Path with parent:",path);
             return objectRef(parentData.$ref,path);
           } else {
@@ -827,10 +867,15 @@
         };
 
         function filterData(data,filter){
-          var results = {$endevProviderType:"firebase",$ref:data.$ref()};
+          var results = []
+          // var results = {}
+          results.$endevProviderType = "firebase";
+          results.$ref = data.$ref()
           _.each(data,function(value, key){
-            if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
-              results[key] = value;
+            // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
+            if(_.isMatchDeep(value,filter)){
+              // results[key] = value;
+              results.push(value);
             }
           });
           return results;
@@ -844,7 +889,7 @@
             if(unwatchCache(callback).unwatch) unwatchCache(callback).unwatch();
             var objRef = getObjectRef(attrs.from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
             // TODO  need to add a watcher for the result and then update the value somehow
-            $firebaseObject(objRef).$loaded().then(function(data){
+            $firebaseArray(objRef).$loaded().then(function(data){
 
               console.log("Data:",data)
               var object = filterData(data,attrs.filter);
@@ -879,8 +924,8 @@
             console.log("Removing:",attrs.newObject);
             var objRef = getObjectRef(attrs.removeFrom,attrs.parentLabel,attrs.parentObject,attrs.parentData);
             $firebaseObject(objRef).$loaded().then(function(object){
-              var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
-              $firebaseObject(object.$ref().child(key)).$remove();
+              // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
+              $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
             })
 
           },
