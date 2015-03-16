@@ -159,6 +159,7 @@
 
 		this.app.directive("data", ['$rootScope','$http','$injector','$interval','$timeout','$log','$interpolate', function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate) {
 			return {
+        priority: 1001,
 				restrict:'E',
 				scope:true,
 				link: function (scope,element,attrs) {
@@ -259,23 +260,32 @@
 
 		this.app.service("$endevYql", ['$http','$q', function($http,$q){ 
 			return {
-				query: function(attrs) {
-					var where = "";
-					for(var i = 0; i<attrs.params.length; i++) {
-						where = attrs.where.replace(attrs.params[i].expression, attrs.params[i].replace("'" + attrs.params[i].value + "'"));
-					}
-					
-					var query = "select * from " + attrs.from + " where " + where;
+				query: function(attrs,extra,callback) {
           var result = $q.defer()
-          $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
-            + encodeURIComponent(query) 
-            + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
-            .success(function(data){
-              result.resolve(data.query.results);
-            }).error(function(data){
-              result.reject(data);
-            });
-					return result.promise
+          if(attrs.parentLabel){
+            var tmp = _.reduce(attrs.from.substring(attrs.parentLabel.length+1).split("."),function(memo,id){
+              console.log("Loging path:",memo,id);
+              return memo[id]
+            },attrs.parentData)
+            if(callback && angular.isFunction(callback)) callback(tmp)
+            else result.resolve(tmp);
+          }else{
+            var where = attrs.where;
+            for(var i = 0; i<attrs.params.length; i++) {
+              where = where.replace(attrs.params[i].expression, attrs.params[i].replace("'" + attrs.params[i].value + "'"));
+            }
+            
+            var query = "select * from " + attrs.from + " where " + where;
+            $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
+              + encodeURIComponent(query) 
+              + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
+              .success(function(data){
+                result.resolve(data.query.results);
+              }).error(function(data){
+                result.reject(data);
+              });
+          }
+  				return result.promise
 				}
 			}
 		}]);
@@ -509,7 +519,45 @@
       }
     }]);
 
-    this.app.directive("fromE",['$interpolate','$endevProvider','$compile','$q', function($interpolate,$endevProvider,$compile,$q){
+    this.app.directive("endevItem",["$endevProvider","$interpolate",function($endevProvider,$interpolate){
+      return {
+        // require: "^from",
+        link: function(scope,element,attrs,fromCtrl){
+          var attrFrom = attrs.endevItem;
+          var label = attrs.endevItem.split(" ")[1];
+          var from = $interpolate(attrFrom,false,null,true)(scope);
+          var type = from.split(" ")[0];
+          var provider;
+          var parent = null;
+          if(attrs.provider) {
+            provider = $endevProvider.get(attrs.provider,attrFrom);
+          } else {
+            var pathRoot = from.match(PAHT_ROOT_REGEX);
+            if(pathRoot){
+              provider = scope["$endevProvider_" + pathRoot[0]];
+              if(!provider) {
+                throw new Error("No self or parent provider found for:",attrFrom);
+              }
+              parent = pathRoot[0];
+            }
+          }
+          if(attrs.autoUpdate){
+            scope.$watch(label,function(value){
+              if(value && provider.bind && !value['default']){
+                var queryParameters = {from:type,scope:scope,label:label};
+
+                queryParameters.parentObject = value;
+                queryParameters.parentData = scope["$endevData_" + label];
+
+                provider.bind(queryParameters);
+              }
+            });
+          }
+        }
+      }
+    }]);
+
+    this.app.directive("from",['$interpolate','$endevProvider','$compile','$q', function($interpolate,$endevProvider,$compile,$q){
       function getRoot(element) {
         if(element[0].tagName === 'OPTION') {
           return element.parent();
@@ -519,24 +567,27 @@
 
       return {
         // terminal: true,
-        priority: 10000,
+        priority: 1000,
         restrict: 'A',
         scope: true,
         compile: function(tElement,tAttributes) {
           if(tElement[0].tagName !== 'DATA') {
-            var attrFrom = tAttributes.fromE;
-            var label = tAttributes.fromE.split(" ")[1];
-            var annotation = "FROM " + tAttributes.fromE;
+            var attrFrom = tAttributes.from;
+            var label = tAttributes.from.split(" ")[1];
+            var annotation = "FROM " + tAttributes.from;
             if (tAttributes.where) annotation += " WHERE " + tAttributes.where
             // tElement.parent().prepend("<span class='__endev_annotation__' ng-if='$annotation'>" + annotation + "</span>");
             // tElement.parent().prepend("<span endev-annotation='" + annotation + "' endev-annotation-data='endevData_" + label + "'></span>");
             // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
             tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
-            tElement.removeAttr("data-from-e");
+            tAttributes.$set("endev-item",tAttributes.from)
             var container
             getRoot(tElement).wrap("<span class='__endev_annotated__'></span>").parent().prepend("<span class='__endev_annotation__'>" + annotation + "</span>");
             // tElement.parent().prepend("<span></span>")
+
           }
+          tElement.removeAttr("data-from");
+          tElement.removeAttr("from");
           return {
             pre: function preLink(scope, iElement, iAttrs, controller) {  },
             post: function postLink(scope, element, attrs, controller,transform) {
@@ -577,16 +628,18 @@
                     execute();
                   });
                 } else {
-                  attrs.$observe('fromE',function(value){
+                  attrs.$observe('from',function(value){
                     from = value;
                     console.log("From changed for",value);
                     execute();
                   })
                 }
 
-                var callback = function(data) {
-                  // if(!_.isEqual(scope["_data_"],data))
+                var unbind;
 
+                var callback = function(data,dataToBind) {
+                  // if(!_.isEqual(scope["_data_"],data))
+                  if(unbind) unbind();
                   if(!(_.keys(data).length >3) && attrs.default){
                     var def = scope.$eval(attrs.default);
                     data['default'] = scope.$eval(attrs.default);
@@ -595,6 +648,11 @@
                     scope['$isDefault'] = false;
                   }
                   scope["$endevData_" + label] = data;
+                  if(dataToBind) {
+                    dataToBind.$bindTo(scope,"$endevDataFull_" + label).then(function(unb){
+                      unbind = unb;
+                    });
+                  }
                   // }
                 };
 
@@ -613,6 +671,9 @@
                     }
 
                     provider.query(queryParameters,null,callback)
+                      .then(function(data){
+                        callback(data);
+                      })
                       .catch(function(data){
                         console.log("Query error: ",data);
                       });
@@ -735,9 +796,9 @@
         var ref = new Firebase("https://endev.firebaseio.com");
         
         function getObjectRef(type,parentLabel,parentObject,parentData){
-          if(parentLabel){
-            path = _.findKey(parentData,function(value){return value == parentObject}) 
-              + "/" + type.substring(parentLabel.length + 1);
+          if(parentData){
+            path = parentLabel ? _.findKey(parentData,function(value){return value == parentObject}) 
+              + "/" + type.substring(parentLabel.length + 1) :  _.findKey(parentData,function(value){return value == parentObject}) ;
             console.log("Path with parent:",path);
             return objectRef(parentData.$ref,path);
           } else {
@@ -746,7 +807,8 @@
         }
 
         var objectRef = function(ref,path){
-          return ref.child(path.replace(".","/"));
+          if(path) return ref.child(path.replace(".","/"));
+          return null;
         };
 
         var unwatch = []
@@ -788,8 +850,8 @@
               var object = filterData(data,attrs.filter);
               object.$endevRef = objRef;
               console.log("Object:",object)
-              result.resolve(object);
-              if(callback && angular.isFunction(callback)) callback(object);
+              if(callback && angular.isFunction(callback)) callback(object,data);
+              else result.resolve(object);
               unwatchCache(callback).unwatch = data.$watch(function(){
                 console.log("Data changed:", data, attrs.where);
                 object = filterData(data,attrs.filter);               
@@ -821,7 +883,12 @@
               $firebaseObject(object.$ref().child(key)).$remove();
             })
 
+          },
+          bind: function(attrs) {
+            var objRef = getObjectRef(attrs.from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+            if(objRef) $firebaseObject(objRef).$bindTo(attrs.scope,attrs.label)
           }
+
         }
       }]);
       
