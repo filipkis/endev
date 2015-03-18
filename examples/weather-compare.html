@@ -2,9 +2,8 @@
 <html>
 <head>
 	<title>EndevJS Weather Compare API Demo</title>
-	<script src="lib/angular/angular.js"></script>
-	<script src="lib/endev.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="../dist/endev.full.js"></script>
 </head>
 <body class="container">
 	<h1>Endev.js Demo</h1>
@@ -14,19 +13,19 @@
 	<!-- <button ng-click="location1 = q1; location2 = q2">Go!</button> -->
 
 	<h2>Weather results:</h2>
-	<data from="geo.places gp1" where="gp1.text = location1">
-		<data from="geo.places gp2" where="gp2.text = location2">
-			<data from="weather.forecast wf1" where="wf1.woeid = gp1.place[0].woeid AND wf1.u = 'c'">
-				<data from="weather.forecast wf2" where="wf2.woeid = gp2.place[0].woeid AND wf2.u = 'c'">
+	<div from="geo.places gp1" where="gp1.text = location1" provider="yql">
+		<div from="geo.places gp2" where="gp2.text = location2" provider="yql">
+			<div from="weather.forecast wf1" where="wf1.woeid = gp1.place[0].woeid AND wf1.u = 'c'" provider="yql">
+				<div from="weather.forecast wf2" where="wf2.woeid = gp2.place[0].woeid AND wf2.u = 'c'" provider="yql">
 				{{location1}} high: {{wf1.channel.item.forecast[0].high}} <br>
 				{{location2}} high: {{wf2.channel.item.forecast[0].high}} <br>
 				The difference: {{wf1.channel.item.forecast[0].high - wf2.channel.item.forecast[0].high}}
-				</data>
-			</data>
-			<div ng-if="$pending">
-				Loading...
+				</div>
 			</div>
-		</data>
-	</data>
+			<!-- <div ng-if="$pending">
+				Loading...
+			</div> -->
+		</div>
+	</div>
 </body>
 </html>

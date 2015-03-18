@@ -22,6 +22,10 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "    margin-top:5px;\n" +
     "    display:block; \n" +
     "  } \n" +
+    "\n" +
+    "  .__endev_annotation_on__ tbody.__endev_annotated__ {\n" +
+    "    display: table-row-group;\n" +
+    "  }\n" +
     "  .__endev_annotation__ { \n" +
     "    display: none; \n" +
     "  }\n" +

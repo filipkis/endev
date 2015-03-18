@@ -35,8 +35,28 @@ module.exports = function(grunt) {
           sourceMap: true,
           banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
         },
-        src: ["tmp/templates.js","src/<%= pkg.name %>.js", "src/xml2json.js"],
+        src: [
+          "src/endev.prefix",
+          "tmp/templates.js",
+          "src/*.js",
+          "src/endev.suffix"],
         dest: 'dist/<%= pkg.name %>.js'
+      },
+      full: {
+        options: {
+          sourceMap: true,
+          banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        },
+        src: [
+          "bower_components/angular/angular.js",
+          "bower_components/underscore/underscore.js",
+          "bower_components/firebase/firebase.js",
+          "bower_components/angularfire/dist/angularfire.js",
+          "src/endev.prefix",
+          "tmp/templates.js",
+          "src/*.js",
+          "src/endev.suffix"],
+        dest: 'dist/<%= pkg.name %>.full.js'
       }
     },
     copy: {
@@ -84,9 +104,15 @@ module.exports = function(grunt) {
         sourceMap: true,
         banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
       },
-      build: {
-        src: 'src/<%= pkg.name %>.js',
-        dest: 'dist/<%= pkg.name %>.min.js'
+      dist: {
+        files: {
+          'dist/<%= pkg.name %>.min.js':['dist/<%= pkg.name %>.js']
+        }
+      },
+      full: {
+        files: {
+          'dist/<%= pkg.name %>.full.min.js':['dist/<%= pkg.name %>.full.js']
+        }
       }
     },
     watch: {
@@ -117,7 +143,9 @@ module.exports = function(grunt) {
 
   grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
+  grunt.registerTask('full', ['html2js','concat','uglify','copy'])
+
   // Default task(s).
-  grunt.registerTask('default', ['html2js','concat','uglify','copy']);
+  grunt.registerTask('default', ['html2js','concat:dist','uglify:dist']);
 
 };

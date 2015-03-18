@@ -1,0 +1,6 @@
+//! makumba-angular.js
+//! version: 0.1.0
+//! authors: Filip Kis
+//! license: MIT 
+
+(function (window,_,document,undefined) {

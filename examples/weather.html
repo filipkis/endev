@@ -2,26 +2,24 @@
 <html>
 <head>
 	<title>EndevJS Weather API Demo</title>
-	<script src="lib/angular/angular.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore.js"></script>
-	<script src="lib/endev.js"></script>
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="../dist/endev.full.js"></script>
 </head>
 <body>
 	<div class="container">
 		<h1>Endev.js Demo</h1>
 		Search:
 
-		<input ng-model="query" placeholder="Enter your place...">
+		<input data-value="query" placeholder="Enter your place...">
 
-		<data from="geo.places gp" where="gp.text = query">
-			<data from="weather.forecast wf" where="wf.woeid = gp.place[0].woeid AND wf.u = 'c'">
+		<div from="geo.places gp" where="gp.text = query" provider="yql">
+			<div from="weather.forecast wf" where="wf.woeid = gp.place[0].woeid AND wf.u = 'c'" provider="yql">
 				{{wf.channel.item.forecast[0].high}} 
-				<div ng-if="$pending">
+				<!-- <div data-if="$pending">
 					Loading...
-				</div>
-			</data>
-		</data>
+				</div> -->
+			</div>
+		</div>
 	</div>
 </body>
 </html>

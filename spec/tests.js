@@ -51,10 +51,3 @@ describe('Testing data directive', function() {
   //   },1500)
   // })
 });
-
-describe('Testing',function(){
-  it('From should return null', function(){
-    expect(endev.from()).toEqual(undefined); 
-  });
-
-});

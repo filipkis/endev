@@ -1,0 +1,12 @@
+
+function Endev(){
+  this.app = angular.module("Endev")
+}
+
+endev = window.endev = new Endev();
+
+}(window || this,_));
+
+angular.element(document).ready(function() {
+  angular.bootstrap(document, ['Endev']);
+});
