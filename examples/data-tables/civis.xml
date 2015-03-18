@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <author>Filip Kis</author>
+    <documentationURL>http://civis.cloud.reply.eu/Civis/EnergyPlatform.svc/downloadMyData</documentationURL>
+    <sampleQuery>select * from {table} where userID='USER_ID' AND token='TOKEN' AND from='23-Mar-13 7:00:00 PM' AND to='23-Apr-13 8:30:00 PM' AND res = 'monthly'</sampleQuery>
+  </meta>
+  <bindings>
+    <select itemPath="civis.readings" produces="XML">
+       <urls>
+          <url>http://civis.cloud.reply.eu/Civis/EnergyPlatform.svc/downloadMyData</url>
+       </urls>
+       <inputs>
+         <key id="userID" type="xs:string" paramType="query" required="true" />
+         <key id="token" type="xs:string" paramType="query" required="true" />
+         <key id="from" type="xs:string" paramType="query" required="true" />
+         <key id="to" type="xs:string" paramType="query" required="true" />
+         <key id="res" type="xs:string" paramType="query" required="false" />
+         <key id="type" type="xs:string" paramType="query" required="false" />         
+       </inputs>
+    </select> 
+ </bindings>
+</table>

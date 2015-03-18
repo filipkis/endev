@@ -11,8 +11,23 @@
 <script src="../dist/endev.js"></script>
 </head>
 <body class="container">
-  <div data-from="http://civis.cloud.reply.eu/RestFulService/EnergyPlatform.svc/getAllUsers user" data-provider="rest">
-    {{user}}
-  </div>
+    <div data-from="civis.users user" provider="firebase">
+      {{user}}
+    </div>
+    <div insert-into="civis.users" provider="firebase">
+      <input data-value="id"/>
+      <input data-value="token"/>
+      <button data-click="insert({id:id, token:token})">Create user</button>
+    </div>
+
+    <div data-from="civis.users user" data-where="user.userID = '403337'" data-provider="firebase"> 
+
+
+      <div data-from="civis.meter meter" 
+            data-where="meter.userId = user.userId AND meter.token = user.token AND
+              meter.start = '1-Apr-13' AND meter.end = '25-Apr-13' AND meter.res = 'hourly'">
+        {{meter.value}}
+      </div>
+    </div>
 </body>
 </html>

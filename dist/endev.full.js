@@ -31278,8 +31278,8 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
       if(attrs.parentLabel){
         var tmp = _.reduce(attrs.from.substring(attrs.parentLabel.length+1).split("."),function(memo,id){
           console.log("Loging path:",memo,id);
-          return memo[id]
-        },attrs.parentData)
+          return angular.isDefined(memo) ? memo[id] : null;
+        },attrs.parentObject)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{

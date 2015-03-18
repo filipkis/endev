@@ -143,7 +143,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
-  grunt.registerTask('full', ['html2js','concat','uglify','copy'])
+  grunt.registerTask('full', ['html2js','concat','uglify'])
 
   // Default task(s).
   grunt.registerTask('default', ['html2js','concat:dist','uglify:dist']);
