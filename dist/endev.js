@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-03-18 */
+/*! endev 0.2.0 2015-03-19 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -67,6 +67,7 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "<div id=\"__endev_helper__\">\n" +
     "  Endev Tools:\n" +
     "  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n" +
+    "  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n" +
     "</div>");
 }]);
 
@@ -513,6 +514,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
                   })
                   .catch(function(data){
                     console.log("Query error: ",data);
+                    scope['$endevErrors'].push(data);
                   });
               }
             },100);//,angular.toJson);
@@ -610,6 +612,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   $rootScope.Date = Date;
   $rootScope.Math = Math;
   $rootScope.$endevAnnotation = false;
+  $rootScope.$endevErrors = []
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);
@@ -864,16 +867,27 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
         for(var i = 0; i<attrs.params.length; i++) {
           where = where.replace(attrs.params[i].expression, attrs.params[i].replace("'" + attrs.params[i].value + "'"));
         }
-        
-        var query = "select * from " + attrs.from + " where " + where;
+        var query;
+        if(attrs.use) {
+          query = "use '" + attrs.use + "' as tmpTable; select * from tmpTable";
+        } else {
+          query = "select * from " + attrs.from;
+        }
+        query += " where " + where;
         $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
           + encodeURIComponent(query) 
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
           .success(function(data){
-            console.log("Data:",data.query.results);
-            result.resolve(data.query.results);
+            var d = data.query.results;
+            if(attrs.use && attrs.from.indexOf(".")>=0) {
+              d = _.reduce(attrs.from.substring(attrs.from.indexOf(".")+1).split("."),function(memo,id){
+                return angular.isDefined(memo) ? memo[id] : null;
+              },data.query.results)
+            }
+            console.log("Data:",d);
+            result.resolve(d);
           }).error(function(data){
-            result.reject(data);
+            result.reject(data.error);
           });
       }
       return result.promise
@@ -994,6 +1008,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs.filter);
+          if(object.length === 0 && attrs.autoInsert) {
+            data.$add(attrs.filter)
+          }
           object.$endevRef = objRef;
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);

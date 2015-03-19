@@ -335,6 +335,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
                   })
                   .catch(function(data){
                     console.log("Query error: ",data);
+                    scope['$endevErrors'].push(data);
                   });
               }
             },100);//,angular.toJson);
@@ -432,6 +433,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   $rootScope.Date = Date;
   $rootScope.Math = Math;
   $rootScope.$endevAnnotation = false;
+  $rootScope.$endevErrors = []
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);

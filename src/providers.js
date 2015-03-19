@@ -23,16 +23,27 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
         for(var i = 0; i<attrs.params.length; i++) {
           where = where.replace(attrs.params[i].expression, attrs.params[i].replace("'" + attrs.params[i].value + "'"));
         }
-        
-        var query = "select * from " + attrs.from + " where " + where;
+        var query;
+        if(attrs.use) {
+          query = "use '" + attrs.use + "' as tmpTable; select * from tmpTable";
+        } else {
+          query = "select * from " + attrs.from;
+        }
+        query += " where " + where;
         $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
           + encodeURIComponent(query) 
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
           .success(function(data){
-            console.log("Data:",data.query.results);
-            result.resolve(data.query.results);
+            var d = data.query.results;
+            if(attrs.use && attrs.from.indexOf(".")>=0) {
+              d = _.reduce(attrs.from.substring(attrs.from.indexOf(".")+1).split("."),function(memo,id){
+                return angular.isDefined(memo) ? memo[id] : null;
+              },data.query.results)
+            }
+            console.log("Data:",d);
+            result.resolve(d);
           }).error(function(data){
-            result.reject(data);
+            result.reject(data.error);
           });
       }
       return result.promise
@@ -153,6 +164,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs.filter);
+          if(object.length === 0 && attrs.autoInsert) {
+            data.$add(attrs.filter)
+          }
           object.$endevRef = objRef;
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);

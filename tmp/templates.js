@@ -60,5 +60,6 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "<div id=\"__endev_helper__\">\n" +
     "  Endev Tools:\n" +
     "  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n" +
+    "  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n" +
     "</div>");
 }]);
