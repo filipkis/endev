@@ -18,11 +18,6 @@
          <key id="res" type="xs:string" paramType="query" required="false" />
          <key id="type" type="xs:string" paramType="query" required="false" />         
        </inputs>
-       <execute>
-        <![CDATA[
-    response.object = request.get().response.IntervalReading;
-        ]]>
-       </execute>
     </select> 
  </bindings>
 </table>
