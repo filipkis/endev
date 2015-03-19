@@ -31296,7 +31296,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
         } else {
           query = "select * from " + attrs.from;
         }
-        query += " where " + where;
+        if(where) query += " where " + where;
         $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
           + encodeURIComponent(query) 
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
@@ -31431,6 +31431,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs.filter);
+          if(object.length === 0 && attrs.autoInsert) {
+            data.$add(attrs.filter)
+          }
           object.$endevRef = objRef;
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);
