@@ -378,8 +378,12 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
 
             provider.bind(queryParameters);
           }
-        // });
       }
+      scope.$watch(label,function(value){
+        if(value && attrs.loaded){
+          scope.$eval(attrs.loaded);
+        }
+      });
     }
   }
 }]);
@@ -409,7 +413,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
         tAttributes.$set("endev-item",tAttributes.from)
         var container
-        if(["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
+        if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
         }else {
@@ -486,12 +490,6 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               if(scope["$endevAnnotation"]){
                 scope.$emit("$endevData_" + label, data);
               }
-              // if(dataToBind) {
-              //   dataToBind.$bindTo(scope,"$endevDataFull_" + label).then(function(unb){
-              //     unbind = unb;
-              //   });
-              // }
-              // }
             };
 
             var execute = _.throttle(function (){ 
@@ -613,6 +611,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   $rootScope.Math = Math;
   $rootScope.$endevAnnotation = false;
   $rootScope.$endevErrors = []
+  if(window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);
