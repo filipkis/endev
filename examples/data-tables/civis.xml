@@ -6,7 +6,7 @@
     <sampleQuery>select * from {table} where userID='USER_ID' AND token='TOKEN' AND from='23-Mar-13 7:00:00 PM' AND to='23-Apr-13 8:30:00 PM' AND res = 'monthly'</sampleQuery>
   </meta>
   <bindings>
-    <select itemPath="entry.IntervalReading" produces="XML">
+    <select itemPath="entry.IntervalReading" produces="enumeration">
        <urls>
           <url>http://civis.cloud.reply.eu/Civis/EnergyPlatform.svc/downloadMyData</url>
        </urls>
