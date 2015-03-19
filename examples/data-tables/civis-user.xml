@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<table xmlns="http://query.yahooapis.com/v1/schema/table.xsd">
+  <meta>
+    <author>Filip Kis</author>
+    <documentationURL>http://civis.cloud.reply.eu/Civis/EnergyPlatform.svc/getAllUsers</documentationURL>
+    <sampleQuery>select * from {table}</sampleQuery>
+  </meta>
+  <bindings>
+    <select itemPath="entry.user" produces="XML">
+       <urls>
+          <url>http://civis.cloud.reply.eu/Civis/EnergyPlatform.svc/getAllUsers</url>
+       </urls>
+    </select> 
+ </bindings>
+</table>
