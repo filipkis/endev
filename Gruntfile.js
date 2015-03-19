@@ -66,6 +66,12 @@ module.exports = function(grunt) {
         src: '**',
         dest: 'examples/lib/',
       },
+      dist: {
+        expand: true,
+        cwd: 'dist/',
+        src: '**',
+        dest: '../gh-pages/',        
+      }
     },
     html2js: {
       options: {
@@ -143,7 +149,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
-  grunt.registerTask('full', ['html2js','concat','uglify'])
+  grunt.registerTask('full', ['html2js','concat','uglify','copy:dist'])
 
   // Default task(s).
   grunt.registerTask('default', ['html2js','concat:dist','uglify:dist']);

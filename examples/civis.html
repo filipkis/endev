@@ -11,24 +11,19 @@
 <script src="../dist/endev.js"></script>
 </head>
 <body class="container">
-    <div data-from="civis.users user" data-where="user.id = '403337'" data-provider="firebase">
+    <div use="https://raw.githubusercontent.com/filipkis/endev/master/examples/data-tables/civis-user.xml" data-from="civis.user user" provider="yql">
+      {{user.userID}}
       <table>
         <thead>
           <tr>
             <th>Start time</th>
             <th>Value</th>
-            <th>Comment</th>
           </tr>
         </thead>
         <tbody>
-          <tr use="https://raw.githubusercontent.com/filipkis/endev/master/examples/data-tables/civis.xml" data-from="civis.IntervalReading reading" data-where="reading.userID = user.id AND reading.token = user.token AND reading.from = '25-Apr-13 0:00:00 AM' AND reading.to = '25-Apr-13 23:59:00 PM' AND reading.res = 'hourly'" provider="yql">
+          <tr use="https://raw.githubusercontent.com/filipkis/endev/master/examples/data-tables/civis.xml" data-from="civis.IntervalReading reading" data-where="reading.userID = user.userID AND reading.token = user.token AND reading.from = '25-Apr-13 0:00:00 AM' AND reading.to = '25-Apr-13 23:59:00 PM' AND reading.res = 'hourly'" provider="yql">
             <td>{{reading.timePeriod.start}}</td>
             <td>{{reading.value}}</td>
-            <td>
-              <div data-from="user.comments comment" data-where="comment.time = reading.start" auto-insert auto-update>
-                <input data-value="comment.text"/>
-              </div>
-            </td>
           </tr>
         </tbody>
       </table>

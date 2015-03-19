@@ -29,7 +29,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
         } else {
           query = "select * from " + attrs.from;
         }
-        query += " where " + where;
+        if(where) query += " where " + where;
         $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
           + encodeURIComponent(query) 
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
