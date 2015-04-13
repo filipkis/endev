@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Queue System</title>
+<script src="http://www.endevjs.org/endev.full.js"></script>
+</head>
+<body>
+<div data-provider="firebase" data-from="Queues queue" data-where="queue.name = 'workshop'">
+  Queue: {{queue.name}}
+  <div data-from="queue.positions myPosition" data-where="myPosition.username = 'ben'" data-default="{username:'ben',name:'Ben Johansson'}" auto-update="true">
+    Name: <input data-value="myPosition.name"/>
+    <br>
+    Location: <input data-value="myPosition.location"/>
+    <br>
+    <div data-new>
+      <button data-insert-into="queue.positions" data-click="insert(myPosition)">Join queue</button>
+    </div>
+    <div data-edit>
+      <button data-remove-from="queue.positions" data-click="remove(myPosition)">Leave</button>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Avatar</th>
+        <th>User</th>
+        <th>Location</th>
+        <th>Comment</th>
+        <th>Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-from="queue.positions position">
+        <td>{{$index + 1}}</td>
+        <td>{{position.name}}</td>
+        <td>{{position.location}}</td>
+        <td>{{position.comment}}</td>
+        <td>{{$index + 1}}/{{count(queue.positions)}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+</body>
+</html>
