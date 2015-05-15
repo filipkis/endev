@@ -131,7 +131,7 @@ module.exports = function(grunt) {
         tasks: ['karma:unit:run']
       },
       scripts: {
-        files: ['src/**/*.js'],
+        files: ['src/**/*.js','src/**/*.prefix','src/**/*.suffix'],
         tasks: [ 'default' ]
       },
     }

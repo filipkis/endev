@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>EndevJS Weather Compare API Demo</title>
+	<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+	<script src="../dist/endev.full.js"></script>
+</head>
+<body class="container">
+	<h3>Weather Compare</h3>
+	How warm is it in 
+	<input data-value="location1" ng-model-options="{updateOn : 'change blur'}">
+	<br/>
+	compared to 
+	<input data-value="location2" ng-model-options="{updateOn : 'change blur'}">
+	<!-- <button ng-click="location1 = q1; location2 = q2">Go!</button> -->
+
+	
+	<div data-from="geo.places geo1" data-where="geo1.text = location1" provider="yql">
+		<div data-from="geo.places geo2" data-where="geo2.text = location2" provider="yql">
+			<div from="weather.forecast forecast1" where="forecast1.woeid = geo1.place[0].woeid AND forecast1.u = 'c'" provider="yql">
+				<div from="weather.forecast forecast2" where="forecast2.woeid = geo2.place[0].woeid AND forecast2.u = 'c'" provider="yql" class="row">
+<!-- 				{{location1}} high: {{forecast1.channel.item.forecast[0].high}} <br>
+				{{location2}} high: {{forecast2.channel.item.forecast[0].high}} <br> -->
+				<div class="col-sm-5">
+
+				<h4>{{location1}} <small>is</small></h4> 
+				
+<div from="flickr.photos.search photos" where="photos.text= forecast1.channel.item.forecast[0].text AND photos.woe_id = geo1.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47' AND photos.tags = 'weather'" provider="yql">
+	
+		<img ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg" class="img-responsive img-thumbnail">
+	</div>
+</div>
+<div class="col-sm-2">
+<br/>
+<br/>
+{{Math.abs(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high)}}
+				degrees
+				<span data-if="(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high) >= 0" style="color:orange"><b>warmer</b></span>
+				<span data-if="(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high) < 0" style="color:blue"><b>colder</b></span>
+</div>
+<div class="col-sm-5">
+				<h4><small>than</small> {{location2}}</h4>
+
+				<div from="flickr.photos.search photos" where="photos.text= forecast2.channel.item.forecast[0].text AND photos.woe_id = geo2.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" provider="yql">
+	
+		<img ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg"  class="img-responsive img-thumbnail">
+	</div>
+	</div>
+				</div>
+			</div>
+			<!-- <div ng-if="$pending">
+				Loading...
+			</div> -->
+		</div>
+	</div>
+</body>
+</html>

@@ -8,5 +8,7 @@ endev = window.endev = new Endev();
 }(window || this,_));
 
 angular.element(document).ready(function() {
-  angular.bootstrap(document, ['Endev']);
+  if(endev.autoStart !== false) {
+    angular.bootstrap(document, ['Endev']);
+  }
 });

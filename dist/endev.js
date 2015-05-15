@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-03-19 */
+/*! endev 0.2.0 2015-03-28 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -361,7 +361,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
         if(pathRoot){
           provider = scope["$endevProvider_" + pathRoot[0]];
           if(!provider) {
-            throw new Error("No self or parent provider found for:",attrFrom);
+            throw new Error("No self or parent provider found for:",attrFrom, " on:", element);
           }
           parent = pathRoot[0];
         }
@@ -378,8 +378,12 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
 
             provider.bind(queryParameters);
           }
-        // });
       }
+      scope.$watch(label,function(value){
+        if(value && attrs.loaded){
+          scope.$eval(attrs.loaded);
+        }
+      });
     }
   }
 }]);
@@ -409,7 +413,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
         tAttributes.$set("endev-item",tAttributes.from)
         var container
-        if(["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
+        if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
         }else {
@@ -438,17 +442,17 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var parent = null;
             if(attrs.provider) {
               provider = $endevProvider.get(attrs.provider,attrFrom);
-              scope["$endevProvider_" + label] = provider;
             } else {
               var pathRoot = from.match(PAHT_ROOT_REGEX);
               if(pathRoot){
                 provider = scope["$endevProvider_" + pathRoot[0]];
                 if(!provider) {
-                  throw new Error("No self or parent provider found for:",from);
+                  throw new Error("No self or parent provider found for:",from," on:", element);
                 }
                 parent = pathRoot[0];
               }
             }
+            scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);
             if(watchExp.length>0) {
@@ -476,7 +480,11 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               if((!data || !(data.length >0)) && attrs.default){
               // if(!(_.keys(data).length >3) && attrs.default){
                 var def = scope.$eval(attrs.default);
-                data.push(def);
+                if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                  data.$add(def);
+                } else {
+                  data.push(def);
+                }
                 // data['default'] = def;
                 scope['$isDefault'] = true;
               } else {
@@ -486,12 +494,6 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               if(scope["$endevAnnotation"]){
                 scope.$emit("$endevData_" + label, data);
               }
-              // if(dataToBind) {
-              //   dataToBind.$bindTo(scope,"$endevDataFull_" + label).then(function(unb){
-              //     unbind = unb;
-              //   });
-              // }
-              // }
             };
 
             var execute = _.throttle(function (){ 
@@ -613,6 +615,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   $rootScope.Math = Math;
   $rootScope.$endevAnnotation = false;
   $rootScope.$endevErrors = []
+  if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);
@@ -947,7 +950,7 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
 if ($injector.has('$firebaseObject')) {
   
   endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
-    var ref = new Firebase("https://endev.firebaseio.com");
+    var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
     function getObjectRef(type,parentLabel,parentObject,parentData){
       if(parentData){
@@ -1012,6 +1015,9 @@ if ($injector.has('$firebaseObject')) {
             data.$add(attrs.filter)
           }
           object.$endevRef = objRef;
+          object.$add = function(addObj){
+            data.$add(addObj);
+          }
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);
           else result.resolve(object);
@@ -1717,6 +1723,8 @@ endev = window.endev = new Endev();
 }(window || this,_));
 
 angular.element(document).ready(function() {
-  angular.bootstrap(document, ['Endev']);
+  if(endev.autoStart !== false) {
+    angular.bootstrap(document, ['Endev']);
+  }
 });
 //# sourceMappingURL=endev.js.map
