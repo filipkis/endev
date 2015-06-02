@@ -1,10 +1,12 @@
 {
   "name": "endev",
-  "version": "0.2.0",
-  "homepage": "https://github.com/filipkis/endev",
+  "version": "0.2.1",
+  "homepage": "https://endevjs.org",
   "authors": [
     "Filip Kis <filip.kis@gmail.com>"
   ],
+  "main": "dist/endev.js",
+  "ignore": ["examples/*","spec/*","src/*",".gitignore","conf.js","Gruntfile.js","*.log"],
   "description": "The simplest way to work with data",
   "license": "MIT",
   "dependencies": {
