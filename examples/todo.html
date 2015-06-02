@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Queue System</title>
+<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+<script src="http://www.endevjs.org/endev.full.js"></script>
+</head>
+<body class="container">
+<h3> ToDo App </h3>
+<div class="row">
+<div class="col-xs-6">
+<h4>Your current tasks</h4>
+<div data-provider="firebase" data-from="TodoList item" data-where="item.done = false" auto-update="true">
+  <input type="checkbox" data-value="item.done"/> <input data-value="item.name"/> 
+</div>
+</div>
+<div class="col-xs-6">
+<h4>Create a new task</h4>
+<input data-value="newTask"/>
+<button data-provider="firebase" data-insert-into="TodoList" data-click="insert({name:newTask,done:false})">Add task</button> 
+</div>
+</div>
+</body>
+</html>

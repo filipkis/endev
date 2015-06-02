@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Photo Collector</title>
+<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+<script src="http://www.endevjs.org/endev.full.js"></script>
+</head>
+<body class="container">
+  <h3> Photo Collector App </h3>
+  <div class="row">
+    <div class="col-sm-8">
+      <input data-value="searchTerm" class="form-control"/>
+      <div data-from="flickr.photos.search photos" data-where="photos.text= searchTerm AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" class="row">
+        <div data-from="photos.photo photo" class="col-sm-4">
+          <img src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg" class="img-responsive img-thumbnail" data-insert-into="PhotoCollection" data-provider="firebase" data-click="insert({url:'http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id +  '_' + photo.secret + '.jpg'})">
+          <small data-from="flickr.people.info2 people" data-where="people.user_id = photo.owner AND people.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" class="pull-right">
+            by {{people.person.username}}
+          </small>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-3 col-sm-offset-1">
+      <h4 class="pull-right">My collection</h4>
+      <div data-from="PhotoCollection photo" data-provider="firebase">
+        <img src="{{photo.url}}" class="img-responsive img-thumbnail"/>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

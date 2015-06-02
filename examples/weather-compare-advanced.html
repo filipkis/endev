@@ -6,52 +6,60 @@
 	<script src="../dist/endev.full.js"></script>
 </head>
 <body class="container">
-	<h3>Weather Compare</h3>
-	How warm is it in 
-	<input data-value="location1" ng-model-options="{updateOn : 'change blur'}">
-	<br/>
-	compared to 
-	<input data-value="location2" ng-model-options="{updateOn : 'change blur'}">
-	<!-- <button ng-click="location1 = q1; location2 = q2">Go!</button> -->
-
-	
-	<div data-from="geo.places geo1" data-where="geo1.text = location1" provider="yql">
-		<div data-from="geo.places geo2" data-where="geo2.text = location2" provider="yql">
-			<div from="weather.forecast forecast1" where="forecast1.woeid = geo1.place[0].woeid AND forecast1.u = 'c'" provider="yql">
-				<div from="weather.forecast forecast2" where="forecast2.woeid = geo2.place[0].woeid AND forecast2.u = 'c'" provider="yql" class="row">
-<!-- 				{{location1}} high: {{forecast1.channel.item.forecast[0].high}} <br>
-				{{location2}} high: {{forecast2.channel.item.forecast[0].high}} <br> -->
-				<div class="col-sm-5">
-
-				<h4>{{location1}} <small>is</small></h4> 
-				
-<div from="flickr.photos.search photos" where="photos.text= forecast1.channel.item.forecast[0].text AND photos.woe_id = geo1.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47' AND photos.tags = 'weather'" provider="yql">
-	
-		<img ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg" class="img-responsive img-thumbnail">
+	<div class="row">
+		<h3 class="col-sm-8 text-center">Weather Compare</h3>
 	</div>
-</div>
-<div class="col-sm-2">
-<br/>
-<br/>
-{{Math.abs(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high)}}
-				degrees
-				<span data-if="(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high) >= 0" style="color:orange"><b>warmer</b></span>
-				<span data-if="(forecast1.channel.item.forecast[0].high - forecast2.channel.item.forecast[0].high) < 0" style="color:blue"><b>colder</b></span>
-</div>
-<div class="col-sm-5">
-				<h4><small>than</small> {{location2}}</h4>
 
-				<div from="flickr.photos.search photos" where="photos.text= forecast2.channel.item.forecast[0].text AND photos.woe_id = geo2.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" provider="yql">
-	
-		<img ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg"  class="img-responsive img-thumbnail">
-	</div>
-	</div>
-				</div>
-			</div>
-			<!-- <div ng-if="$pending">
-				Loading...
-			</div> -->
+	<div class="row">
+		<div class="col-sm-3">
+			<h4 class="text-right">
+				<input data-value="location1" ng-model-options="{updateOn : 'change blur'}" class="text-right">
+			</h4> 
+		</div>
+		<div class="col-sm-3 col-sm-offset-2">
+			<h4>
+				<input data-value="location2" ng-model-options="{updateOn : 'change blur'}">
+			</h4>
 		</div>
 	</div>
-</body>
-</html>
+<div data-from="http://weather.yahooapis.com/forecastrss?w=12797282&u=f result" provider="rest">
+	{{result}}
+</div>
+
+	<div data-from="geo.places geo1" data-where="geo1.text = location1" provider="yql">
+		<div data-from="geo.places geo2" data-where="geo2.text = location2" provider="yql">
+			<div from="weather.forecast forecast1" where="forecast1.woeid = geo1.place[0].woeid" provider="yql">
+				<div from="weather.forecast forecast2" where="forecast2.woeid = geo2.place[0].woeid" provider="yql" class="row">
+					<div class="col-sm-3">
+							<img data-from="flickr.photos.search photos" data-where="photos.text= forecast1.channel.item.condition.text AND photos.woe_id = geo1.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg" class="img-responsive img-thumbnail">
+					</div>
+					<div class="col-sm-2" style="margin-top:-44px;">
+						<h4 class="text-center"><small>
+							is {{Math.abs(forecast1.channel.item.condition.temp - forecast2.channel.item.condition.temp)}}
+							degrees
+							<span data-if="(forecast1.channel.item.condition.temp - forecast2.channel.item.condition.temp) >= 0" style="color:orange"><b>warmer</b></span>
+							<span data-if="(forecast1.channel.item.condition.temp - forecast2.channel.item.condition.temp) < 0" style="color:blue"><b>colder</b></span>
+							than
+							</small>
+						</h4>
+							<br/>
+							<br/>
+							<!-- <button data-insert-into="WeatherComparison"  data-provider="firebase" data-click="insert({location1:location1,location2:location2})">Save</button> -->
+					</div>
+					<div class="col-sm-3">
+						<img data-from="flickr.photos.search photos" data-where="photos.text= forecast2.channel.item.condition.text AND photos.woe_id = geo2.place[0].woeid AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" ng-src="http://farm{{photos.photo[0].farm}}.staticflickr.com/{{photos.photo[0].server}}/{{photos.photo[0].id}}_{{photos.photo[0].secret}}.jpg" class="img-responsive img-thumbnail">
+					</div>
+
+						<div class="col-sm-offset-1 col-sm-3 well well-sm"> 
+							<h4 class="text-center">Saved comparisons</h4>
+							<ul>
+								<li data-from="WeatherComparison comparison" data-provider="firebase"><a href="" data-click="$root.location1 = comparison.location1; $root.location2 = comparison.location2">{{comparison.location1}}<->{{comparison.location2}}</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</body>
+	</html>
