@@ -12,10 +12,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
     query: function(attrs,extra,callback) {
       var result = $q.defer()
       if(attrs.parentLabel){
-        var tmp = _.reduce(attrs.from.substring(attrs.parentLabel.length+1).split("."),function(memo,id){
-          console.log("Loging path:",memo,id);
-          return angular.isDefined(memo) ? memo[id] : null;
-        },attrs.parentObject)
+        var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{
@@ -36,9 +33,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           .success(function(data){
             var d = data.query.results;
             if(attrs.use && attrs.from.indexOf(".")>=0) {
-              d = _.reduce(attrs.from.substring(attrs.from.indexOf(".")+1).split("."),function(memo,id){
-                return angular.isDefined(memo) ? memo[id] : null;
-              },data.query.results)
+              d = _.valueOnPath(data.query.results,attrs.from,true);
             }
             console.log("Data:",d);
             result.resolve(d);
@@ -137,8 +132,10 @@ if ($injector.has('$firebaseObject')) {
       return result;
     };
 
-    function filterData(data,filter){
+    function filterData(data,attrs){
       var results = []
+      var filter = attrs.filter;
+      var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
       // var results = {}
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
@@ -148,6 +145,11 @@ if ($injector.has('$firebaseObject')) {
           // results[key] = value;
           results.push(value);
         }
+      });
+      _.each(inSetParams,function(param){
+        results = _.filter(results,function(object){
+          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+        })
       });
       return results;
       // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
@@ -163,7 +165,7 @@ if ($injector.has('$firebaseObject')) {
         $firebaseArray(objRef).$loaded().then(function(data){
 
           console.log("Data:",data)
-          var object = filterData(data,attrs.filter);
+          var object = filterData(data,attrs);
           if(object.length === 0 && attrs.autoInsert) {
             data.$add(attrs.filter)
           }
@@ -176,7 +178,7 @@ if ($injector.has('$firebaseObject')) {
           else result.resolve(object);
           unwatchCache(callback).unwatch = data.$watch(function(){
             console.log("Data changed:", data, attrs.where);
-            object = filterData(data,attrs.filter);               
+            object = filterData(data,attrs);               
             if(callback && angular.isFunction(callback)) callback(object);
           })
         });  

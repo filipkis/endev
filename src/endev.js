@@ -253,7 +253,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             if(angular.isDefined(scope["$endevData_" + label])) 
               throw new Error("Conflicting object " + lable + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
-            var type = from.split(" ")[0];
+            var type = from.split(",")[0].split(" ")[0];
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
                 var exp = new Expr(expr,label);
                 exp.setValue(scope.$eval(exp.rhs));
@@ -320,8 +320,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var execute = _.throttle(function (){ 
               console.log("Executed with params: ", params);
               if(provider){
+
+                var equalityParams = _.filter(params,function(param){return param.operator[0] == "="});
               
-                var filter = _.reduce(params,function(memo,param){return _.merge(param.obj,memo)},{});
+                var filter = _.reduce(equalityParams,function(memo,param){return _.merge(param.obj,memo)},{});
                 // console.log("Filter: ", filter);
                 var queryParameters = _.defaults({from:type,where:attrs.where,params:params,filter:filter},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
 

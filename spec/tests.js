@@ -41,6 +41,10 @@ describe('Testing data directive', function() {
     expect(element.html()).toEqual("Rest result");
   });
 
+  it("Should work with multiline string",function(){
+    var element = $compile("<div from='http://fake.rest.com res' where='res.id = 1 AND res.page = 10' provider='yql'>{{res.result}}</div>")($rootScope);
+  })
+
 
   // it('Makes the call to Firebase',function(){
   //   var element = $compile("<data provider='firebase' from='test res'>{{res.result}}</data>")($rootScope);

@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-03-28 */
+/*! endev 0.2.0 2015-06-02 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -432,7 +432,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             if(angular.isDefined(scope["$endevData_" + label])) 
               throw new Error("Conflicting object " + lable + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
-            var type = from.split(" ")[0];
+            var type = from.split(",")[0].split(" ")[0];
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
                 var exp = new Expr(expr,label);
                 exp.setValue(scope.$eval(exp.rhs));
@@ -499,8 +499,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var execute = _.throttle(function (){ 
               console.log("Executed with params: ", params);
               if(provider){
+
+                var equalityParams = _.filter(params,function(param){return param.operator[0] == "="});
               
-                var filter = _.reduce(params,function(memo,param){return _.merge(param.obj,memo)},{});
+                var filter = _.reduce(equalityParams,function(memo,param){return _.merge(param.obj,memo)},{});
                 // console.log("Filter: ", filter);
                 var queryParameters = _.defaults({from:type,where:attrs.where,params:params,filter:filter},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
 
@@ -859,10 +861,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
     query: function(attrs,extra,callback) {
       var result = $q.defer()
       if(attrs.parentLabel){
-        var tmp = _.reduce(attrs.from.substring(attrs.parentLabel.length+1).split("."),function(memo,id){
-          console.log("Loging path:",memo,id);
-          return angular.isDefined(memo) ? memo[id] : null;
-        },attrs.parentObject)
+        var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{
@@ -883,9 +882,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           .success(function(data){
             var d = data.query.results;
             if(attrs.use && attrs.from.indexOf(".")>=0) {
-              d = _.reduce(attrs.from.substring(attrs.from.indexOf(".")+1).split("."),function(memo,id){
-                return angular.isDefined(memo) ? memo[id] : null;
-              },data.query.results)
+              d = _.valueOnPath(data.query.results,attrs.from,true);
             }
             console.log("Data:",d);
             result.resolve(d);
@@ -984,8 +981,10 @@ if ($injector.has('$firebaseObject')) {
       return result;
     };
 
-    function filterData(data,filter){
+    function filterData(data,attrs){
       var results = []
+      var filter = attrs.filter;
+      var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
       // var results = {}
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
@@ -995,6 +994,11 @@ if ($injector.has('$firebaseObject')) {
           // results[key] = value;
           results.push(value);
         }
+      });
+      _.each(inSetParams,function(param){
+        results = _.filter(results,function(object){
+          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+        })
       });
       return results;
       // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
@@ -1010,7 +1014,7 @@ if ($injector.has('$firebaseObject')) {
         $firebaseArray(objRef).$loaded().then(function(data){
 
           console.log("Data:",data)
-          var object = filterData(data,attrs.filter);
+          var object = filterData(data,attrs);
           if(object.length === 0 && attrs.autoInsert) {
             data.$add(attrs.filter)
           }
@@ -1023,7 +1027,7 @@ if ($injector.has('$firebaseObject')) {
           else result.resolve(object);
           unwatchCache(callback).unwatch = data.$watch(function(){
             console.log("Data changed:", data, attrs.where);
-            object = filterData(data,attrs.filter);               
+            object = filterData(data,attrs);               
             if(callback && angular.isFunction(callback)) callback(object);
           })
         });  
@@ -1145,6 +1149,13 @@ _.matcherDeep = function(attrs) {
 var hasherWithThis = function() {
   return JSON.stringify({this:this,args:arguments});
 }; 
+
+_.valueOnPath = function(object,path,removeRoot) {
+
+  return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
+    return angular.isDefined(memo) ? memo[id] : null;
+  },object)
+}
 /*
  Copyright 2011-2013 Abdulla Abdurakhmanov
  Original sources are available at https://code.google.com/p/x2js/
