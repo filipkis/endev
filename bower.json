@@ -6,7 +6,7 @@
     "Filip Kis <filip.kis@gmail.com>"
   ],
   "main": "dist/endev.js",
-  "ignore": ["examples/*","spec/*","src/*",".gitignore","conf.js","Gruntfile.js","*.log"],
+  "ignore": ["examples","spec","src",".gitignore","conf.js","Gruntfile.js","*.log"],
   "description": "The simplest way to work with data",
   "license": "MIT",
   "dependencies": {
