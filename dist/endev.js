@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-06-02 */
+/*! endev 0.2.1 2015-06-03 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -481,6 +481,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               // if(!(_.keys(data).length >3) && attrs.default){
                 var def = scope.$eval(attrs.default);
                 if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                  //TODO consider using where data as well
                   data.$add(def);
                 } else {
                   data.push(def);
@@ -1015,9 +1016,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs);
-          if(object.length === 0 && attrs.autoInsert) {
-            data.$add(attrs.filter)
-          }
+          // if(object.length === 0 && attrs.autoInsert) {
+          //   data.$add(attrs.filter)
+          // }
           object.$endevRef = objRef;
           object.$add = function(addObj){
             data.$add(addObj);

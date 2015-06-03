@@ -166,9 +166,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs);
-          if(object.length === 0 && attrs.autoInsert) {
-            data.$add(attrs.filter)
-          }
+          // if(object.length === 0 && attrs.autoInsert) {
+          //   data.$add(attrs.filter)
+          // }
           object.$endevRef = objRef;
           object.$add = function(addObj){
             data.$add(addObj);

@@ -302,6 +302,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               // if(!(_.keys(data).length >3) && attrs.default){
                 var def = scope.$eval(attrs.default);
                 if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                  //TODO consider using where data as well
                   data.$add(def);
                 } else {
                   data.push(def);
