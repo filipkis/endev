@@ -1,52 +1,55 @@
+/**
+ * Hi there :)
+ *
+ * endev requires some external libraries to work (angular,
+ * underscore etc.), so we've provided two ways to build
+ * from source: you can either bundle those dependenices
+ * along with endev into a single file (good for getting
+ * started fast, but bad if you already use those
+ * dependencies elsewhere in your project) or you can build
+ * endev without the dependencies and add them to your
+ * HTML manually.
+ *
+ * To build a stand-alone file with all dependencies
+ * included, use `grunt standalone`. Else just type `grunt`.
+ *
+ * The compiled files can be found in the dist/ folder.
+ */
 module.exports = function(grunt) {
 
-  // Project configuration.
+	// Plugins
+  grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
+  grunt.loadNpmTasks('grunt-notify');
+  grunt.loadNpmTasks('grunt-karma');
+  grunt.loadNpmTasks('grunt-html2js');
+
+	// Tasks
+  grunt.registerTask('default', ['html2js','concat:lib']);
+  grunt.registerTask('standalone', ['html2js','concat:standalone']);
+
+  // Config
+	var concatOptions = {
+		sourceMap: true,
+		banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+	};
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    coffeelint: {
-      app: ['src/*.coffee'],
-      options: {
-        max_line_length: {
-          level: 'ignore'
-        },
-        line_endings: {
-          value: "unix",
-          level: "error"
-        },
-      }
-    },
-    coffee: {
-      compile: {
-        files: [{
-          expand: true,         // Enable dynamic expansion.
-          cwd: 'src/',          // Src matches are relative to this path.
-          src: ['**/*.coffee'], // Actual pattern(s) to match.
-          dest: 'lib/',         // Destination path prefix.
-          ext: '.js'            // Dest filepaths will have this extension.
-          }],
-        options: {
-          bare: true            // Skip surrounding IIFE in compiled output.
-        }
-      }
-    },
     concat: {
-      dist: {
-        options: {
-          sourceMap: true,
-          banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-        },
+      lib: {
+        options: concatOptions,
         src: [
           "src/endev.prefix",
           "tmp/templates.js",
           "src/*.js",
-          "src/endev.suffix"],
+          "src/endev.suffix"
+					],
         dest: 'dist/<%= pkg.name %>.js'
       },
-      full: {
-        options: {
-          sourceMap: true,
-          banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-        },
+      standalone: {
+        options: concatOptions,
         src: [
           "bower_components/angular/angular.js",
           "bower_components/underscore/underscore.js",
@@ -59,20 +62,6 @@ module.exports = function(grunt) {
         dest: 'dist/<%= pkg.name %>.full.js'
       }
     },
-    copy: {
-      main: {
-        expand: true,
-        cwd: 'dist/',
-        src: '**',
-        dest: 'examples/lib/',
-      },
-      dist: {
-        expand: true,
-        cwd: 'dist/',
-        src: '**',
-        dest: '../gh-pages/',        
-      }
-    },
     html2js: {
       options: {
         module: "endev-templates",
@@ -82,76 +71,6 @@ module.exports = function(grunt) {
         src: ['src/**/*.tpl.html'],
         dest: 'tmp/templates.js'
       },
-    },
-    jasmine: {
-      src: 'src/**/*.js',
-      options: {
-        specs: 'spec/**/*.js',
-        vendor: [
-          "test/lib/*.js",
-        ]
-      }
-    },
-    karma: {
-      options: {
-        configFile: 'conf.js'
-      },
-      dev: {
-        singleRun: false
-      },
-      unit: {
-        singleRun: false,
-        browsers: ['PhantomJS'],
-        background: true
-      }
-    },
-    uglify: {
-      options: {
-        sourceMap: true,
-        banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-      },
-      dist: {
-        files: {
-          'dist/<%= pkg.name %>.min.js':['dist/<%= pkg.name %>.js']
-        }
-      },
-      full: {
-        files: {
-          'dist/<%= pkg.name %>.full.min.js':['dist/<%= pkg.name %>.full.js']
-        }
-      }
-    },
-    watch: {
-      templates: {
-        files: ['src/**/*.tpl.html'],
-        tasks: ['default']
-      },
-      spec: {
-        files: ['src/**/*.js','spec/*.js'],
-        tasks: ['karma:unit:run']
-      },
-      scripts: {
-        files: ['src/**/*.js','src/**/*.prefix','src/**/*.suffix'],
-        tasks: [ 'default' ]
-      },
     }
   });
-
-  // Load the plugin that provides the "uglify" task.
-  grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-contrib-concat');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
-  grunt.loadNpmTasks('grunt-notify');
-  grunt.loadNpmTasks('grunt-karma');
-  grunt.loadNpmTasks('grunt-html2js');
-
-  grunt.registerTask('start', ['default','karma:unit:start','watch'])
-
-  grunt.registerTask('full', ['html2js','concat','uglify','copy:dist'])
-
-  // Default task(s).
-  grunt.registerTask('default', ['html2js','concat:dist','uglify:dist']);
-
 };
