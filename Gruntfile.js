@@ -17,23 +17,21 @@
  */
 module.exports = function(grunt) {
 
-	// Plugins
+  // Plugins
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-notify');
-  grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-html2js');
 
-	// Tasks
+  // Tasks
   grunt.registerTask('default', ['html2js','concat:lib']);
   grunt.registerTask('standalone', ['html2js','concat:standalone']);
 
   // Config
-	var concatOptions = {
-		sourceMap: true,
-		banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
-	};
+  var concatOptions = {
+    sourceMap: true,
+    banner: '/*! <%= pkg.name %> <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+  };
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
@@ -45,7 +43,7 @@ module.exports = function(grunt) {
           "tmp/templates.js",
           "src/*.js",
           "src/endev.suffix"
-					],
+          ],
         dest: 'dist/<%= pkg.name %>.js'
       },
       standalone: {
