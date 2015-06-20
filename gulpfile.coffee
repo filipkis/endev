@@ -8,6 +8,8 @@ gulp.task "basic", ->
           "src/endev.prefix",
           "tmp/templates.js",
           "src/*.js",
+          "src/directives/*.js",
+          "src/factories/*.js",
           "src/endev.suffix"
         ]
             .pipe(sourcemaps.init())
