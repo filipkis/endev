@@ -2,14 +2,17 @@ gulp       = require "gulp"
 concat     = require "gulp-concat"
 uglify     = require "gulp-uglify"
 sourcemaps = require "gulp-sourcemaps"
-browserify = require "browserify"
 
 gulp.task "basic", ->
         gulp.src [
           "tmp/templates.js",
-          "src/*.js",
-          "src/directives/*.js",
-          "src/factories/*.js",
+          "src/utils.js",
+          "src/xml2json.js",
+          "src/modules/datatag/**/*.js",
+          "src/modules/endev/endev.js",
+          "src/modules/endev/directives/*.js",
+          "src/modules/endev/factories/*.js",
+          "src/modules/endev/services/*.js",
         ]
             .pipe(sourcemaps.init())
             .pipe(concat "endev.js")
