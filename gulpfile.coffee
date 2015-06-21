@@ -6,13 +6,13 @@ sourcemaps = require "gulp-sourcemaps"
 gulp.task "basic", ->
         gulp.src [
           "tmp/templates.js",
-          "src/utils.js",
-          "src/xml2json.js",
-          "src/modules/datatag/**/*.js",
-          "src/modules/endev/endev.js",
-          "src/modules/endev/directives/*.js",
-          "src/modules/endev/factories/*.js",
-          "src/modules/endev/services/*.js",
+          "src/js/utils.js",
+          "src/js/xml2json.js",
+          "src/js/modules/datatag/**/*.js",
+          "src/js/modules/endev/endev.js",
+          "src/js/modules/endev/directives/*.js",
+          "src/js/modules/endev/factories/*.js",
+          "src/js/modules/endev/services/*.js",
         ]
             .pipe(sourcemaps.init())
             .pipe(concat "endev.js")
