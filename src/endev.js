@@ -1,21 +1,19 @@
+(function (window,_,document,undefined) {
 	
-var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
-var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
-var PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
-var PAHT_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
+window.OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+window.COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
+window.PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
+window.PAHT_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 
-
-
-var endevModule;
 //checking if angularFire is loaded
 try{ 
   angular.module("firebase")
-  endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
+  window.endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
 } catch(err) {
-  endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
+  window.endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
 }
 
-var $injector = angular.injector(["ng","Endev"]);
+window.$injector = angular.injector(["ng","Endev"]);
 
 _.each([['if','ng-show'],['click','ng-click']],function(pair){
   endevModule.directive(pair[0],['$compile',function($compile){
@@ -46,3 +44,17 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);
+
+function Endev(){
+  this.app = angular.module("Endev")
+}
+
+endev = window.endev = new Endev();
+
+}(window || this,_));
+
+angular.element(document).ready(function() {
+  if(endev.autoStart !== false) {
+    angular.bootstrap(document, ['Endev']);
+  }
+});
