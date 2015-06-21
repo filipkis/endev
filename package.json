@@ -18,6 +18,7 @@
     "coffee-script": "^1.9.3",
     "firebase": "2.2.x",
     "gulp-concat": "^2.5.2",
+    "gulp-html2js": "^0.2.0",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
     "underscore": "1.8.x"

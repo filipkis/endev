@@ -42,7 +42,9 @@
       $rootScope.$endevErrors = []
       if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
       angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
-      angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
+      angular.element($document[0].body).append($templateCache.get('src/html/endevhelper.tpl.html'));
+
+
 
     //Firebase dependent features
     if ($injector.has('$firebaseObject')) {

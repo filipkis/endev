@@ -2,18 +2,27 @@ gulp       = require "gulp"
 concat     = require "gulp-concat"
 uglify     = require "gulp-uglify"
 sourcemaps = require "gulp-sourcemaps"
+html2js    = require "gulp-html2js"
 
-gulp.task "basic", ->
-        gulp.src [
-          "tmp/templates.js",
-          "src/js/utils.js",
-          "src/js/xml2json.js",
-          "src/js/modules/datatag/**/*.js",
-          "src/js/modules/endev/endev.js",
-          "src/js/modules/endev/directives/*.js",
-          "src/js/modules/endev/factories/*.js",
-          "src/js/modules/endev/services/*.js",
-        ]
+gulp.task "templates", ->
+    gulp
+        .src "src/html/endevhelper.tpl.html"
+        .pipe(html2js outputModuleName: "endev-templates")
+        .pipe(concat "endev-templates.js")
+        .pipe(gulp.dest "src/js/modules/endev-templates")
+
+gulp.task "basic", ["templates"], ->
+        gulp
+            .src [
+              "src/js/utils.js",
+              "src/js/xml2json.js",
+              "src/js/modules/endev-templates/**/*.js",
+              "src/js/modules/datatag/**/*.js",
+              "src/js/modules/endev/endev.js",
+              "src/js/modules/endev/directives/*.js",
+              "src/js/modules/endev/factories/*.js",
+              "src/js/modules/endev/services/*.js",
+            ]
             .pipe(sourcemaps.init())
             .pipe(concat "endev.js")
             .pipe(sourcemaps.write("endev.map.js"))
