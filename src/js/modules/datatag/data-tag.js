@@ -1,3 +1,5 @@
+var angular = require("angular");
+
 angular.module("endev-data-tag",[])
 .directive("data", ['$rootScope','$http','$injector','$interval','$timeout','$log','$interpolate','Expr', function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate,Expr) {
   function EndevLog() {
