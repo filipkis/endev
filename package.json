@@ -20,6 +20,7 @@
     "event-stream": "^3.3.1",
     "firebase": "^2.2.7",
     "gulp": "^3.9.0",
+    "gulp-ng-annotate": "^1.0.0",
     "gulp-sourcemaps": "^1.5.2",
     "stringify": "^3.1.0",
     "underscore": "^1.8.3",

@@ -173,7 +173,7 @@ angular.element(document).ready(function() {
     angular.bootstrap(document, ['Endev']);
 });
 
-require("./factories/expr");
+endevModule.factory("Expr", require("./factories/expr"));
 require("./services/endevFirebase");
 require("./services/endevProvider");
 require("./services/endevRest");

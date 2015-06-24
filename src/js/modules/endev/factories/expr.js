@@ -1,5 +1,5 @@
-endevModule.factory("Expr",[function(){
-  function Expr(expr,label) {
+module.exports = function() {
+  return function Expr(expr,label) {
     this.expression = expr;
     this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
     this.rhs = expr.split(COMPARISON_REGEX)[1].trim();
@@ -14,5 +14,4 @@ endevModule.factory("Expr",[function(){
       return (this.attribute || this.lhs) + this.operator + value;
     }
   }
-  return Expr;
-}]);
+}
