@@ -15,5 +15,5 @@ gulp.task "default", ->
             .pipe(source "endev.full.js")
             .pipe(do buffer)
             .pipe(do sourcemaps.init)
-            .pipe(sourcemaps.write "./dist")
+            .pipe(sourcemaps.write "./")
             .pipe(gulp.dest "./dist")
