@@ -1,4 +1,5 @@
 var angular = require("angular");
+var _ = require("underscore");
 
 window.OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
 window.COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
@@ -49,121 +50,7 @@ if ($injector.has('$firebaseObject')) {
   endevModule.run(["$rootScope","$firebaseArray","$firebaseObject","$q",function($rootScope,$firebaseArray,$firebaseObject,$q) {
     $rootScope.from =  _.memoize(function(path) {
       var ref = new Firebase("https://endev.firebaseio.com");
-      // var sync = $firebase(ref.child(path),{
-      //   arrayFactory: $FirebaseArray.$extendFactory({
-      //     findOrNew: _.memoize(function(find,init) {
-      //       var deferred = $q.defer();
-      //       this.$list.$loaded().then(function(list){
-      //         var result = _.findWhere(list,find);
-      //         if(!result) {
-      //           result = _.extend(find,init);
-      //           result.$new = true;
-      //         }
-      //         deferred.resolve(result);
-      //       });
-      //       return result;
-      //     },JSON.stringify),
-      //     findOrCreate: _.memoize(function(find,init) {
-      //       var deferred = $q.defer();
-      //       this.$list.$loaded().then(function(list){
-      //         var result = _.findWhere(list,find);
-      //         if(!result) {
-      //           list.$add(_.extend(find,init)).then(function(ref){
-      //             $firebase(ref).$asObject().$loaded().then(function(object){
-      //               _.extend(object,_.pick(init,function(value,key){
-      //                 return !object[key] && angular.isArray(value) && value.length === 0;
-      //               }));
-      //               deferred.resolve(object);
-      //             });
-      //           });
-      //         }else{
-      //           var ref = new Firebase(list.$inst().$ref().toString() + "/" + result.$id);
-      //           $firebase(ref).$asObject().$loaded().then(function(object){
-      //             _.extend(object,_.pick(init,function(value,key){
-      //               return !object[key] && angular.isArray(value) && value.length === 0;
-      //             }));
-      //             deferred.resolve(object);
-      //           });
-      //         }
-      //       });
-      //       return deferred.promise;
-      //     },JSON.stringify),
-      //     insert: function(obj) {
-      //       this.$list.$add(obj);
-      //     },
-      //     remove: function(obj) {
-      //       this.$list.$remove(obj);
-      //     }
-      //   }),
-      //   objectFactory: $FirebaseArray.$extendFactory({
-      //     findOrNew: function(find,init) {
-      //       var deferred = $q.defer();
-      //       this.$loaded().then(function(list){
-      //         var result = _.findWhere(list,find);
-      //         if(!result) {
-      //           result = _.extend(find,init);
-      //           result.$new = true;
-      //         }
-      //         deferred.resolve(result);
-      //       });
-      //       return result;
-      //     },
-      //     findOrCreate: function(find,init) {
-      //       var deferred = $q.defer();
-      //       this.$list.$loaded().then(function(list){
-      //         var result = _.findWhere(list,find);
-      //         if(!result) {
-      //           list.$add(_.extend(find,init)).then(function(ref){
-      //             deferred.resolve($firebase(ref).$asObject());
-      //           });
-      //         }else{
-      //           deferred.resolve(result);
-      //         }
-      //       });
-      //       return deferred.promise;
-      //     },
-      //     insert: function(obj) {
-      //       this.$list.$add(obj);
-      //     },
-      //     remove: function(obj) {
-      //       this.$list.$remove(obj);
-      //     }
-      //   })
-      // });
-      // return sync.$asArray();
-      
     });
-
-    // Array.prototype.findOrNew = _.memoize(function(find,init){     
-    //   var result = _.findWhere(this,find);
-    //   if(!result) {
-    //     result = _.extend(find,init)
-    //     result.$new = true;
-    //   }
-    //   return result;
-    // },hasherWithThis);
-
-    // Array.prototype.findOrCreate = _.memoize(function(find,init){
-    //   var result = _.findWhere(this,find);
-    //   if(!result) {
-    //     result = _.extend(find,init)
-    //     this.push(result);
-    //   }
-    //   return result;
-    // },hasherWithThis);
-
-    // Array.prototype.insert = function(obj) {
-    //   obj['$new'] = undefined;
-    //   obj['$deleted'] = undefined;
-    //   obj['createdAt'] = new Date().getTime();
-    //   this.push(obj);
-    // }
-
-    // Array.prototype.remove = function(obj) {
-    //   this.splice(this.indexOf(obj),1);
-    //   obj['$new'] = true;
-    //   obj['$deleted'] = true;
-    // }
 
   }]);
 }
@@ -181,15 +68,16 @@ if ($injector.has('$firebaseObject')) {
 require("./services/endevProvider")(endevModule);
 require("./services/endevRest")(endevModule);
 require("./services/endevYql")(endevModule);
-require("./directives/edit");
-require("./directives/else");
-require("./directives/endevAnnotation");
-require("./directives/endevItem");
-require("./directives/from");
-require("./directives/import");
-require("./directives/insertInto");
-require("./directives/list");
-require("./directives/new");
-require("./directives/object");
-require("./directives/removeFrom");
-require("./directives/value");
+
+require("./directives/edit")(endevModule);
+require("./directives/else")(endevModule);
+require("./directives/endevAnnotation")(endevModule);
+require("./directives/endevItem")(endevModule);
+require("./directives/from")(endevModule);
+require("./directives/import")(endevModule);
+require("./directives/insertInto")(endevModule);
+require("./directives/list")(endevModule);
+require("./directives/new")(endevModule);
+require("./directives/object")(endevModule);
+require("./directives/removeFrom")(endevModule);
+require("./directives/value")(endevModule);
