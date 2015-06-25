@@ -5,7 +5,9 @@ require("angularfire");
 
 require("./utils");
 require("./xml2json");
-
-require("./modules/endev-templates/endev-templates");
 require("./modules/datatag/data-tag");
 require("./modules/endev/endev");
+
+angular.element(document).ready(function() {
+    angular.bootstrap(document, ['Endev']);
+});
