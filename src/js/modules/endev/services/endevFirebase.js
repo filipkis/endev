@@ -1,8 +1,8 @@
-//Firebase dependent features
-if ($injector.has('$firebaseObject')) {
-  
-  endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
-    var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
+var _ = require("underscore");
+
+module.exports = function(ngModule) {
+  ngModule.service("$endevFirebase", function($q,$firebaseObject,$firebaseArray){
+    var ref = ngModule.firebaseProvider && ngModule.firebaseProvider.path ? new Firebase(ngModule.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
     function getObjectRef(type,parentLabel,parentObject,parentData){
       if(parentData){
@@ -118,6 +118,5 @@ if ($injector.has('$firebaseObject')) {
       }
 
     }
-  }]);
+  });
 }
-

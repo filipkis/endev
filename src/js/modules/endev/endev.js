@@ -8,9 +8,9 @@ window.PAHT_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 //checking if angularFire is loaded
 try{ 
   angular.module("firebase")
-  window.endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
+  module = window.endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
 } catch(err) {
-  window.endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
+  module = window.endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
 }
 
 window.$injector = angular.injector(["ng","Endev"]);
@@ -173,11 +173,14 @@ angular.element(document).ready(function() {
     angular.bootstrap(document, ['Endev']);
 });
 
-endevModule.factory("Expr", require("./factories/expr"));
-require("./services/endevFirebase");
-require("./services/endevProvider");
-require("./services/endevRest");
-require("./services/endevYql");
+require("./factories/expr")(endevModule);
+
+if ($injector.has('$firebaseObject')) {
+    require("./services/endevFirebase")(endevModule);
+}
+require("./services/endevProvider")(endevModule);
+require("./services/endevRest")(endevModule);
+require("./services/endevYql")(endevModule);
 require("./directives/edit");
 require("./directives/else");
 require("./directives/endevAnnotation");
