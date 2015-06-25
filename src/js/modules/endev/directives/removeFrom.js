@@ -1,3 +1,5 @@
+var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
+
 module.exports = function(ngModule) {
   ngModule.directive("removeFrom", function($interpolate,$endevProvider) {
     return {
@@ -9,7 +11,7 @@ module.exports = function(ngModule) {
         if(attrs.provider) {
           provider = $endevProvider.get(attrs.provider,removeFrom);
         } else {
-          var pathRoot = removeFrom.match(PAHT_ROOT_REGEX);
+          var pathRoot = removeFrom.match(PATH_ROOT_REGEX);
           if(pathRoot){
             provider = scope["$endevProvider_" + pathRoot[0]];
             if(!provider) {

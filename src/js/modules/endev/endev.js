@@ -1,10 +1,6 @@
 var angular = require("angular");
 var _ = require("underscore");
 
-window.OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
-window.COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
-window.PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
-window.PAHT_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 
 //checking if angularFire is loaded
 try{ 

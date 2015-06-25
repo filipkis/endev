@@ -1,3 +1,5 @@
+var PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
+
 module.exports = function(ngModule) {
   ngModule.directive("object", function($q){
     return {

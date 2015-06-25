@@ -1,5 +1,7 @@
 var angular = require("angular");
 var _ = require("underscore");
+var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 
 module.exports = function(ngModule) {
   ngModule.directive("from", function($interpolate,$endevProvider,$compile,$q,Expr){
@@ -57,7 +59,7 @@ module.exports = function(ngModule) {
               if(attrs.provider) {
                 provider = $endevProvider.get(attrs.provider,attrFrom);
               } else {
-                var pathRoot = from.match(PAHT_ROOT_REGEX);
+                var pathRoot = from.match(PATH_ROOT_REGEX);
                 if(pathRoot){
                   provider = scope["$endevProvider_" + pathRoot[0]];
                   if(!provider) {
