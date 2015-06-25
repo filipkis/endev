@@ -11,8 +11,6 @@ if (firebaseEnabled) ngModuleDeps.push("firebase");
 
 var endevModule = angular.module("Endev", ngModuleDeps);  
 
-window.$injector = angular.injector(["ng","Endev"]);
-
 //The basic run
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
   $rootScope.Date = Date;
@@ -24,7 +22,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   angular.element($document[0].body).append($templateCache.get('src/html/endevhelper.tpl.html'));
 
 //Firebase dependent features
-if ($injector.has('$firebaseObject')) {
+if (firebaseEnabled) {
   endevModule.run(["$rootScope","$firebaseArray","$firebaseObject","$q",function($rootScope,$firebaseArray,$firebaseObject,$q) {
     $rootScope.from =  _.memoize(function(path) {
       var ref = new Firebase("https://endev.firebaseio.com");
@@ -40,7 +38,7 @@ angular.element(document).ready(function() {
 
 require("./factories/expr")(endevModule);
 
-if ($injector.has('$firebaseObject')) {
+if (firebaseEnabled) {
     require("./services/endevFirebase")(endevModule);
 }
 require("./services/endevProvider")(endevModule);
