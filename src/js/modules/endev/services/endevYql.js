@@ -1,7 +1,7 @@
 var _ = require("underscore");
 
 module.exports = function(ngModule) {
-  endevModule.service("$endevYql", function($http,$q){ 
+  ngModule.service("$endevYql", function($http,$q){ 
     return {
       query: function(attrs,extra,callback) {
         var result = $q.defer()

@@ -1,14 +1,15 @@
 var angular = require("angular");
 var _ = require("underscore");
+var throws = require("throws");
 
+var firebaseEnabled = !throws(function(){
+  angular.module("firebase");
+});
 
-//checking if angularFire is loaded
-try{ 
-  angular.module("firebase")
-  module = window.endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
-} catch(err) {
-  module = window.endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
-}
+var ngModuleDeps = ["endev-templates","endev-data-tag"];
+if (firebaseEnabled) ngModuleDeps.push("firebase");
+
+var endevModule = angular.module("Endev", ngModuleDeps);  
 
 window.$injector = angular.injector(["ng","Endev"]);
 

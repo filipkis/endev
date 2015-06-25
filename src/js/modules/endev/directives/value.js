@@ -1,5 +1,5 @@
 module.exports = function(ngModule) {
-  endevModule.directive("value", function($compile){
+  ngModule.directive("value", function($compile){
     return {
       priority: 1000, 
       terminal:true,
