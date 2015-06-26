@@ -1,3 +1,5 @@
+var pixlxml = require("pixl-xml");
+
 module.exports = function(ngModule) {
   ngModule.service("$endevRest", function($http,$interpolate,$q){ 
 
@@ -22,8 +24,7 @@ module.exports = function(ngModule) {
             angular.isObject(attrs.headers) ? attrs.headers : undefined,
           transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
             if (headersGetter()['content-type']=="application/atom+xml") {
-              var x2js = new X2JS();
-              return x2js.xml_str2json(data);
+              return pixlxml.parse(data);
             } else {
               return data;
             }

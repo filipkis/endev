@@ -4,7 +4,6 @@ window.firebase = require("firebase");
 require("angularfire");
 
 require("./lib/utils");
-require("./lib/xml2json");
 require("./angular/datatag/");
 require("./angular/endev/");
 

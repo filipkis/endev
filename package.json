@@ -24,6 +24,7 @@
     "gulp-ng-annotate": "^1.0.0",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
+    "pixl-xml": "^1.0.3",
     "stringify": "^3.1.0",
     "throws": "^0.1.7",
     "underscore": "^1.8.3",
