@@ -9,7 +9,7 @@ uglify     = require "gulp-uglify"
 
 gulp.task "default", ->
         bundler = browserify
-            entries: ["src/js/endev.js"]
+            entries: ["src/index.js"]
             debug: yes
             transform: do stringify
 

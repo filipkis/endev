@@ -7,6 +7,6 @@ module.exports = function(ngModule) {
 
     angular.element(document.body)
       .attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}")
-      .append(require("../../../../html/endevHelper.tpl.html"));
+      .append(require("../templates/annotations.html"));
   });
 };
