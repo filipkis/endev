@@ -1,5 +1,7 @@
 var angular = require("angular");
+var extend = require("extend");
 var _ = require("underscore");
+
 var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
 var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 
@@ -119,8 +121,11 @@ module.exports = function(ngModule) {
 
                   var equalityParams = _.filter(params,function(param){return param.operator[0] == "="});
                 
-                  var filter = _.reduce(equalityParams,function(memo,param){return _.merge(param.obj,memo)},{});
-                  // console.log("Filter: ", filter);
+                  var filter = {};
+                  equalityParams.forEach(function(param){
+                    extend(true, filter, param.obj);
+                  });
+
                   var queryParameters = _.defaults({from:type,where:attrs.where,params:params,filter:filter},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
 
                   if (parent) {

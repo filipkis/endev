@@ -19,6 +19,7 @@
     "coffee-script": "^1.9.3",
     "del": "^1.2.0",
     "event-stream": "^3.3.1",
+    "extend": "^2.0.1",
     "firebase": "^2.2.7",
     "gulp": "^3.9.0",
     "gulp-ng-annotate": "^1.0.0",
