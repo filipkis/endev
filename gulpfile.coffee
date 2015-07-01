@@ -5,7 +5,6 @@ source     = require "vinyl-source-stream"
 buffer     = require "vinyl-buffer"
 stringify  = require "stringify"
 ngAnnotate = require "gulp-ng-annotate"
-uglify     = require "gulp-uglify"
 
 gulp.task "default", ->
         bundler = browserify
@@ -18,6 +17,5 @@ gulp.task "default", ->
             .pipe(do buffer)
             .pipe(sourcemaps.init loadMaps: yes)
             .pipe(do ngAnnotate)
-            .pipe(do uglify)
             .pipe(sourcemaps.write "./")
             .pipe(gulp.dest "./dist")
