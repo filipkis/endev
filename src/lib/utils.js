@@ -14,10 +14,6 @@ _.isMatchDeep = function(object, attrs) {
   return true;
 };
 
-var hasherWithThis = function() {
-  return JSON.stringify({this:this,args:arguments});
-}; 
-
 _.valueOnPath = function(object,path,removeRoot) {
 
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
