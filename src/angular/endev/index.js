@@ -2,25 +2,15 @@ var angular = require("angular");
 var _ = require("underscore");
 var throws = require("throws");
 
-var firebaseEnabled = !throws(function(){
-  angular.module("firebase");
-});
-
-var ngModuleDeps = ["endev-data-tag"];
-if (firebaseEnabled) ngModuleDeps.push("firebase");
-
-var endevModule = angular.module("Endev", ngModuleDeps);  
+var endevModule = angular.module("Endev", [
+    "endev-data-tag",
+    require("angularfire")
+]);  
 
 require("./runs/default")(endevModule);
-if (firebaseEnabled) {
-  require("./runs/default")(endevModule);
-}
-
+require("./runs/firebase")(endevModule);
 require("./factories/expr")(endevModule);
-
-if (firebaseEnabled) {
-    require("./services/endevFirebase")(endevModule);
-}
+require("./services/endevFirebase")(endevModule);
 require("./services/endevProvider")(endevModule);
 require("./services/endevRest")(endevModule);
 require("./services/endevYql")(endevModule);

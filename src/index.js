@@ -1,8 +1,3 @@
-window.angular  = require("angular");
-window._        = require("underscore");
-window.firebase = require("firebase");
-require("angularfire");
-
 require("./angular/datatag/");
 require("./angular/endev/");
 
