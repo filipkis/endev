@@ -1,3 +1,5 @@
+var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+
 module.exports = function(ngModule) {
     ngModule.directive("data", function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate,Expr) {
       function EndevLog() {
