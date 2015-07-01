@@ -14,12 +14,6 @@ _.isMatchDeep = function(object, attrs) {
   return true;
 };
 
-_.matcherDeep = function(attrs) {
-  return function(obj) {
-    return _.isMatchDeep(obj,attrs);
-  } 
-} 
-
 var hasherWithThis = function() {
   return JSON.stringify({this:this,args:arguments});
 }; 

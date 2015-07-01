@@ -56,7 +56,6 @@ module.exports = function(ngModule) {
         })
       });
       return results;
-      // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
     }
 
     return {
