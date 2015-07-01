@@ -1,4 +1,5 @@
 var _ = require("underscore");
+var equals = require("equals");
 
 module.exports = function(ngModule) {
   ngModule.service("$endevFirebase", function($q,$firebaseObject,$firebaseArray){
@@ -44,8 +45,7 @@ module.exports = function(ngModule) {
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
       _.each(data,function(value, key){
-        // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
-        if(_.isMatchDeep(value,filter)){
+        if(equals(value,filter)){
           // results[key] = value;
           results.push(value);
         }
@@ -106,7 +106,6 @@ module.exports = function(ngModule) {
         console.log("Removing:",attrs.newObject);
         var objRef = getObjectRef(attrs.removeFrom,attrs.parentLabel,attrs.parentObject,attrs.parentData);
         $firebaseObject(objRef).$loaded().then(function(object){
-          // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
           $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
         })
 
