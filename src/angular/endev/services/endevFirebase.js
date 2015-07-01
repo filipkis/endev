@@ -1,5 +1,6 @@
 var _ = require("underscore");
 var equals = require("equals");
+var valueOnPath = require("value-on-path");
 
 module.exports = function(ngModule) {
   ngModule.service("$endevFirebase", function($q,$firebaseObject,$firebaseArray){
@@ -52,7 +53,7 @@ module.exports = function(ngModule) {
       });
       _.each(inSetParams,function(param){
         results = _.filter(results,function(object){
-          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+          return _.contains(param.value,valueOnPath(object,param.lhs,true));
         })
       });
       return results;

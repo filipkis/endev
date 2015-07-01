@@ -1,0 +1,9 @@
+{
+  "name": "value-on-path",
+  "description": "Not sure what this does exactly",
+  "version": "0.0.1",
+  "dependencies": {
+    "angular": "^1.4.1",
+    "underscore": "^1.8.3"
+  }
+}

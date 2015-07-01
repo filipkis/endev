@@ -3,7 +3,6 @@ window._        = require("underscore");
 window.firebase = require("firebase");
 require("angularfire");
 
-require("./lib/utils");
 require("./angular/datatag/");
 require("./angular/endev/");
 

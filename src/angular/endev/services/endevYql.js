@@ -1,4 +1,5 @@
 var _ = require("underscore");
+var valueOnPath = require("value-on-path");
 
 module.exports = function(ngModule) {
   ngModule.service("$endevYql", function($http,$q){ 
@@ -6,7 +7,7 @@ module.exports = function(ngModule) {
       query: function(attrs,extra,callback) {
         var result = $q.defer()
         if(attrs.parentLabel){
-          var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
+          var tmp = valueOnPath(attrs.parentObject,attrs.from,true)
           if(callback && angular.isFunction(callback)) callback(tmp)
           else result.resolve(tmp);
         }else{
@@ -27,7 +28,7 @@ module.exports = function(ngModule) {
             .success(function(data){
               var d = data.query.results;
               if(attrs.use && attrs.from.indexOf(".")>=0) {
-                d = _.valueOnPath(data.query.results,attrs.from,true);
+                d = valueOnPath(data.query.results,attrs.from,true);
               }
               console.log("Data:",d);
               result.resolve(d);
