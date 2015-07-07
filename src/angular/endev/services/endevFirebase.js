@@ -1,6 +1,7 @@
 var _ = require("underscore");
 var equals = require("equals");
 var valueOnPath = require("value-on-path");
+var Firebase = require("firebase");
 
 module.exports = function(ngModule) {
   ngModule.service("$endevFirebase", function($q,$firebaseObject,$firebaseArray){
