@@ -1,4 +1,5 @@
 var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
+var _ = require("underscore");
 
 module.exports = function(ngModule) {
     ngModule.directive("data", function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate,Expr) {
