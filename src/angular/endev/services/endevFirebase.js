@@ -1,7 +1,7 @@
-var _ = require("underscore");
-var equals = require("equals");
+var _           = require("underscore");
+var Firebase    = require("firebase");
+var contains    = require("object-contains");
 var valueOnPath = require("value-on-path");
-var Firebase = require("firebase");
 
 module.exports = function(ngModule) {
   ngModule.service("$endevFirebase", function($q,$firebaseObject,$firebaseArray){
@@ -47,7 +47,7 @@ module.exports = function(ngModule) {
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
       _.each(data,function(value, key){
-        if(equals(value,filter)){
+        if(contains(value,filter)){
           // results[key] = value;
           results.push(value);
         }
