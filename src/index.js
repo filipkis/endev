@@ -1,5 +1,7 @@
 require("./angular/datatag/");
-require("./angular/endev/");
+window.endev = {
+    app: require("./angular/endev/")
+};
 
 angular.element(document).ready(function() {
     angular.bootstrap(document, ['Endev']);

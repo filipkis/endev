@@ -28,3 +28,5 @@ require("./directives/new")(endevModule);
 require("./directives/object")(endevModule);
 require("./directives/removeFrom")(endevModule);
 require("./directives/value")(endevModule);
+
+module.exports = endevModule;
