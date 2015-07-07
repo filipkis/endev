@@ -5,7 +5,7 @@ module.exports = function(ngModule) {
       priority: 1000,
       compile: function(element, attrs) {
         element.attr("ng-click", attrs["click"]);
-        element.removeAttr("data-if");
+        element.removeAttr("data-click");
         return {
           pre: function preLink(scope, iElement, iAttrs, controller) {  },
           post: function postLink(scope, iElement, iAttrs, controller) {  
