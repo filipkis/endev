@@ -7,15 +7,16 @@ stringify  = require "stringify"
 ngAnnotate = require "gulp-ng-annotate"
 
 gulp.task "default", ->
-        bundler = browserify
-            entries: ["src/index.js"]
-            debug: yes
-            transform: do stringify
+    bundler = browserify
+        entries: ["src/index.js"]
+        debug: yes
+        transform: do stringify
+        standalone: "endev"
 
-        bundler.bundle()
-            .pipe(source "endev.full.js")
-            .pipe(do buffer)
-            .pipe(sourcemaps.init loadMaps: yes)
-            .pipe(do ngAnnotate)
-            .pipe(sourcemaps.write "./")
-            .pipe(gulp.dest "./dist")
+    bundler.bundle()
+        .pipe(source "endev.full.js")
+        .pipe(do buffer)
+        .pipe(sourcemaps.init loadMaps: yes)
+        .pipe(do ngAnnotate)
+        .pipe(sourcemaps.write "./")
+        .pipe(gulp.dest "./dist")
