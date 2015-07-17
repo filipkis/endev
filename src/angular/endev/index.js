@@ -1,24 +1,30 @@
+/**
+ * This module provides access to backend data via angular services
+ * and directives.
+ */
 var angular = require("angular");
-var _ = require("underscore");
-var throws = require("throws");
+var datatag = require("../datatag/");
 
-var endevModule = angular.module("Endev", [
+// Define the "Endev" Angular module
+var ngModule = angular.module("Endev", [
     "endev-data-tag",
     require("angularfire")
 ]);  
 
-require("./runs/default")(endevModule);
-require("./runs/firebase")(endevModule);
-require("./factories/expr")(endevModule);
-require("./services/endevFirebase")(endevModule);
-require("./services/endevProvider")(endevModule);
-require("./services/endevRest")(endevModule);
-require("./services/endevYql")(endevModule);
-require("./directives/endevAnnotation")(endevModule);
-require("./directives/endevItem")(endevModule);
-require("./directives/from")(endevModule);
-require("./directives/insertInto")(endevModule);
-require("./directives/object")(endevModule);
-require("./directives/removeFrom")(endevModule);
+// Attach the services, factories, directives etc. to our module
+require("./runs/default")(ngModule);
+require("./runs/firebase")(ngModule);
+require("./factories/expr")(ngModule);
+require("./services/endevFirebase")(ngModule);
+require("./services/endevProvider")(ngModule);
+require("./services/endevRest")(ngModule);
+require("./services/endevYql")(ngModule);
+require("./directives/endevAnnotation")(ngModule);
+require("./directives/endevItem")(ngModule);
+require("./directives/from")(ngModule);
+require("./directives/insertInto")(ngModule);
+require("./directives/object")(ngModule);
+require("./directives/removeFrom")(ngModule);
 
-module.exports = endevModule;
+// Export the module so it can be referenced by the outside world
+module.exports = ngModule;
