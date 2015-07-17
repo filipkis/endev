@@ -19,5 +19,6 @@ require("./directives/list")(ngModule);
 require("./directives/new")(ngModule);
 require("./directives/value")(ngModule);
 
-// Export the module so it can be referenced by the outside world
-module.exports = ngModule;
+// Since the module is now attached directly to Angular, we only
+// export its name.
+module.exports = "syntaxWrapper";

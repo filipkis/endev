@@ -2,12 +2,11 @@
  * This module provides access to backend data via angular services
  * and directives.
  */
-var angular = require("angular");
+var angular     = require("angular");
+var angularfire = require("angularfire");
 
 // Define the "Endev" Angular module
-var ngModule = angular.module("Endev", [
-    require("angularfire")
-]);  
+var ngModule = angular.module("Endev", [angularfire]);  
 
 // Attach the services, factories, directives etc. to our module
 require("./runs/default")(ngModule);
@@ -25,5 +24,6 @@ require("./directives/insertInto")(ngModule);
 require("./directives/object")(ngModule);
 require("./directives/removeFrom")(ngModule);
 
-// Export the module so it can be referenced by the outside world
-module.exports = ngModule;
+// Since the module is now attached directly to Angular, we only
+// export its name.
+module.exports = "Endev";

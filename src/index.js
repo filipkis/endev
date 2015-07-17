@@ -17,7 +17,7 @@ var endev         = require("./angular/endev/");
 
 // Bootstrap the document to load our modules at startup
 angular.element(document).ready(function() {
-    angular.bootstrap(document, ['Endev', 'syntaxWrapper']);
+    angular.bootstrap(document, [endev, syntaxWrapper]);
 });
 
 // Provide access to the Endev module to browserify
