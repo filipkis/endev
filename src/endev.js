@@ -363,6 +363,7 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var insertInto = $interpolate(attrs.insertInto,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,insertInto);
@@ -403,6 +404,7 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var removeFrom = $interpolate(attrs.removeFrom,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,removeFrom);
