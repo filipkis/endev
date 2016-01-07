@@ -1,8 +1,6 @@
 	
 var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
 var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
-var PATH_REGEX = new RegExp(/^(?:[a-zA-Z_$][0-9a-zA-Z_$]*\.)*(?:[a-zA-Z_$][0-9a-zA-Z_$]*)/);
-var PAHT_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 
 
 
@@ -168,25 +166,14 @@ endevModule.directive("endevAnnotation",[function(){
 endevModule.directive("endevItem",["$endevProvider","$interpolate",function($endevProvider,$interpolate){
   return {
     // require: "^from",
-    link: function(scope,element,attrs,fromCtrl){
+    link: function(scope,element,attrs){
       var attrFrom = attrs.endevItem;
       var label = attrs.endevItem.split(" ")[1];
       var from = $interpolate(attrFrom,false,null,true)(scope);
       var type = from.split(" ")[0];
-      var provider;
-      var parent = null;
-      if(attrs.provider) {
-        provider = $endevProvider.get(attrs.provider,attrFrom);
-      } else {
-        var pathRoot = from.match(PAHT_ROOT_REGEX);
-        if(pathRoot){
-          provider = scope["$endevProvider_" + pathRoot[0]];
-          if(!provider) {
-            throw new Error("No self or parent provider found for:",attrFrom, " on:", element);
-          }
-          parent = pathRoot[0];
-        }
-      }
+      var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
+      var provider = context.provider;
+
       if(attrs.autoUpdate){
         // scope.$watch(label,function(value){
           var value = scope[label];
@@ -209,7 +196,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
   }
 }]);
 
-endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','Expr', function($interpolate,$endevProvider,$compile,$q,Expr){
+endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$rootScope','Expr', function($interpolate,$endevProvider,$compile,$q,$rootScope,Expr){
   function getRoot(element) {
     if(element[0].tagName === 'OPTION') {
       return element.parent();
@@ -233,7 +220,6 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
         tAttributes.$set("endev-item",tAttributes.from)
-        var container
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
@@ -251,7 +237,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
           element  =  $compile(element)(scope);
           if(element[0].tagName !== 'DATA') {
             if(angular.isDefined(scope["$endevData_" + label])) 
-              throw new Error("Conflicting object " + lable + " defined by:", element);
+              throw new Error("Conflicting object " + label + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
             var type = from.split(",")[0].split(" ")[0];
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
@@ -259,20 +245,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
                 exp.setValue(scope.$eval(exp.rhs));
                 return exp;
               }) : [];
-            var provider;
-            var parent = null;
-            if(attrs.provider) {
-              provider = $endevProvider.get(attrs.provider,attrFrom);
-            } else {
-              var pathRoot = from.match(PAHT_ROOT_REGEX);
-              if(pathRoot){
-                provider = scope["$endevProvider_" + pathRoot[0]];
-                if(!provider) {
-                  throw new Error("No self or parent provider found for:",from," on:", element);
-                }
-                parent = pathRoot[0];
-              }
-            }
+            var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
+            var provider = context.provider;
+            var parent = context.parent;
+
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);
@@ -362,21 +338,10 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
     scope:true,
     link: function (scope,element,attrs) {
       var insertInto = $interpolate(attrs.insertInto,false,null,true)(scope)
-      var provider;
-      var parent = null;
+      var context = $endevProvider.getContext(attrs.provider,insertInto,element,scope);
+      var provider = context.provider;
+      var parent = context.parent;
 
-      if(attrs.provider) {
-        provider = $endevProvider.get(attrs.provider,insertInto);
-      } else {
-        var pathRoot = insertInto.match(PAHT_ROOT_REGEX);
-        if(pathRoot){
-          provider = scope["$endevProvider_" + pathRoot[0]];
-          if(!provider) {
-            throw new Error("No self or parent provider found for:",insertInto);
-          }
-          parent = pathRoot[0];
-        }
-      }
       scope.insert = function(object) {
         console.log("Inserting:",object);
 
@@ -403,21 +368,10 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
     scope:true,
     link: function (scope,element,attrs) {
       var removeFrom = $interpolate(attrs.removeFrom,false,null,true)(scope)
-      var provider;
-      var parent = null;
+      var context = $endevProvider.getContext(attrs.provider,removeFrom,element,scope);
+      var provider = context.provider;
+      var parent = context.parent;
 
-      if(attrs.provider) {
-        provider = $endevProvider.get(attrs.provider,removeFrom);
-      } else {
-        var pathRoot = removeFrom.match(PAHT_ROOT_REGEX);
-        if(pathRoot){
-          provider = scope["$endevProvider_" + pathRoot[0]];
-          if(!provider) {
-            throw new Error("No self or parent provider found for:",removeFrom);
-          }
-          parent = pathRoot[0];
-        }
-      }
       scope.remove = function(object) {
         console.log("Removing:",object);
 
@@ -444,4 +398,8 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
+  if(!(window.endev && !window.endev.showHelper)){
+    $rootScope.$endevShowHelper = true;
+  }
+
 }]);

@@ -1,8 +1,27 @@
+var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
+var PROTOCOL_REGEX = new RegExp(/^([a-zA-Z_$][0-9a-zA-Z_$]*):/);
+
 endevModule.service("$endevProvider",['$injector', function($injector){
   return {
-    get: function(provider,type){
-      return provider ? $injector.get('$endev' + provider[0].toUpperCase() + provider.slice(1)) :
-        type.search(/http(s)?:\/\//) == 0 ? $injector.get("$endevRest") : $injector.get('$endevYql');
+    getContext: function(name,path,element,scope) {
+      var provider, parent;
+      var name = name || (path.search(/http(s)?:\/\//) > 1 ? "rest" : (path.match(PROTOCOL_REGEX) || [null,null])[1]);
+      if(name) {
+        provider = $injector.get('$endev' + name[0].toUpperCase() + name.slice(1));
+      } else {
+        var pathRoot = path.match(PATH_ROOT_REGEX);
+        if(pathRoot){
+          provider = scope["$endevProvider_" + pathRoot[0]];
+          if(!provider) {
+            throw new Error("No self or parent provider found for:", path, "on:", element);
+          }
+          parent = pathRoot[0];
+        }
+      }
+      return {
+        provider: provider,
+        parent: parent
+      }
     }
   }
 }]);
@@ -10,9 +29,10 @@ endevModule.service("$endevProvider",['$injector', function($injector){
 endevModule.service("$endevYql", ['$http','$q', function($http,$q){ 
   return {
     query: function(attrs,extra,callback) {
+      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer()
       if(attrs.parentLabel){
-        var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
+        var tmp = _.valueOnPath(attrs.parentObject,from,true)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{
@@ -24,7 +44,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
         if(attrs.use) {
           query = "use '" + attrs.use + "' as tmpTable; select * from tmpTable";
         } else {
-          query = "select * from " + attrs.from;
+          query = "select * from " + from;
         }
         if(where) query += " where " + where;
         $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
@@ -32,8 +52,8 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
           .success(function(data){
             var d = data.query.results;
-            if(attrs.use && attrs.from.indexOf(".")>=0) {
-              d = _.valueOnPath(data.query.results,attrs.from,true);
+            if(attrs.use && from.indexOf(".")>=0) {
+              d = _.valueOnPath(data.query.results,from,true);
             }
             console.log("Data:",d);
             result.resolve(d);
@@ -158,9 +178,9 @@ if ($injector.has('$firebaseObject')) {
     return {
       query: function(attrs,extraAttrs,callback) {
         var result = $q.defer();
-
+        var from = attrs.from.slice(attrs.from.indexOf(":")+1);
         if(unwatchCache(callback).unwatch) unwatchCache(callback).unwatch();
-        var objRef = getObjectRef(attrs.from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
         // TODO  need to add a watcher for the result and then update the value somehow
         $firebaseArray(objRef).$loaded().then(function(data){
 
@@ -187,8 +207,8 @@ if ($injector.has('$firebaseObject')) {
       }, 
       insert: function(attrs) {
         var result = $q.defer();
-
-        var objRef = getObjectRef(attrs.insertInto,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var insertInto = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
+        var objRef = getObjectRef(insertInto,attrs.parentLabel,attrs.parentObject,attrs.parentData);
 
         $firebaseArray(objRef).$loaded().then(function(list){
           list.$add(attrs.newObject).then(function(ref){
@@ -201,7 +221,8 @@ if ($injector.has('$firebaseObject')) {
       },
       remove: function(attrs) {
         console.log("Removing:",attrs.newObject);
-        var objRef = getObjectRef(attrs.removeFrom,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var removeFrom = attrs.removeFrom.slice(attrs.removeFrom.indexOf(":")+1);
+        var objRef = getObjectRef(removeFrom,attrs.parentLabel,attrs.parentObject,attrs.parentData);
         $firebaseObject(objRef).$loaded().then(function(object){
           // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
           $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
@@ -209,7 +230,8 @@ if ($injector.has('$firebaseObject')) {
 
       },
       bind: function(attrs) {
-        var objRef = getObjectRef(attrs.from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
         if(objRef) $firebaseObject(objRef).$bindTo(attrs.scope,attrs.label)
       }
 
