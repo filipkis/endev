@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-06-02 */
+/*! endev 0.2.1 2016-01-07 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -30904,6 +30904,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               // if(!(_.keys(data).length >3) && attrs.default){
                 var def = scope.$eval(attrs.default);
                 if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                  //TODO consider using where data as well
                   data.$add(def);
                 } else {
                   data.push(def);
@@ -30923,7 +30924,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               console.log("Executed with params: ", params);
               if(provider){
 
-                var equalityParams = _.filter(params,function(param){return param.operator == "="});
+                var equalityParams = _.filter(params,function(param){return param.operator[0] == "="});
               
                 var filter = _.reduce(equalityParams,function(memo,param){return _.merge(param.obj,memo)},{});
                 // console.log("Filter: ", filter);
@@ -30964,6 +30965,7 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var insertInto = $interpolate(attrs.insertInto,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,insertInto);
@@ -31004,6 +31006,7 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var removeFrom = $interpolate(attrs.removeFrom,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,removeFrom);
@@ -31284,7 +31287,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
     query: function(attrs,extra,callback) {
       var result = $q.defer()
       if(attrs.parentLabel){
-        var tmp = _.valueOnPath(attrs.parentObject,attrs.from.substring(attrs.parentLabel.length+1))
+        var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{
@@ -31305,7 +31308,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           .success(function(data){
             var d = data.query.results;
             if(attrs.use && attrs.from.indexOf(".")>=0) {
-              d = _.valueOnPath(data.query.results,attrs.from.substring(attrs.from.indexOf(".")+1));
+              d = _.valueOnPath(data.query.results,attrs.from,true);
             }
             console.log("Data:",d);
             result.resolve(d);
@@ -31407,7 +31410,7 @@ if ($injector.has('$firebaseObject')) {
     function filterData(data,attrs){
       var results = []
       var filter = attrs.filter;
-      var equalityParams
+      var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
       // var results = {}
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
@@ -31417,6 +31420,11 @@ if ($injector.has('$firebaseObject')) {
           // results[key] = value;
           results.push(value);
         }
+      });
+      _.each(inSetParams,function(param){
+        results = _.filter(results,function(object){
+          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+        })
       });
       return results;
       // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
@@ -31433,9 +31441,9 @@ if ($injector.has('$firebaseObject')) {
 
           console.log("Data:",data)
           var object = filterData(data,attrs);
-          if(object.length === 0 && attrs.autoInsert) {
-            data.$add(attrs.filter)
-          }
+          // if(object.length === 0 && attrs.autoInsert) {
+          //   data.$add(attrs.filter)
+          // }
           object.$endevRef = objRef;
           object.$add = function(addObj){
             data.$add(addObj);
@@ -31568,8 +31576,9 @@ var hasherWithThis = function() {
   return JSON.stringify({this:this,args:arguments});
 }; 
 
-_.valueOnPath = function(object,path) {
-  return _.reduce(path.split("."),function(memo,id){
+_.valueOnPath = function(object,path,removeRoot) {
+
+  return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
     return angular.isDefined(memo) ? memo[id] : null;
   },object)
 }
