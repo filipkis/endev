@@ -1,4 +1,4 @@
-/*! endev 0.2.0 2015-03-19 */
+/*! endev 0.2.1 2016-01-07 */
 //! makumba-angular.js
 //! version: 0.1.0
 //! authors: Filip Kis
@@ -361,7 +361,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
         if(pathRoot){
           provider = scope["$endevProvider_" + pathRoot[0]];
           if(!provider) {
-            throw new Error("No self or parent provider found for:",attrFrom);
+            throw new Error("No self or parent provider found for:",attrFrom, " on:", element);
           }
           parent = pathRoot[0];
         }
@@ -432,7 +432,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             if(angular.isDefined(scope["$endevData_" + label])) 
               throw new Error("Conflicting object " + lable + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
-            var type = from.split(" ")[0];
+            var type = from.split(",")[0].split(" ")[0];
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
                 var exp = new Expr(expr,label);
                 exp.setValue(scope.$eval(exp.rhs));
@@ -442,17 +442,17 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var parent = null;
             if(attrs.provider) {
               provider = $endevProvider.get(attrs.provider,attrFrom);
-              scope["$endevProvider_" + label] = provider;
             } else {
               var pathRoot = from.match(PAHT_ROOT_REGEX);
               if(pathRoot){
                 provider = scope["$endevProvider_" + pathRoot[0]];
                 if(!provider) {
-                  throw new Error("No self or parent provider found for:",from);
+                  throw new Error("No self or parent provider found for:",from," on:", element);
                 }
                 parent = pathRoot[0];
               }
             }
+            scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);
             if(watchExp.length>0) {
@@ -480,7 +480,12 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
               if((!data || !(data.length >0)) && attrs.default){
               // if(!(_.keys(data).length >3) && attrs.default){
                 var def = scope.$eval(attrs.default);
-                data.push(def);
+                if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                  //TODO consider using where data as well
+                  data.$add(def);
+                } else {
+                  data.push(def);
+                }
                 // data['default'] = def;
                 scope['$isDefault'] = true;
               } else {
@@ -495,8 +500,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var execute = _.throttle(function (){ 
               console.log("Executed with params: ", params);
               if(provider){
+
+                var equalityParams = _.filter(params,function(param){return param.operator[0] == "="});
               
-                var filter = _.reduce(params,function(memo,param){return _.merge(param.obj,memo)},{});
+                var filter = _.reduce(equalityParams,function(memo,param){return _.merge(param.obj,memo)},{});
                 // console.log("Filter: ", filter);
                 var queryParameters = _.defaults({from:type,where:attrs.where,params:params,filter:filter},_.extendOwn({},_.pick(attrs,function(value,key){ return key.indexOf('$') !=0 })));
 
@@ -535,6 +542,7 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var insertInto = $interpolate(attrs.insertInto,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,insertInto);
@@ -575,6 +583,7 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
     link: function (scope,element,attrs) {
       var removeFrom = $interpolate(attrs.removeFrom,false,null,true)(scope)
       var provider;
+      var parent = null;
 
       if(attrs.provider) {
         provider = $endevProvider.get(attrs.provider,removeFrom);
@@ -611,7 +620,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   $rootScope.Math = Math;
   $rootScope.$endevAnnotation = false;
   $rootScope.$endevErrors = []
-  if(window.endev.logic) angular.extend($rootScope,window.endev.logic);
+  if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
 }]);
@@ -855,10 +864,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
     query: function(attrs,extra,callback) {
       var result = $q.defer()
       if(attrs.parentLabel){
-        var tmp = _.reduce(attrs.from.substring(attrs.parentLabel.length+1).split("."),function(memo,id){
-          console.log("Loging path:",memo,id);
-          return angular.isDefined(memo) ? memo[id] : null;
-        },attrs.parentObject)
+        var tmp = _.valueOnPath(attrs.parentObject,attrs.from,true)
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       }else{
@@ -879,9 +885,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           .success(function(data){
             var d = data.query.results;
             if(attrs.use && attrs.from.indexOf(".")>=0) {
-              d = _.reduce(attrs.from.substring(attrs.from.indexOf(".")+1).split("."),function(memo,id){
-                return angular.isDefined(memo) ? memo[id] : null;
-              },data.query.results)
+              d = _.valueOnPath(data.query.results,attrs.from,true);
             }
             console.log("Data:",d);
             result.resolve(d);
@@ -946,7 +950,7 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
 if ($injector.has('$firebaseObject')) {
   
   endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
-    var ref = new Firebase("https://endev.firebaseio.com");
+    var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
     function getObjectRef(type,parentLabel,parentObject,parentData){
       if(parentData){
@@ -980,8 +984,10 @@ if ($injector.has('$firebaseObject')) {
       return result;
     };
 
-    function filterData(data,filter){
+    function filterData(data,attrs){
       var results = []
+      var filter = attrs.filter;
+      var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
       // var results = {}
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
@@ -991,6 +997,11 @@ if ($injector.has('$firebaseObject')) {
           // results[key] = value;
           results.push(value);
         }
+      });
+      _.each(inSetParams,function(param){
+        results = _.filter(results,function(object){
+          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+        })
       });
       return results;
       // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
@@ -1006,17 +1017,20 @@ if ($injector.has('$firebaseObject')) {
         $firebaseArray(objRef).$loaded().then(function(data){
 
           console.log("Data:",data)
-          var object = filterData(data,attrs.filter);
-          if(object.length === 0 && attrs.autoInsert) {
-            data.$add(attrs.filter)
-          }
+          var object = filterData(data,attrs);
+          // if(object.length === 0 && attrs.autoInsert) {
+          //   data.$add(attrs.filter)
+          // }
           object.$endevRef = objRef;
+          object.$add = function(addObj){
+            data.$add(addObj);
+          }
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);
           else result.resolve(object);
           unwatchCache(callback).unwatch = data.$watch(function(){
             console.log("Data changed:", data, attrs.where);
-            object = filterData(data,attrs.filter);               
+            object = filterData(data,attrs);               
             if(callback && angular.isFunction(callback)) callback(object);
           })
         });  
@@ -1138,6 +1152,13 @@ _.matcherDeep = function(attrs) {
 var hasherWithThis = function() {
   return JSON.stringify({this:this,args:arguments});
 }; 
+
+_.valueOnPath = function(object,path,removeRoot) {
+
+  return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
+    return angular.isDefined(memo) ? memo[id] : null;
+  },object)
+}
 /*
  Copyright 2011-2013 Abdulla Abdurakhmanov
  Original sources are available at https://code.google.com/p/x2js/
@@ -1716,6 +1737,8 @@ endev = window.endev = new Endev();
 }(window || this,_));
 
 angular.element(document).ready(function() {
-  angular.bootstrap(document, ['Endev']);
+  if(endev.autoStart !== false) {
+    angular.bootstrap(document, ['Endev']);
+  }
 });
 //# sourceMappingURL=endev.js.map
