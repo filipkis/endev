@@ -30492,17 +30492,6 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "</div>");
 }]);
 
-
-var QueryContext = function() {
-
-}
-
-var from = function(fromString) {
-
-    return new QueryContext();
-}
-
-
 angular.module("endev-data-tag",[])
 .directive("data", ['$rootScope','$http','$injector','$interval','$timeout','$log','$interpolate','Expr', function($rootScope,$http,$injector,$interval,$timeout,$log,$interpolate,Expr) {
   function EndevLog() {
