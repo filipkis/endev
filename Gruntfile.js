@@ -108,6 +108,28 @@ module.exports = function(grunt) {
         files: ['src/**/*.js','src/**/*.prefix','src/**/*.suffix'],
         tasks: [ 'default' ]
       },
+    },
+    'gh-pages': {
+      options: {
+        base: 'dist',
+        add: true,
+        clone: '../gh-pages'
+      },
+      src: ['**']
+    },bump: {
+      options: {
+        files: ['package.json','bower.json'],
+        updateConfigs: [],
+        //commit: true,
+        commitMessage: 'Release v%VERSION%',
+        commitFiles: ['package.json','bower.json'],
+        createTag: true,
+        tagName: '%VERSION%',
+        tagMessage: 'Version %VERSION%',
+        push: true,
+        pushTo: 'origin',
+        prereleaseName: false,
+      }
     }
   });
 
@@ -120,6 +142,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-notify');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-html2js');
+  grunt.loadNpmTasks('grunt-gh-pages');
+  grunt.loadNpmTasks('grunt-bump');
 
   grunt.registerTask('start', ['default','karma:unit:start','watch'])
 
@@ -127,5 +151,9 @@ module.exports = function(grunt) {
 
   // Default task(s).
   grunt.registerTask('default', ['html2js','concat:dist','uglify:dist']);
+
+  grunt.registerTask('deploy',['full','gh-pages']);
+
+  grunt.registerTask('release',['full','bump','gh-pages']);
 
 };
