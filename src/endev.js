@@ -249,6 +249,21 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var provider = context.provider;
             var parent = context.parent;
 
+            if(provider.update) {
+              scope.update = function(object,data) {
+                var queryParameters = {from:type,scope:scope,label:label};
+
+                if (parent) {
+                  queryParameters.parentLabel = parent;
+                  queryParameters.parentObject = scope[parent];
+                  queryParameters.parentData = scope["$endevData_" + parent];
+                }
+
+                queryParameters.updatedObject = _.extend(object,data);
+                provider.update(queryParameters);
+              }
+            }
+
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);

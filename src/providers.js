@@ -204,7 +204,16 @@ if ($injector.has('$firebaseObject')) {
         });  
 
         return result.promise;
-      }, 
+      },
+      update: function(attrs) {
+        var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
+          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+          _.merge(object,attrs.updatedObject);
+          object.$save();
+        });
+      },
       insert: function(attrs) {
         var result = $q.defer();
         var insertInto = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
@@ -227,7 +236,6 @@ if ($injector.has('$firebaseObject')) {
           // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
           $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
         })
-
       },
       bind: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);

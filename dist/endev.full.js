@@ -1,4 +1,4 @@
-/*! endev 0.2.1 2016-01-07 */
+/*! endev 0.2.2 2016-01-08 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -30422,8 +30422,6 @@ if ( typeof Object.getPrototypeOf !== "function" ) {
     }
 })();
 
-//! makumba-angular.js
-//! version: 0.1.0
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -30487,7 +30485,7 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "    margin-top: -1px; \n" +
     "  }\n" +
     "</style>\n" +
-    "<div id=\"__endev_helper__\">\n" +
+    "<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n" +
     "  Endev Tools:\n" +
     "  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n" +
     "  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n" +
@@ -30798,7 +30796,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
   }
 }]);
 
-endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','Expr', function($interpolate,$endevProvider,$compile,$q,Expr){
+endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$rootScope','Expr', function($interpolate,$endevProvider,$compile,$q,$rootScope,Expr){
   function getRoot(element) {
     if(element[0].tagName === 'OPTION') {
       return element.parent();
@@ -30822,7 +30820,6 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
         tAttributes.$set("endev-item",tAttributes.from)
-        var container
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
@@ -30851,6 +30848,21 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','E
             var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
             var provider = context.provider;
             var parent = context.parent;
+
+            if(provider.update) {
+              scope.update = function(object,data) {
+                var queryParameters = {from:type,scope:scope,label:label};
+
+                if (parent) {
+                  queryParameters.parentLabel = parent;
+                  queryParameters.parentObject = scope[parent];
+                  queryParameters.parentData = scope["$endevData_" + parent];
+                }
+
+                queryParameters.updatedObject = _.extend(object,data);
+                provider.update(queryParameters);
+              }
+            }
 
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
@@ -31001,6 +31013,10 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body).attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}");
   angular.element($document[0].body).append($templateCache.get('endevHelper.tpl.html'));
+  if(!(window.endev && !window.endev.showHelper)){
+    $rootScope.$endevShowHelper = true;
+  }
+
 }]);
 
 endevModule.directive("list",['$compile',function($compile){
@@ -31434,7 +31450,16 @@ if ($injector.has('$firebaseObject')) {
         });  
 
         return result.promise;
-      }, 
+      },
+      update: function(attrs) {
+        var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
+          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+          _.merge(object,attrs.updatedObject);
+          object.$save();
+        });
+      },
       insert: function(attrs) {
         var result = $q.defer();
         var insertInto = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
@@ -31457,7 +31482,6 @@ if ($injector.has('$firebaseObject')) {
           // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
           $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
         })
-
       },
       bind: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);

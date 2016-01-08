@@ -1,6 +1,4 @@
-/*! endev 0.2.1 2016-01-07 */
-//! makumba-angular.js
-//! version: 0.1.0
+/*! endev 0.2.2 2016-01-08 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -427,6 +425,21 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
             var provider = context.provider;
             var parent = context.parent;
+
+            if(provider.update) {
+              scope.update = function(object,data) {
+                var queryParameters = {from:type,scope:scope,label:label};
+
+                if (parent) {
+                  queryParameters.parentLabel = parent;
+                  queryParameters.parentObject = scope[parent];
+                  queryParameters.parentData = scope["$endevData_" + parent];
+                }
+
+                queryParameters.updatedObject = _.extend(object,data);
+                provider.update(queryParameters);
+              }
+            }
 
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
@@ -1014,7 +1027,16 @@ if ($injector.has('$firebaseObject')) {
         });  
 
         return result.promise;
-      }, 
+      },
+      update: function(attrs) {
+        var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
+          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+          _.merge(object,attrs.updatedObject);
+          object.$save();
+        });
+      },
       insert: function(attrs) {
         var result = $q.defer();
         var insertInto = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
@@ -1037,7 +1059,6 @@ if ($injector.has('$firebaseObject')) {
           // var key = _.findKey(object,function(value){return _.isMatchDeep(value,attrs.newObject)})
           $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
         })
-
       },
       bind: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
