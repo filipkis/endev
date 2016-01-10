@@ -1,8 +1,9 @@
-/*! endev 0.2.2 2016-01-08 */
+/*! endev 0.2.3 2016-01-10 */
 //! authors: Filip Kis
 //! license: MIT 
 
-(function (window,_,document,undefined) {
+(function (window, _, document) {
+    'use strict';
 angular.module('endev-templates', ['endevHelper.tpl.html']);
 
 angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($templateCache) {
@@ -350,6 +351,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
       var type = from.split(" ")[0];
       var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
       var provider = context.provider;
+      var parent = context.parent;
 
       if(attrs.autoUpdate){
         // scope.$watch(label,function(value){
@@ -358,8 +360,14 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
             console.log("Item value changed",value);
             var queryParameters = {from:type,scope:scope,label:label};
 
-            queryParameters.parentObject = value;
-            queryParameters.parentData = scope["$endevData_" + label];
+            queryParameters.object = value;
+            queryParameters.data = scope["$endevData_" + label];
+
+            if(parent) {
+              queryParameters.parentLabel = parent;
+              queryParameters.parentObject = scope[parent];
+              queryParameters.parentData = scope["$endevData_" + parent];
+            }
 
             provider.bind(queryParameters);
           }
@@ -395,7 +403,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
         // tElement.parent().prepend("<span class='__endev_annotation__' ng-if='$annotation'>" + annotation + "</span>");
         // tElement.parent().prepend("<span endev-annotation='" + annotation + "' endev-annotation-data='endevData_" + label + "'></span>");
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
-        tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
+        tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
         tAttributes.$set("endev-item",tAttributes.from)
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
@@ -425,6 +433,13 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
             var provider = context.provider;
             var parent = context.parent;
+
+            scope.$endevId = function(item,idFn) {
+              if (item) {
+                return item.$$endevId || item.$id || idFn(item);
+              }
+              return idFn(item);
+            }
 
             if(provider.update) {
               scope.update = function(object,data) {
@@ -649,15 +664,15 @@ endevModule.directive("object",["$q",function($q){
           //     eval();
           //   });
           // }
-          function eval() {
-            $q.when(scope.$eval(rhs)).then(function(value){
-              if(value && value["$bindTo"]) {
-                value.$bindTo(scope,lhs);
-              } else {
-                scope[lhs] = value;
-              }
-            });
-          }
+          //function eval() {
+          //  $q.when(scope.$eval(rhs)).then(function(value){
+          //    if(value && value["$bindTo"]) {
+          //      value.$bindTo(scope,lhs);
+          //    } else {
+          //      scope[lhs] = value;
+          //    }
+          //  });
+          //}
           scope.$watch(lhs,function(newValue,oldValue){
             if(newValue) {
               attrs.$removeClass("ng-hide");
@@ -824,6 +839,51 @@ if ($injector.has('$firebaseObject')) {
 var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
 var PROTOCOL_REGEX = new RegExp(/^([a-zA-Z_$][0-9a-zA-Z_$]*):/);
 
+var generalDataFilter = function (data, attrs) {
+  var results = [];
+  var filter = attrs.filter;
+  var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
+  // var results = {}
+  _.each(data,function(value, key){
+    //var value = _.isUndefined(val.$value) ? val : val.$value;
+
+    // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
+    if(_.isMatchDeep(value,filter)){
+      // results[key] = value;
+      results.push(value);
+      //results.$objects.push(val);
+    }
+  });
+  _.each(inSetParams,function(param){
+    results = _.filter(results,function(object){
+      return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
+    })
+  });
+  return results;
+}
+
+var UnwatchCache = function() {
+  var unwatch = []
+
+  this.find = function(callback){
+    var result = _.find(unwatch,function(item){
+      return item.callback == callback;
+    });
+    if(!result){
+      result = {
+        callback:callback
+      }
+      unwatch.push(result);
+    }
+    return result;
+  };
+
+  this.unwatch = function (callback) {
+    var fn = this.find(callback);
+    if (fn.unwatch) fn.unwatch();
+  }
+}
+
 endevModule.service("$endevProvider",['$injector', function($injector){
   return {
     getContext: function(name,path,element,scope) {
@@ -836,9 +896,11 @@ endevModule.service("$endevProvider",['$injector', function($injector){
         if(pathRoot){
           provider = scope["$endevProvider_" + pathRoot[0]];
           if(!provider) {
-            throw new Error("No self or parent provider found for:", path, "on:", element);
+            provider = $injector.get('$endevLocal');
+            //throw new Error("No self or parent provider found for:", path, "on:", element);
+          } else {
+            parent = pathRoot[0];
           }
-          parent = pathRoot[0];
         }
       }
       return {
@@ -849,7 +911,164 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   }
 }]);
 
-endevModule.service("$endevYql", ['$http','$q', function($http,$q){ 
+endevModule.service("$endevLocal",['$q',function($q){
+
+  var observers = {};
+
+  var getType = _.memoize(function(type){
+    var result;
+    if(storageAvailable('localStorage') && localStorage.getItem(type)){
+      result = JSON.parse(localStorage.getItem(type));
+      //TODO what if not an object?
+    } else {
+      result = {};
+    }
+    if (_.isUndefined(result.$endevUniqId)) result.$endevUniqId = 0;
+    return result;
+  });
+
+  var $watch = function(type, fn) {
+    if (!observers[type]) observers[type] = [];
+    observers[type].push(fn);
+    return function(){
+      observers[type].splice(observers[type].indexOf(fn),1);
+    }
+  }
+
+  var getData = function(path){
+    if(path.indexOf(".")>0) {
+      var type = getType(path.substring(0,path.indexOf(".")));
+      return _.valueOnPath(type,path,true);
+    }
+    return getType(path);
+  }
+
+  var getRefOrDefault = function(path){
+    var original = getType(getTypeFromPath(path));
+    if(path.indexOf(".")<0){
+      return original;
+    } else {
+      var id = path.substring(path.lastIndexOf(".")+1);
+      var parent = _.valueOnPath(original,path.substring(0,path.lastIndexOf(".")),true);
+      if(_.isUndefined(parent[id])) {
+        parent[id] = {}
+      }
+      return parent[id];
+    }
+  }
+
+  var getPath = function(from,parentObject) {
+    from = from.slice(from.indexOf(":")+1);
+    if (parentObject) {
+      return parentObject.$$endevPath + "." + parentObject.$$endevId + "." +from.slice(from.indexOf(".")+1);
+    } else {
+      return from;
+    }
+  }
+
+  var getTypeFromPath = function(path) {
+    if(path.indexOf(".")>0)
+      return path.substring(0,path.indexOf("."));
+    return path;
+  }
+
+  var update = function(path, updatedItem) {
+    var collection = getData(path);
+    var copy = angular.copy(updatedItem);
+    _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
+    _.merge(collection[updatedItem.$$endevId], copy);
+    save(path);
+  }
+
+  var insert = function(path,item) {
+    var collection = getRefOrDefault(path);
+    var typeData = getType(getTypeFromPath(path));
+    collection[++typeData.$endevUniqId] = angular.copy(item);
+    save(path);
+    return copyItem(item);
+  }
+
+  var remove = function(path,item){
+    var collection = getData(path);
+    delete collection[item.$$endevId];
+    save(path);
+  }
+
+  var save = function(path){
+    _.each(observers[path],function(fn){if(_.isFunction(fn)) fn()});
+    if(storageAvailable('localStorage')){
+      var type = getTypeFromPath(path);
+      localStorage.setItem(type,JSON.stringify(getType(type),function(key,value){
+        if (key == '$watch') return undefined;
+        return value;
+      }));
+    }
+  }
+
+  var copyItem = function(value,key,path) {
+    var newValue;
+    if(_.isObject(value) || _.isArray(value)){
+      newValue = angular.copy(value);
+    } else {
+      newValue = {};
+      newValue.$value = value;
+    }
+    newValue.$$endevId = key;
+    newValue.$$endevPath = path;
+    return newValue;
+  }
+
+  var copyCollection = function(path) {
+    var data = getData(path);
+    var result = [];
+    _.each(data,function(value,key){
+      if (key.indexOf('$')!==0) {
+        result.push(copyItem(value,key,path));
+      }
+    })
+    return result;
+  }
+
+  var unwatchCache = new UnwatchCache();
+
+  return {
+    query:function(attrs,extraAttrs,callback){
+      var result = $q.defer();
+      var path = getPath(attrs.from,attrs.parentObject);
+      unwatchCache.unwatch(callback);
+      var data = copyCollection(path);
+      var object = generalDataFilter(data,attrs);
+      if(callback && angular.isFunction(callback)) callback(object,data);
+      else result.resolve(object);
+      unwatchCache.find(callback).unwatch = $watch(path, function(){
+        var data = copyCollection(path);
+        var object = generalDataFilter(data,attrs);
+        if(callback && angular.isFunction(callback)) callback(object);
+      });
+      return result.promise;
+    },
+    update:function(attrs){
+      update(getPath(attrs.from,attrs.parentObject), attrs.updatedObject);
+    },
+    insert:function(attrs){
+      var result = $q.defer();
+      result.resolve(insert(getPath(attrs.insertInto,attrs.parentObject),attrs.newObject));
+      return result.promise;
+    },
+    remove:function(attrs){
+      remove(getPath(attrs.removeFrom,attrs.parentObject),attrs.newObject);
+    },
+    bind:function(attrs){
+      attrs.scope.$watch(attrs.label,function(newValue, oldValue){
+        if(newValue != oldValue){
+          update(getPath(attrs.from,attrs.parentObject), newValue);
+        }
+      },true)
+    }
+  }
+}]);
+
+endevModule.service("$endevYql", ['$http','$q', function($http,$q){
   return {
     query: function(attrs,extra,callback) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
@@ -947,7 +1166,7 @@ if ($injector.has('$firebaseObject')) {
       if(parentData){
         // var key = _.findKey(parentData,function(value){return value == parentObject}) 
         var key = parentObject.$id 
-        path = parentLabel ? key + "/" + type.substring(parentLabel.length + 1) : key ;
+        var path = parentLabel ? key + "/" + type.substring(parentLabel.length + 1) : key ;
         console.log("Path with parent:",path);
         return objectRef(parentData.$ref,path);
       } else {
@@ -960,49 +1179,22 @@ if ($injector.has('$firebaseObject')) {
       return null;
     };
 
-    var unwatch = []
-
-    var unwatchCache = function(callback){
-      var result = _.find(unwatch,function(item){
-        return item.callback == callback;
-      });
-      if(!result){
-        result = {
-          callback:callback
-        }
-        unwatch.push(result);
-      }
-      return result;
-    };
-
     function filterData(data,attrs){
-      var results = []
-      var filter = attrs.filter;
-      var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
-      // var results = {}
+      var results = generalDataFilter(data,attrs);
+
       results.$endevProviderType = "firebase";
       results.$ref = data.$ref()
-      _.each(data,function(value, key){
-        // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
-        if(_.isMatchDeep(value,filter)){
-          // results[key] = value;
-          results.push(value);
-        }
-      });
-      _.each(inSetParams,function(param){
-        results = _.filter(results,function(object){
-          return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
-        })
-      });
+
       return results;
-      // return _.filter(_.reject(data,function(value,key){return key.indexOf("$")===0}),_.matcherDeep(filter))
     }
+
+    var unwatchCache = new UnwatchCache();
 
     return {
       query: function(attrs,extraAttrs,callback) {
         var result = $q.defer();
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
-        if(unwatchCache(callback).unwatch) unwatchCache(callback).unwatch();
+        unwatchCache.unwatch(callback);
         var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
         // TODO  need to add a watcher for the result and then update the value somehow
         $firebaseArray(objRef).$loaded().then(function(data){
@@ -1019,7 +1211,7 @@ if ($injector.has('$firebaseObject')) {
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);
           else result.resolve(object);
-          unwatchCache(callback).unwatch = data.$watch(function(){
+          unwatchCache.find(callback).unwatch = data.$watch(function(){
             console.log("Data changed:", data, attrs.where);
             object = filterData(data,attrs);               
             if(callback && angular.isFunction(callback)) callback(object);
@@ -1062,7 +1254,7 @@ if ($injector.has('$firebaseObject')) {
       },
       bind: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
-        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var objRef = getObjectRef(from,null,attrs.object,attrs.data);
         if(objRef) $firebaseObject(objRef).$bindTo(attrs.scope,attrs.label)
       }
 
@@ -1155,10 +1347,23 @@ var hasherWithThis = function() {
 }; 
 
 _.valueOnPath = function(object,path,removeRoot) {
-
+  if(removeRoot && path.indexOf(".") < 0) return object;
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
     return angular.isDefined(memo) ? memo[id] : null;
   },object)
+}
+
+function storageAvailable(type) {
+  try {
+    var storage = window[type],
+        x = '__storage_test__';
+    storage.setItem(x, x);
+    storage.removeItem(x);
+    return true;
+  }
+  catch(e) {
+    return false;
+  }
 }
 /*
  Copyright 2011-2013 Abdulla Abdurakhmanov
