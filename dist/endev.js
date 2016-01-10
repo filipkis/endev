@@ -1037,13 +1037,11 @@ endevModule.service("$endevLocal",['$q',function($q){
       var path = getPath(attrs.from,attrs.parentObject);
       unwatchCache.unwatch(callback);
       var data = copyCollection(path);
-      //TODO Handle nested objects
       var object = generalDataFilter(data,attrs);
       if(callback && angular.isFunction(callback)) callback(object,data);
       else result.resolve(object);
       unwatchCache.find(callback).unwatch = $watch(path, function(){
         var data = copyCollection(path);
-        //TODO Handle nested objects
         var object = generalDataFilter(data,attrs);
         if(callback && angular.isFunction(callback)) callback(object);
       });
