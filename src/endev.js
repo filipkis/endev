@@ -173,6 +173,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
       var type = from.split(" ")[0];
       var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
       var provider = context.provider;
+      var parent = context.parent;
 
       if(attrs.autoUpdate){
         // scope.$watch(label,function(value){
@@ -181,8 +182,14 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
             console.log("Item value changed",value);
             var queryParameters = {from:type,scope:scope,label:label};
 
-            queryParameters.parentObject = value;
-            queryParameters.parentData = scope["$endevData_" + label];
+            queryParameters.object = value;
+            queryParameters.data = scope["$endevData_" + label];
+
+            if(parent) {
+              queryParameters.parentLabel = parent;
+              queryParameters.parentObject = scope[parent];
+              queryParameters.parentData = scope["$endevData_" + parent];
+            }
 
             provider.bind(queryParameters);
           }

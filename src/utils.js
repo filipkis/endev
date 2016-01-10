@@ -84,7 +84,7 @@ var hasherWithThis = function() {
 }; 
 
 _.valueOnPath = function(object,path,removeRoot) {
-
+  if(removeRoot && path.indexOf(".") < 0) return object;
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
     return angular.isDefined(memo) ? memo[id] : null;
   },object)

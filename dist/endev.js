@@ -351,6 +351,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
       var type = from.split(" ")[0];
       var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
       var provider = context.provider;
+      var parent = context.parent;
 
       if(attrs.autoUpdate){
         // scope.$watch(label,function(value){
@@ -359,8 +360,14 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
             console.log("Item value changed",value);
             var queryParameters = {from:type,scope:scope,label:label};
 
-            queryParameters.parentObject = value;
-            queryParameters.parentData = scope["$endevData_" + label];
+            queryParameters.object = value;
+            queryParameters.data = scope["$endevData_" + label];
+
+            if(parent) {
+              queryParameters.parentLabel = parent;
+              queryParameters.parentObject = scope[parent];
+              queryParameters.parentData = scope["$endevData_" + parent];
+            }
 
             provider.bind(queryParameters);
           }
@@ -917,48 +924,88 @@ endevModule.service("$endevLocal",['$q',function($q){
       result = {};
     }
     if (_.isUndefined(result.$endevUniqId)) result.$endevUniqId = 0;
-    if (!observers[type]) observers[type] = [];
-    result.$watch = function(fn) {
-      observers[type].push(fn);
-      return function(){
-        observers[type].splice(observers[type].indexOf(fn),1);
-      }
-    }
     return result;
   });
 
-  var update = function(type, updatedItem) {
-    var collection = getType(type);
+  var $watch = function(type, fn) {
+    if (!observers[type]) observers[type] = [];
+    observers[type].push(fn);
+    return function(){
+      observers[type].splice(observers[type].indexOf(fn),1);
+    }
+  }
+
+  var getData = function(path){
+    if(path.indexOf(".")>0) {
+      var type = getType(path.substring(0,path.indexOf(".")));
+      return _.valueOnPath(type,path,true);
+    }
+    return getType(path);
+  }
+
+  var getRefOrDefault = function(path){
+    var original = getType(getTypeFromPath(path));
+    if(path.indexOf(".")<0){
+      return original;
+    } else {
+      var id = path.substring(path.lastIndexOf(".")+1);
+      var parent = _.valueOnPath(original,path.substring(0,path.lastIndexOf(".")),true);
+      if(_.isUndefined(parent[id])) {
+        parent[id] = {}
+      }
+      return parent[id];
+    }
+  }
+
+  var getPath = function(from,parentObject) {
+    from = from.slice(from.indexOf(":")+1);
+    if (parentObject) {
+      return parentObject.$$endevPath + "." + parentObject.$$endevId + "." +from.slice(from.indexOf(".")+1);
+    } else {
+      return from;
+    }
+  }
+
+  var getTypeFromPath = function(path) {
+    if(path.indexOf(".")>0)
+      return path.substring(0,path.indexOf("."));
+    return path;
+  }
+
+  var update = function(path, updatedItem) {
+    var collection = getData(path);
     var copy = angular.copy(updatedItem);
     _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
     _.merge(collection[updatedItem.$$endevId], copy);
-    save(type,collection);
+    save(path);
   }
 
-  var insert = function(type,item) {
-    var collection = getType(type);
-    collection[++collection.$endevUniqId] = angular.copy(item);
-    save(type,collection);
+  var insert = function(path,item) {
+    var collection = getRefOrDefault(path);
+    var typeData = getType(getTypeFromPath(path));
+    collection[++typeData.$endevUniqId] = angular.copy(item);
+    save(path);
     return copyItem(item);
   }
 
-  var remove = function(type,item){
-    var collection = getType(type);
+  var remove = function(path,item){
+    var collection = getData(path);
     delete collection[item.$$endevId];
-    save(type,collection);
+    save(path);
   }
 
-  var save = function(type,object){
-    _.each(observers[type],function(fn){if(_.isFunction(fn)) fn()});
+  var save = function(path){
+    _.each(observers[path],function(fn){if(_.isFunction(fn)) fn()});
     if(storageAvailable('localStorage')){
-      localStorage.setItem(type,JSON.stringify(object,function(key,value){
-        if (key == '$watch' || key == '$add') return undefined;
+      var type = getTypeFromPath(path);
+      localStorage.setItem(type,JSON.stringify(getType(type),function(key,value){
+        if (key == '$watch') return undefined;
         return value;
       }));
     }
   }
 
-  var copyItem = function(value,key) {
+  var copyItem = function(value,key,path) {
     var newValue;
     if(_.isObject(value) || _.isArray(value)){
       newValue = angular.copy(value);
@@ -967,14 +1014,16 @@ endevModule.service("$endevLocal",['$q',function($q){
       newValue.$value = value;
     }
     newValue.$$endevId = key;
+    newValue.$$endevPath = path;
     return newValue;
   }
 
-  var copyCollection = function(data) {
+  var copyCollection = function(path) {
+    var data = getData(path);
     var result = [];
     _.each(data,function(value,key){
       if (key.indexOf('$')!==0) {
-        result.push(copyItem(value,key));
+        result.push(copyItem(value,key,path));
       }
     })
     return result;
@@ -985,16 +1034,15 @@ endevModule.service("$endevLocal",['$q',function($q){
   return {
     query:function(attrs,extraAttrs,callback){
       var result = $q.defer();
-      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+      var path = getPath(attrs.from,attrs.parentObject);
       unwatchCache.unwatch(callback);
-      var typeData = getType(from);
-      var data = copyCollection(typeData);
+      var data = copyCollection(path);
       //TODO Handle nested objects
       var object = generalDataFilter(data,attrs);
       if(callback && angular.isFunction(callback)) callback(object,data);
       else result.resolve(object);
-      unwatchCache.find(callback).unwatch = typeData.$watch(function(){
-        var data = copyCollection(typeData);
+      unwatchCache.find(callback).unwatch = $watch(path, function(){
+        var data = copyCollection(path);
         //TODO Handle nested objects
         var object = generalDataFilter(data,attrs);
         if(callback && angular.isFunction(callback)) callback(object);
@@ -1002,24 +1050,20 @@ endevModule.service("$endevLocal",['$q',function($q){
       return result.promise;
     },
     update:function(attrs){
-      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
-      update(from, attrs.updatedObject);
+      update(getPath(attrs.from,attrs.parentObject), attrs.updatedObject);
     },
     insert:function(attrs){
       var result = $q.defer();
-      var from = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
-      result.resolve(insert(from,attrs.newObject));
-      return result.promise
+      result.resolve(insert(getPath(attrs.insertInto,attrs.parentObject),attrs.newObject));
+      return result.promise;
     },
     remove:function(attrs){
-      var from = attrs.removeFrom.slice(attrs.removeFrom.indexOf(":")+1);
-      remove(from,attrs.newObject);
+      remove(getPath(attrs.removeFrom,attrs.parentObject),attrs.newObject);
     },
     bind:function(attrs){
-      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       attrs.scope.$watch(attrs.label,function(newValue, oldValue){
         if(newValue != oldValue){
-          update(from, newValue);
+          update(getPath(attrs.from,attrs.parentObject), newValue);
         }
       },true)
     }
@@ -1212,7 +1256,7 @@ if ($injector.has('$firebaseObject')) {
       },
       bind: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
-        var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
+        var objRef = getObjectRef(from,null,attrs.object,attrs.data);
         if(objRef) $firebaseObject(objRef).$bindTo(attrs.scope,attrs.label)
       }
 
@@ -1305,7 +1349,7 @@ var hasherWithThis = function() {
 }; 
 
 _.valueOnPath = function(object,path,removeRoot) {
-
+  if(removeRoot && path.indexOf(".") < 0) return object;
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
     return angular.isDefined(memo) ? memo[id] : null;
   },object)
