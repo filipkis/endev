@@ -73,7 +73,7 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   }
 }]);
 
-endevModule.service("$endevLocal",['$q',function($q){
+endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window,$timeout){
 
   var observers = {};
 
@@ -96,6 +96,13 @@ endevModule.service("$endevLocal",['$q',function($q){
       observers[type].splice(observers[type].indexOf(fn),1);
     }
   }
+
+  angular.element($window).on('storage',function(e){
+    $timeout(function(){
+      getType.cache = {};
+      _.each(observers[e.key],function(fn){if(_.isFunction(fn)) fn()});
+    })
+  })
 
   var getData = function(path){
     if(path.indexOf(".")>0) {
