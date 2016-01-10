@@ -1,4 +1,5 @@
 //! authors: Filip Kis
 //! license: MIT 
 
-(function (window,_,document,undefined) {
+(function (window, _, document) {
+    'use strict';

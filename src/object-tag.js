@@ -51,15 +51,15 @@ endevModule.directive("object",["$q",function($q){
           //     eval();
           //   });
           // }
-          function eval() {
-            $q.when(scope.$eval(rhs)).then(function(value){
-              if(value && value["$bindTo"]) {
-                value.$bindTo(scope,lhs);
-              } else {
-                scope[lhs] = value;
-              }
-            });
-          }
+          //function eval() {
+          //  $q.when(scope.$eval(rhs)).then(function(value){
+          //    if(value && value["$bindTo"]) {
+          //      value.$bindTo(scope,lhs);
+          //    } else {
+          //      scope[lhs] = value;
+          //    }
+          //  });
+          //}
           scope.$watch(lhs,function(newValue,oldValue){
             if(newValue) {
               attrs.$removeClass("ng-hide");

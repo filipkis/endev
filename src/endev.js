@@ -218,7 +218,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
         // tElement.parent().prepend("<span class='__endev_annotation__' ng-if='$annotation'>" + annotation + "</span>");
         // tElement.parent().prepend("<span endev-annotation='" + annotation + "' endev-annotation-data='endevData_" + label + "'></span>");
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
-        tAttributes.$set("ng-repeat",label + " in $endevData_" + label );
+        tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
         tAttributes.$set("endev-item",tAttributes.from)
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
@@ -248,6 +248,13 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
             var provider = context.provider;
             var parent = context.parent;
+
+            scope.$endevId = function(item,idFn) {
+              if (item) {
+                return item.$$endevId || item.$id || idFn(item);
+              }
+              return idFn(item);
+            }
 
             if(provider.update) {
               scope.update = function(object,data) {
