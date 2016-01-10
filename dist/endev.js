@@ -1,4 +1,4 @@
-/*! endev 0.2.4 2016-01-10 */
+/*! endev 0.2.4 2016-01-11 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -455,6 +455,11 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                 provider.update(queryParameters);
               }
             }
+            if(provider.remove) {
+              scope.remove = function(object,data){
+                removeFn(type,object,parent,scope,provider)
+              }
+            }
 
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
@@ -570,6 +575,19 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
   }
 }]);
 
+var removeFn = function(removeFrom,object,parent,scope,provider) {
+  console.log("Removing:",object);
+  var queryParameters = {removeFrom:removeFrom,newObject:object};
+
+  if (parent) {
+    queryParameters.parentLabel = parent;
+    queryParameters.parentObject = scope[parent];
+    queryParameters.parentData = scope["$endevData_" + parent];
+  }
+
+  provider.remove(queryParameters)
+}
+
 endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($interpolate,$endevProvider) {
   return {
     scope:true,
@@ -580,17 +598,7 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
       var parent = context.parent;
 
       scope.remove = function(object) {
-        console.log("Removing:",object);
-
-        var queryParameters = {removeFrom:removeFrom,newObject:object};
-
-        if (parent) {
-          queryParameters.parentLabel = parent; 
-          queryParameters.parentObject = scope[parent];
-          queryParameters.parentData = scope["$endevData_" + parent];
-        }
-
-        provider.remove(queryParameters)
+        removeFn(removeFrom,object,parent,scope,provider)
       }
     }
   }
