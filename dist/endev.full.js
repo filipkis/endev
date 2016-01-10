@@ -30776,7 +30776,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
       var provider = context.provider;
       var parent = context.parent;
 
-      if(attrs.autoUpdate){
+      if(attrs.hasOwnProperty("autoUpdate") && (attrs.autoUpdate == "" || attrs.autoUpdate)){
         // scope.$watch(label,function(value){
           var value = scope[label];
           if(value && provider.bind && !value['default']){
