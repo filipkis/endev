@@ -1,4 +1,4 @@
-/*! endev 0.2.3 2016-01-10 */
+/*! endev 0.2.4 2016-01-10 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -31334,7 +31334,7 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   }
 }]);
 
-endevModule.service("$endevLocal",['$q',function($q){
+endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window,$timeout){
 
   var observers = {};
 
@@ -31357,6 +31357,13 @@ endevModule.service("$endevLocal",['$q',function($q){
       observers[type].splice(observers[type].indexOf(fn),1);
     }
   }
+
+  angular.element($window).on('storage',function(e){
+    $timeout(function(){
+      getType.cache = {};
+      _.each(observers[e.key],function(fn){if(_.isFunction(fn)) fn()});
+    })
+  })
 
   var getData = function(path){
     if(path.indexOf(".")>0) {
