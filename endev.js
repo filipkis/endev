@@ -456,7 +456,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
               }
             }
             if(provider.remove) {
-              scope.remove = function(object,data){
+              scope.remove = scope['delete'] = function(object,data){
                 removeFn(type,object,parent,scope,provider)
               }
             }
@@ -588,6 +588,7 @@ var removeFn = function(removeFrom,object,parent,scope,provider) {
   provider.remove(queryParameters)
 }
 
+//For backwards capability
 endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($interpolate,$endevProvider) {
   return {
     scope:true,
@@ -599,6 +600,22 @@ endevModule.directive("removeFrom", ['$interpolate','$endevProvider', function($
 
       scope.remove = function(object) {
         removeFn(removeFrom,object,parent,scope,provider)
+      }
+    }
+  }
+}]);
+
+endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($interpolate,$endevProvider) {
+  return {
+    scope:true,
+    link: function (scope,element,attrs) {
+      var deleteFrom = $interpolate(attrs.deleteFrom,false,null,true)(scope)
+      var context = $endevProvider.getContext(attrs.provider,deleteFrom,element,scope);
+      var provider = context.provider;
+      var parent = context.parent;
+
+      scope.remove = function(object) {
+        removeFn(deleteFrom,object,parent,scope,provider)
       }
     }
   }
