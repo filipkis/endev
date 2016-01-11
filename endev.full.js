@@ -30969,6 +30969,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                     callback(data);
                   })
                   .catch(function(data){
+                    scope['$endevError'] = true;
                     console.log("Query error: ",data);
                     scope['$endevErrors'].push(data);
                   });
@@ -31622,39 +31623,47 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
   }
 
   return {
-    query: function(attrs) {
-      var where = "";
-      for(var i = 0; i<attrs.params.length; i++) {
-        where += attrs.params[i].attribute + "=" + encodeURIComponent(attrs.params[i].value);
-        if(i < attrs.params.length-1) {
-          where += "&";
-        }
-      }
-      var config = {
-        headers: angular.isString(attrs.headers) ? angular.fromJson(attrs.headers) : 
-          angular.isObject(attrs.headers) ? attrs.headers : undefined,
-        transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
-          if (headersGetter()['content-type']=="application/atom+xml") {
-            var x2js = new X2JS();
-            return x2js.xml_str2json(data);
-          } else {
-            return data;
-          }
-        })
-      }
-      var url = attrs.from
-      if (url.indexOf('?') != -1) {
-        url = url + "&" + where;
+    query: function(attrs,extra,callback) {
+      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+      var result = $q.defer();
+      if(attrs.parentLabel) {
+        var tmp = _.valueOnPath(attrs.parentObject, from, true)
+        if(callback && angular.isFunction(callback)) callback(tmp)
+        else result.resolve(tmp);
       } else {
-        url = url + "?" + where;
+        var where = "";
+        for(var i = 0; i<attrs.params.length; i++) {
+          where += attrs.params[i].attribute + "=" + encodeURIComponent(attrs.params[i].value);
+          if(i < attrs.params.length-1) {
+            where += "&";
+          }
+        }
+        var config = {
+          headers: angular.isString(attrs.headers) ? angular.fromJson(attrs.headers) :
+            angular.isObject(attrs.headers) ? attrs.headers : undefined,
+          transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
+            if (headersGetter()['content-type']=="application/atom+xml") {
+              var x2js = new X2JS();
+              return x2js.xml_str2json(data);
+            } else {
+              return data;
+            }
+          })
+        }
+        var url = attrs.from
+        if (url.indexOf('?') != -1) {
+          url = url + "&" + where;
+        } else {
+          url = url + "?" + where;
+        }
+
+        $http.get(url, config)
+          .success(function(data){
+            result.resolve(data);
+          }).error(function(data){
+            result.reject(data);
+          });
       }
-      var result = $q.defer()
-      $http.get(url, config)
-        .success(function(data){
-          result.resolve(data);
-        }).error(function(data){
-          result.reject(data);
-        });
       return result.promise;
     }
   }
