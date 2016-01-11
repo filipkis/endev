@@ -53,7 +53,7 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "  } \n" +
     "  .__endev_annotated__ > .__endev_list_item_annotated__ { \n" +
     "    outline: 1px dashed rgba(255,0,0,0.5); \n" +
-    "  } \n" +
+    "  }\n" +
     "  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n" +
     "    /*border: 1px solid red;*/\n" +
     "    padding-top: 10px; \n" +
@@ -61,6 +61,24 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "  } \n" +
     "  table .__endev_annotated__ > .__endev_annotation__ { \n" +
     "    margin-top: -1px; \n" +
+    "  }\n" +
+    "  ._endev_json_ {\n" +
+    "\n" +
+    "  }\n" +
+    "  ._endev_json_number_ {\n" +
+    "    color: forestgreen;\n" +
+    "  }\n" +
+    "  ._endev_json_key_ {\n" +
+    "    color: darkorange;\n" +
+    "  }\n" +
+    "  ._endev_json_string_ {\n" +
+    "    color: darkseagreen;\n" +
+    "  }\n" +
+    "  ._endev_json_boolean_ {\n" +
+    "    color: green;\n" +
+    "  }\n" +
+    "  ._endev_json_null_ {\n" +
+    "    color: dimgray;\n" +
     "  }\n" +
     "</style>\n" +
     "<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n" +
@@ -543,6 +561,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
 
                 provider.query(queryParameters,null,callback)
                   .then(function(data){
+                    scope['$endevError'] = false;
                     callback(data);
                   })
                   .catch(function(data){
@@ -640,6 +659,18 @@ endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($
     }
   }
 }]);
+
+endevModule.directive("explain",function(){
+  return {
+    link: function(scope,element,attrs) {
+      scope.$watch(attrs.explain,function(newValue){
+        if(!_.isUndefined(newValue)){
+          element[0].innerHTML = "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(newValue, undefined, 2)) + "</pre>";
+        }
+      });
+    }
+  }
+})
           
 //The basic run
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
@@ -1445,6 +1476,25 @@ _.valueOnPath = function(object,path,removeRoot) {
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
     return angular.isDefined(memo) ? memo[id] : null;
   },object)
+}
+
+function syntaxHighlight(json) {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    var cls = '_endev_json_number_';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = '_endev_json_key_';
+      } else {
+        cls = '_endev_json_string_';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = '_endev_json_boolean_';
+    } else if (/null/.test(match)) {
+      cls = '_endev_json_null_';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
 }
 
 function storageAvailable(type) {
