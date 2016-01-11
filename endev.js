@@ -962,7 +962,7 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   return {
     getContext: function(name,path,element,scope) {
       var provider, parent;
-      var name = name || (path.search(/http(s)?:\/\//) > 1 ? "rest" : (path.match(PROTOCOL_REGEX) || [null,null])[1]);
+      var name = name || (path.search(/http(s)?:\/\//) = 0 ? "rest" : (path.match(PROTOCOL_REGEX) || [null,null])[1]);
       if(name) {
         provider = $injector.get('$endev' + name[0].toUpperCase() + name.slice(1));
       } else {
