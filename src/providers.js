@@ -8,9 +8,14 @@ var generalDataFilter = function (data, attrs) {
   // var results = {}
   _.each(data,function(value, key){
     //var value = _.isUndefined(val.$value) ? val : val.$value;
+    var equalId = false;
+    if(value && filter && (value.$id == filter.$id
+        || (value.$$endevId == filter.$$endevId && value.$$endevPath == filter.$$endevPath))){
+      equalId = true;
+    }
 
     // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
-    if(_.isMatchDeep(value,filter)){
+    if(equalId || _.isMatchDeep(value,filter)){
       // results[key] = value;
       results.push(value);
       //results.$objects.push(val);
