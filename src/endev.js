@@ -215,6 +215,15 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
     return element;
   }
 
+  function getParentLabel(scope,object){
+    var pLabel = _.chain(scope)
+        .allKeys()
+        .filter(function(key){return key.indexOf("$endevData_")==0})
+        .find(function(key){return _.find(scope[key], function(value){return _.isEqual(object,value)})})
+        .value();
+    return pLabel.substring(pLabel.indexOf("_")+1);
+  }
+
   return {
     // terminal: true,
     priority: 1000,
@@ -269,6 +278,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
 
             if(provider.update) {
               scope.update = function(object,data) {
+                var pLabel = getParentLabel(scope,object);
+                var type = scope["$endevParentType_" + pLabel];
+                var label = pLabel;
+                var parent = scope["$endevParentParent_" + pLabel];
                 var queryParameters = {from:type,scope:scope,label:label};
 
                 if (parent) {
@@ -282,11 +295,13 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
               }
             }
             if(provider.remove) {
-              scope.remove = scope['delete'] = function(object,data){
-                removeFn(type,object,parent,scope,provider)
+              scope.remove = scope['delete'] = function(object){
+                var pLabel = getParentLabel(scope,object);
+                removeFn(scope["$endevParentType_" + pLabel],object,scope["$endevParentParent_" + pLabel],scope,scope["$endevProvider_" + pLabel]);
               }
             }
-
+            scope["$endevParentParent_" + label] = parent;
+            scope["$endevParentType_" + label] = type;
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);
