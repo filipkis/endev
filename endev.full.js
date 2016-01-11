@@ -31715,11 +31715,14 @@ if ($injector.has('$firebaseObject')) {
           console.log("Object:",object)
           if(callback && angular.isFunction(callback)) callback(object,data);
           else result.resolve(object);
-          unwatchCache.find(callback).unwatch = data.$watch(function(){
+          var updateCallback = function(){
             console.log("Data changed:", data, attrs.where);
-            object = filterData(data,attrs);               
+            object = filterData(data,attrs);
             if(callback && angular.isFunction(callback)) callback(object);
-          })
+            _.each(object,function(value){value.$$endevCallback = updateCallback});
+          }
+          _.each(object,function(value){value.$$endevCallback = updateCallback});
+          unwatchCache.find(callback).unwatch = data.$watch(updateCallback);
         });  
 
         return result.promise;
@@ -31731,6 +31734,7 @@ if ($injector.has('$firebaseObject')) {
           var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
           _.merge(object,attrs.updatedObject);
           object.$save();
+          if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
         });
       },
       insert: function(attrs) {
