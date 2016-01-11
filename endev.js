@@ -1183,7 +1183,7 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
 endevModule.service("$endevYql", ['$http','$q', function($http,$q){
   return {
-    query: function(attrs,extra,callback) {
+    query: _.throttle(function(attrs,extra,callback) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer()
       if(attrs.parentLabel){
@@ -1217,7 +1217,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           });
       }
       return result.promise
-    }
+    },100)
   }
 }]);
 
