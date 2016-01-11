@@ -30820,7 +30820,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
     var pLabel = _.chain(scope)
         .allKeys()
         .filter(function(key){return key.indexOf("$endevData_")==0})
-        .find(function(key){return scope[key].indexOf(object)>=0})
+        .find(function(key){return _.find(scope[key], function(value){return _.isEqual(object,value)})})
         .value();
     return pLabel.substring(pLabel.indexOf("_")+1);
   }
