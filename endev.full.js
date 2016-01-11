@@ -30622,10 +30622,14 @@ endevModule.factory("Expr",[function(){
     this.lhs = expr.split(COMPARISON_REGEX)[0].trim();
     this.rhs = expr.split(COMPARISON_REGEX)[1].trim();
     this.operator = COMPARISON_REGEX.exec(expr);
-    this.attribute = this.lhs.replace(new RegExp("^" + label + ".", "g"),"");
+    this.attribute = this.lhs == label ? "" : this.lhs.replace(new RegExp("^" + label + ".", "g"),"");
     this.setValue = function(value) {
       this.value = value;
-      this.obj = _.reduceRight(this.attribute.split("."),function(memo,id){ var result = {}; result[id] = memo; return result}, value);
+      if(this.attribute != "") {
+        this.obj = _.reduceRight(this.attribute.split("."),function(memo,id){ var result = {}; result[id] = memo; return result}, value);
+      } else {
+        this.obj = value;
+      }
       return value;
     }
     this.replace = function(value) {
@@ -31048,6 +31052,9 @@ endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
   $rootScope.Date = Date;
   $rootScope.Math = Math;
+  $rootScope.$now = function() {
+    return new Date();
+  }
   $rootScope.$endevAnnotation = false;
   $rootScope.$endevErrors = []
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
@@ -31294,9 +31301,14 @@ var generalDataFilter = function (data, attrs) {
   // var results = {}
   _.each(data,function(value, key){
     //var value = _.isUndefined(val.$value) ? val : val.$value;
+    var equalId = false;
+    if(value && filter && (value.$id == filter.$id
+        || (value.$$endevId == filter.$$endevId && value.$$endevPath == filter.$$endevPath))){
+      equalId = true;
+    }
 
     // if(!key.indexOf("$")!==0 && _.isMatchDeep(value,filter)){
-    if(_.isMatchDeep(value,filter)){
+    if(equalId || _.isMatchDeep(value,filter)){
       // results[key] = value;
       results.push(value);
       //results.$objects.push(val);
