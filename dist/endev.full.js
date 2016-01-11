@@ -30816,6 +30816,15 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
     return element;
   }
 
+  function getParentLabel(scope,object){
+    var pLabel = _.chain(scope)
+        .allKeys()
+        .filter(function(key){return key.indexOf("$endevData_")==0})
+        .find(function(key){return _.find(scope[key], function(value){return _.isEqual(object,value)})})
+        .value();
+    return pLabel.substring(pLabel.indexOf("_")+1);
+  }
+
   return {
     // terminal: true,
     priority: 1000,
@@ -30870,6 +30879,10 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
 
             if(provider.update) {
               scope.update = function(object,data) {
+                var pLabel = getParentLabel(scope,object);
+                var type = scope["$endevParentType_" + pLabel];
+                var label = pLabel;
+                var parent = scope["$endevParentParent_" + pLabel];
                 var queryParameters = {from:type,scope:scope,label:label};
 
                 if (parent) {
@@ -30883,11 +30896,13 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
               }
             }
             if(provider.remove) {
-              scope.remove = scope['delete'] = function(object,data){
-                removeFn(type,object,parent,scope,provider)
+              scope.remove = scope['delete'] = function(object){
+                var pLabel = getParentLabel(scope,object);
+                removeFn(scope["$endevParentType_" + pLabel],object,scope["$endevParentParent_" + pLabel],scope,scope["$endevProvider_" + pLabel]);
               }
             }
-
+            scope["$endevParentParent_" + label] = parent;
+            scope["$endevParentType_" + label] = type;
             scope["$endevProvider_" + label] = provider;
             var watchExp = _.map(params,function(item){return item.rhs});
             if(parent) watchExp.push(parent);
@@ -31298,12 +31313,14 @@ var generalDataFilter = function (data, attrs) {
   var results = [];
   var filter = attrs.filter;
   var inSetParams = _.filter(attrs.params,function(param) { return param.operator[0] == " IN " })
+  var notEqual = _.filter(attrs.params,function(param) { return param.operator[0] == "!=" })
+  var lgtComparison = _.filter(attrs.params,function(param) { return param.operator[0] == ">" || param.operator[0] == "<" || param.operator[0] == ">=" || param.operator[0] == "<=" })
   // var results = {}
   _.each(data,function(value, key){
     //var value = _.isUndefined(val.$value) ? val : val.$value;
     var equalId = false;
-    if(value && filter && (value.$id == filter.$id
-        || (value.$$endevId == filter.$$endevId && value.$$endevPath == filter.$$endevPath))){
+    if(value && filter && (value.$id && value.$id == filter.$id
+        || (value.$$endevId && value.$$endevPath && value.$$endevId == filter.$$endevId && value.$$endevPath == filter.$$endevPath))){
       equalId = true;
     }
 
@@ -31314,6 +31331,26 @@ var generalDataFilter = function (data, attrs) {
       //results.$objects.push(val);
     }
   });
+  _.each(notEqual,function(param){
+    results = _.filter(results,function(object){
+      return _.valueOnPath(object,param.lhs,true) != param.value;
+    })
+  })
+  _.each(lgtComparison,function(param){
+    results = _.filter(results,function(object){
+      var value = _.valueOnPath(object,param.lhs,true);
+      switch (param.operator[0]){
+        case ">":
+          return value > param.value;
+        case "<":
+          return value < param.value;
+        case ">=":
+          return value >= param.value;
+        case "<=":
+          return value <= param.value;
+      }
+    })
+  })
   _.each(inSetParams,function(param){
     results = _.filter(results,function(object){
       return _.contains(param.value,_.valueOnPath(object,param.lhs,true));
