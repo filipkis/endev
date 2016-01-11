@@ -451,6 +451,9 @@ endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
   $rootScope.Date = Date;
   $rootScope.Math = Math;
+  $rootScope.$now = function() {
+    return new Date();
+  }
   $rootScope.$endevAnnotation = false;
   $rootScope.$endevErrors = []
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
