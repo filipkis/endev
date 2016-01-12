@@ -1,3 +1,14 @@
+/*!
+ * The setup code for Endev Tutorial that makes it possible for people not
+ * to override each others data when forking the code in CodePen.
+ *
+ * Author: Filip Kis
+ * License: MIT
+ */
+
+
+// HELPER METHODS
+
 function setCookie(cname, cvalue, exdays) {
     var d = new Date();
     d.setTime(d.getTime() + (exdays*24*60*60*1000));
@@ -16,6 +27,28 @@ function getCookie(cname) {
     return "";
 }
 
+function getCodePenId() {
+    var CODEPEN_ID = /codepen\.io\/[^/]+\/(?:pen|debug|fullpage|fullembedgrid)\/([^?#]+)/;
+    var id;
+
+    if(CODEPEN_ID.test(window.location.href)) {
+        id = CODEPEN_ID.exec(window.location.href)[1];
+    } else {
+        // Case when you're in CodePen editor
+        // the iFrame doesn't contain the pen's id and you can't
+        // access the perant's address as it's on different subdomain
+        var metas = document.getElementsByTagName('link');
+        for(i=0;i<metas.length;i++) {
+            if(metas[i].getAttribute('rel') == 'canonical') {
+                if(CODEPEN_ID.test(metas[i].getAttribute('href')))
+                    id = CODEPEN_ID.exec(metas[i].getAttribute('href'))[1];
+            }
+        }
+    }
+
+    return id;
+}
+
 var createGuid = function () {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -23,15 +56,26 @@ var createGuid = function () {
     });
 }
 
-var guid;
+// MAIN CODE
 
-if (!getCookie('endevTutorial')) {
-    guid = createGuid();
-    setCookie('endevTutorial',guid);
-} else {
-    guid = getCookie('endevTutorial');
+// Try to get the CodePen ID
+var guid = getCodePenId();
+
+// If no CodePen ID go for unique ID from cookies
+// Note that this means that even the Firebase code
+// will be browser dependent as each code instance run
+// in differnt browser (where the cookies is not set) will
+// connect to different document in Firebase.
+if(!guid) {
+    if (!getCookie('endevTutorial')) {
+        guid = createGuid();
+        setCookie('endevTutorial',guid);
+    } else {
+        guid = getCookie('endevTutorial');
+    }
 }
 
+// Setup the Firebase connection.
 endev.firebaseProvider = {
-    path: "https://burning-fire-1948.firebaseio.com/" + guid
+    path: "https://endev-tutorial-01.firebaseio.com/" + guid
 }
