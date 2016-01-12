@@ -13,7 +13,6 @@
         }
         endev.logic = {
             toDate: function(timestamp) {
-                console.log(timestamp)
                 return (new Date(timestamp/1)).toString();
             },
             tutorialName: function(id) {
@@ -44,7 +43,7 @@
     <div id="{{s.$id}}" class="collapse">
         <input data-value="s.name" placeholder="Enter name"><br>
         <textarea data-value="s.notes" placeholder="Enter notes" rows="5" cols="40"></textarea>
-        <div from="s d" data-if="d.$id != 'name' && d.$id != 'notes'">
+        <div from="s d" data-if="d.$id != 'name' && d.$id != 'notes'" auto-update>
             <h3><a href="#{{d.$id}}" data-toggle="collapse">{{tutorialName(d.codePenId)}} <small>{{toDate(d.$id)}}</small></a></h3>
             <div id="{{d.$id}}" class="collapse">
                 <textarea data-value="d.notes" placeholder="Enter notes" rows="3" cols="40"></textarea>
