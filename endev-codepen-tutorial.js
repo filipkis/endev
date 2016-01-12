@@ -76,5 +76,21 @@ if(!guid) {
 
 // Setup the Firebase connection.
 endev.firebaseProvider = {
-    path: "https://endev-tutorial-01.firebaseio.com/" + guid
+    path: "https://endev-tutorial-01.firebaseio.com/"
 }
+
+
+endev.app.run(function () {
+    var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
+
+    var data_to_save = {
+        html: document.documentElement.innerHTML,
+    }
+
+    if(getCodePenId()) {
+        data_to_save.codePenId = getCodePenId();
+    }
+    code_snapshot_ref.child(guid).child(Date.now()).set(data_to_save);
+})
+
+
