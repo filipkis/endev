@@ -59,9 +59,8 @@ var createGuid = function () {
 // MAIN CODE
 
 // Try to get the CodePen ID
-var guid = getCodePenId();
+var guid;
 
-// If no CodePen ID go for unique ID from cookies
 // Note that this means that even the Firebase code
 // will be browser dependent as each code instance run
 // in differnt browser (where the cookies is not set) will
