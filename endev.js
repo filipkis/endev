@@ -1,4 +1,4 @@
-/*! endev 0.2.4 2016-01-11 */
+/*! endev 0.2.4 2016-01-13 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -671,6 +671,22 @@ endevModule.directive("explain",function(){
     }
   }
 })
+
+endevModule.directive("describe",['$endevProvider',function($endevProvider){
+  return {
+    link: function(scope,element,attrs) {
+      var yql = $endevProvider.getContext("yql").provider;
+      if(!_.isUndefined(attrs.describe)) {
+        yql.desc(attrs.describe).then(function(desc){
+          var res = {
+            parameters: _.map(desc.request.select.key,function(value){return _.pick(value,"name","type","required")})
+          }
+          element[0].innerHTML = "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(res, undefined, 2)) + "</pre>";
+        });
+      }
+    }
+  }
+}])
           
 //The basic run
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
@@ -1202,8 +1218,8 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           query = "select * from " + from;
         }
         if(where) query += " where " + where;
-        $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
-          + encodeURIComponent(query) 
+        $http.get("https://query.yahooapis.com/v1/public/yql?q="
+          + encodeURIComponent(query)
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
           .success(function(data){
             var d = data.query.results;
@@ -1217,11 +1233,26 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           });
       }
       return result.promise
-    },100)
+
+    },100),
+    desc: function(table){
+      var result = $q.defer();
+      $http.get("https://query.yahooapis.com/v1/public/yql?q="
+              + encodeURIComponent("desc " + table)
+              + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
+          .success(function(data){
+            var d = data.query.results.table;
+            result.resolve(d);
+          }).error(function(data){
+        result.reject(data.error);
+      });
+      return result.promise;
+    }
+
   }
 }]);
 
-endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){ 
+endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){
 
   function prependTransform(defaults, transform) {
     // We can't guarantee that the transform transformation is an array
@@ -1279,7 +1310,7 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
 
 //Firebase dependent features
 if ($injector.has('$firebaseObject')) {
-  
+
   endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
     var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
