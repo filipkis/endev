@@ -30476,7 +30476,7 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "  } \n" +
     "  .__endev_annotated__ > .__endev_list_item_annotated__ { \n" +
     "    outline: 1px dashed rgba(255,0,0,0.5); \n" +
-    "  }\n" +
+    "  } \n" +
     "  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n" +
     "    /*border: 1px solid red;*/\n" +
     "    padding-top: 10px; \n" +
@@ -31744,7 +31744,7 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
 
 //Firebase dependent features
 if ($injector.has('$firebaseObject')) {
-
+  
   endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
     var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
