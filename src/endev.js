@@ -5,12 +5,17 @@ var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:
 
 
 var endevModule;
+var modulesToLoad = ["endev-templates","endev-data-tag"]
+if(window.endevAngularModulesToLoad && angular.isArray(window.endevAngularModulesToLoad)){
+  modulesToLoad = modulesToLoad.concat(window.endevAngularModulesToLoad);
+}
+
 //checking if angularFire is loaded
 try{ 
   angular.module("firebase")
-  endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
+  endevModule = angular.module("Endev", modulesToLoad.concat("firebase"));
 } catch(err) {
-  endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
+  endevModule = angular.module("Endev", modulesToLoad);
 }
 
 var $injector = angular.injector(["ng","Endev"]);
@@ -365,9 +370,11 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
 
                 provider.query(queryParameters,null,callback)
                   .then(function(data){
+                    scope['$endevError'] = false;
                     callback(data);
                   })
                   .catch(function(data){
+                    scope['$endevError'] = true;
                     console.log("Query error: ",data);
                     scope['$endevErrors'].push(data);
                   });
@@ -461,6 +468,40 @@ endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($
     }
   }
 }]);
+
+endevModule.directive("explain",function(){
+  return {
+    link: function(scope,element,attrs) {
+      scope.$watch(attrs.explain,function(newValue){
+        if(!_.isUndefined(newValue)){
+          element[0].innerHTML = "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(newValue, undefined, 2)) + "</pre>";
+        }
+      });
+    }
+  }
+})
+
+endevModule.directive("describe",['$endevProvider',function($endevProvider){
+  return {
+    priority: 1001,
+    terminal: true,
+    link: function(scope,element,attrs) {
+      var yql = $endevProvider.getContext("yql").provider;
+      if(!_.isUndefined(attrs.describe)) {
+        yql.desc(attrs.describe).then(function(desc){
+          var res = {
+            parameters: _.map(desc.request.select.key,function(value){return _.pick(value,"name","type","required")})
+          }
+          var text = desc.name
+          if(desc.meta.documentationURL) {
+            text = text + " <a href='" + desc.meta.documentationURL + "'>documentation</a>"
+          }
+          element[0].innerHTML = text + "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(res, undefined, 2)) + "</pre>";
+        });
+      }
+    }
+  }
+}])
           
 //The basic run
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){

@@ -86,8 +86,27 @@ var hasherWithThis = function() {
 _.valueOnPath = function(object,path,removeRoot) {
   if(removeRoot && path.indexOf(".") < 0) return object;
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
-    return angular.isDefined(memo) ? memo[id] : null;
+    return (angular.isDefined(memo) && memo != null) ? memo[id] : null;
   },object)
+}
+
+function syntaxHighlight(json) {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    var cls = '_endev_json_number_';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = '_endev_json_key_';
+      } else {
+        cls = '_endev_json_string_';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = '_endev_json_boolean_';
+    } else if (/null/.test(match)) {
+      cls = '_endev_json_null_';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
 }
 
 function storageAvailable(type) {

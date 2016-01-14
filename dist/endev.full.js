@@ -1,4 +1,4 @@
-/*! endev 0.2.4 2016-01-11 */
+/*! endev 0.2.4 2016-01-14 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -30476,7 +30476,7 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "  } \n" +
     "  .__endev_annotated__ > .__endev_list_item_annotated__ { \n" +
     "    outline: 1px dashed rgba(255,0,0,0.5); \n" +
-    "  } \n" +
+    "  }\n" +
     "  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n" +
     "    /*border: 1px solid red;*/\n" +
     "    padding-top: 10px; \n" +
@@ -30484,6 +30484,24 @@ angular.module("endevHelper.tpl.html", []).run(["$templateCache", function($temp
     "  } \n" +
     "  table .__endev_annotated__ > .__endev_annotation__ { \n" +
     "    margin-top: -1px; \n" +
+    "  }\n" +
+    "  ._endev_json_ {\n" +
+    "\n" +
+    "  }\n" +
+    "  ._endev_json_number_ {\n" +
+    "    color: forestgreen;\n" +
+    "  }\n" +
+    "  ._endev_json_key_ {\n" +
+    "    color: darkorange;\n" +
+    "  }\n" +
+    "  ._endev_json_string_ {\n" +
+    "    color: darkseagreen;\n" +
+    "  }\n" +
+    "  ._endev_json_boolean_ {\n" +
+    "    color: green;\n" +
+    "  }\n" +
+    "  ._endev_json_null_ {\n" +
+    "    color: dimgray;\n" +
     "  }\n" +
     "</style>\n" +
     "<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n" +
@@ -30606,12 +30624,17 @@ var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:
 
 
 var endevModule;
+var modulesToLoad = ["endev-templates","endev-data-tag"]
+if(window.endevAngularModulesToLoad && angular.isArray(window.endevAngularModulesToLoad)){
+  modulesToLoad = modulesToLoad.concat(window.endevAngularModulesToLoad);
+}
+
 //checking if angularFire is loaded
 try{ 
   angular.module("firebase")
-  endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
+  endevModule = angular.module("Endev", modulesToLoad.concat("firebase"));
 } catch(err) {
-  endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
+  endevModule = angular.module("Endev", modulesToLoad);
 }
 
 var $injector = angular.injector(["ng","Endev"]);
@@ -30966,9 +30989,11 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
 
                 provider.query(queryParameters,null,callback)
                   .then(function(data){
+                    scope['$endevError'] = false;
                     callback(data);
                   })
                   .catch(function(data){
+                    scope['$endevError'] = true;
                     console.log("Query error: ",data);
                     scope['$endevErrors'].push(data);
                   });
@@ -31062,6 +31087,40 @@ endevModule.directive("deleteFrom", ['$interpolate','$endevProvider', function($
     }
   }
 }]);
+
+endevModule.directive("explain",function(){
+  return {
+    link: function(scope,element,attrs) {
+      scope.$watch(attrs.explain,function(newValue){
+        if(!_.isUndefined(newValue)){
+          element[0].innerHTML = "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(newValue, undefined, 2)) + "</pre>";
+        }
+      });
+    }
+  }
+})
+
+endevModule.directive("describe",['$endevProvider',function($endevProvider){
+  return {
+    priority: 1001,
+    terminal: true,
+    link: function(scope,element,attrs) {
+      var yql = $endevProvider.getContext("yql").provider;
+      if(!_.isUndefined(attrs.describe)) {
+        yql.desc(attrs.describe).then(function(desc){
+          var res = {
+            parameters: _.map(desc.request.select.key,function(value){return _.pick(value,"name","type","required")})
+          }
+          var text = desc.name
+          if(desc.meta.documentationURL) {
+            text = text + " <a href='" + desc.meta.documentationURL + "'>documentation</a>"
+          }
+          element[0].innerHTML = text + "<pre class='_endev_json_'>" + syntaxHighlight(JSON.stringify(res, undefined, 2)) + "</pre>";
+        });
+      }
+    }
+  }
+}])
           
 //The basic run
 endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
@@ -31385,7 +31444,7 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   return {
     getContext: function(name,path,element,scope) {
       var provider, parent;
-      var name = name || (path.search(/http(s)?:\/\//) > 1 ? "rest" : (path.match(PROTOCOL_REGEX) || [null,null])[1]);
+      var name = name || (path.search(/http(s)?:\/\//) == 0 ? "rest" : (path.match(PROTOCOL_REGEX) || [null,null])[1]);
       if(name) {
         provider = $injector.get('$endev' + name[0].toUpperCase() + name.slice(1));
       } else {
@@ -31574,7 +31633,7 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
 endevModule.service("$endevYql", ['$http','$q', function($http,$q){
   return {
-    query: function(attrs,extra,callback) {
+    query: _.throttle(function(attrs,extra,callback) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer()
       if(attrs.parentLabel){
@@ -31593,8 +31652,8 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           query = "select * from " + from;
         }
         if(where) query += " where " + where;
-        $http.get("https://query.yahooapis.com/v1/public/yql?q=" 
-          + encodeURIComponent(query) 
+        $http.get("https://query.yahooapis.com/v1/public/yql?q="
+          + encodeURIComponent(query)
           + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
           .success(function(data){
             var d = data.query.results;
@@ -31608,11 +31667,26 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
           });
       }
       return result.promise
+
+    },100),
+    desc: function(table){
+      var result = $q.defer();
+      $http.get("https://query.yahooapis.com/v1/public/yql?q="
+              + encodeURIComponent("desc " + table)
+              + "&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&format=json")
+          .success(function(data){
+            var d = data.query.results.table;
+            result.resolve(d);
+          }).error(function(data){
+        result.reject(data.error);
+      });
+      return result.promise;
     }
+
   }
 }]);
 
-endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){ 
+endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){
 
   function prependTransform(defaults, transform) {
     // We can't guarantee that the transform transformation is an array
@@ -31622,39 +31696,47 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
   }
 
   return {
-    query: function(attrs) {
-      var where = "";
-      for(var i = 0; i<attrs.params.length; i++) {
-        where += attrs.params[i].attribute + "=" + encodeURIComponent(attrs.params[i].value);
-        if(i < attrs.params.length-1) {
-          where += "&";
-        }
-      }
-      var config = {
-        headers: angular.isString(attrs.headers) ? angular.fromJson(attrs.headers) : 
-          angular.isObject(attrs.headers) ? attrs.headers : undefined,
-        transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
-          if (headersGetter()['content-type']=="application/atom+xml") {
-            var x2js = new X2JS();
-            return x2js.xml_str2json(data);
-          } else {
-            return data;
-          }
-        })
-      }
-      var url = attrs.from
-      if (url.indexOf('?') != -1) {
-        url = url + "&" + where;
+    query: function(attrs,extra,callback) {
+      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+      var result = $q.defer();
+      if(attrs.parentLabel) {
+        var tmp = _.valueOnPath(attrs.parentObject, from, true)
+        if(callback && angular.isFunction(callback)) callback(tmp)
+        else result.resolve(tmp);
       } else {
-        url = url + "?" + where;
+        var where = "";
+        for(var i = 0; i<attrs.params.length; i++) {
+          where += attrs.params[i].attribute + "=" + encodeURIComponent(attrs.params[i].value);
+          if(i < attrs.params.length-1) {
+            where += "&";
+          }
+        }
+        var config = {
+          headers: angular.isString(attrs.headers) ? angular.fromJson(attrs.headers) :
+            angular.isObject(attrs.headers) ? attrs.headers : undefined,
+          transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
+            if (headersGetter()['content-type']=="application/atom+xml") {
+              var x2js = new X2JS();
+              return x2js.xml_str2json(data);
+            } else {
+              return data;
+            }
+          })
+        }
+        var url = attrs.from
+        if (url.indexOf('?') != -1) {
+          url = url + "&" + where;
+        } else {
+          url = url + "?" + where;
+        }
+
+        $http.get(url, config)
+          .success(function(data){
+            result.resolve(data);
+          }).error(function(data){
+            result.reject(data);
+          });
       }
-      var result = $q.defer()
-      $http.get(url, config)
-        .success(function(data){
-          result.resolve(data);
-        }).error(function(data){
-          result.reject(data);
-        });
       return result.promise;
     }
   }
@@ -31662,7 +31744,7 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
 
 //Firebase dependent features
 if ($injector.has('$firebaseObject')) {
-  
+
   endevModule.service("$endevFirebase",['$q','$firebaseObject','$firebaseArray', function($q,$firebaseObject,$firebaseArray){
     var ref = endev && endev.firebaseProvider && endev.firebaseProvider.path ? new Firebase(endev.firebaseProvider.path) : new Firebase("https://endev.firebaseio.com");
     
@@ -31857,8 +31939,27 @@ var hasherWithThis = function() {
 _.valueOnPath = function(object,path,removeRoot) {
   if(removeRoot && path.indexOf(".") < 0) return object;
   return _.reduce((removeRoot ? path.substring(path.indexOf(".")+1) : path).split("."),function(memo,id){
-    return angular.isDefined(memo) ? memo[id] : null;
+    return (angular.isDefined(memo) && memo != null) ? memo[id] : null;
   },object)
+}
+
+function syntaxHighlight(json) {
+  json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+    var cls = '_endev_json_number_';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) {
+        cls = '_endev_json_key_';
+      } else {
+        cls = '_endev_json_string_';
+      }
+    } else if (/true|false/.test(match)) {
+      cls = '_endev_json_boolean_';
+    } else if (/null/.test(match)) {
+      cls = '_endev_json_null_';
+    }
+    return '<span class="' + cls + '">' + match + '</span>';
+  });
 }
 
 function storageAvailable(type) {
