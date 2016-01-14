@@ -28,7 +28,8 @@ function getCookie(cname) {
 }
 
 function getCodePenId() {
-    var CODEPEN_ID = /codepen\.io\/[^/]+\/(?:pen|debug|fullpage|fullembedgrid)\/([^?#]+)/;
+    // there's all fullembedgrid, but I've excluded that one because embeded code won't change
+    var CODEPEN_ID = /codepen\.io\/[^/]+\/(?:pen|debug|fullpage)\/([^?#]+)/;
     var id;
 
     if(CODEPEN_ID.test(window.location.href)) {

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Endev Tutorial</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script>
+        endevAngularModulesToLoad = ["ngRoute"];
+    </script>
+    <script src="https://code.angularjs.org/1.3.13/angular.min.js"></script>
+    <script src="https://code.angularjs.org/1.3.13/angular-route.min.js"></script>
+    <script src="http://underscorejs.org/underscore-min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
+    <!--<script src="http://www.endevjs.org/endev.full.js"></script>-->
+    <script src="../../code/dist/endev.js"></script>
+    <script>
+        endev.logic = {
+            toDate: function(timestamp) {
+                return (new Date(timestamp/1)).toString();
+            },
+            tutorialName: function(id) {
+                switch (id){
+                    case "LGyJzm": return "Tutorial 1.1";
+                    case "KVmGaX": return "Tutorial 1.2";
+                    case "vLZYae": return "Tutorial 1.3";
+                    case "xZrxmE": return "Tutorial 1.4";
+                    case "KVqKYj": return "Tutorial 1.5";
+                    case "BjZyoM": return "Tutorial 2.1";
+                    case "EPXazQ": return "Tutorial 2.2";
+                    case "MKoweO": return "Tutorial 2.3";
+                    case "JGJYjP": return "Tutorial 2.4";
+                    case "pgwjOm": return "Tutorial 2.5";
+                    case "MKobwv": return "Tutorial 3.1";
+                    case "obwWYm": return "Tutorial 3.2";
+                    case "BjZyom": return "Tutorial 3.3";
+                }
+                return "Unknown";
+
+            },
+            track: function(event){
+                mixpanel.track(event);
+            },
+            explain: function(e){
+                if($("#" + e).hasClass("in")){
+                    mixpanel.track('Hide explanation ' + e );
+                } else {
+                    mixpanel.track('Show explanation ' + e );
+                }
+            }
+
+        }
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+        // HELPER METHODS
+
+        function setCookie(cname, cvalue, exdays) {
+            var d = new Date();
+            d.setTime(d.getTime() + (exdays*24*60*60*1000));
+            var expires = "expires="+d.toUTCString();
+            document.cookie = cname + "=" + cvalue + "; " + expires + ";path=/";
+        }
+
+        function getCookie(cname) {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0)==' ') c = c.substring(1);
+                if (c.indexOf(name) == 0) return c.substring(name.length, c.length);
+            }
+            return "";
+        }
+
+        var createGuid = function () {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        function getParameterByName(name) {
+            name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+            var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+                    results = regex.exec(location.search);
+            return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        }
+
+        // MAIN CODE
+
+        // Try to get the CodePen ID
+        var guid = getParameterByName("id");
+
+        // Note that this means that even the Firebase code
+        // will be browser dependent as each code instance run
+        // in differnt browser (where the cookies is not set) will
+        // connect to different document in Firebase.
+        if(!guid) {
+            if (!getCookie('endevTutorial')) {
+                guid = createGuid();
+                setCookie('endevTutorial',guid);
+            } else {
+                guid = getCookie('endevTutorial');
+            }
+        } else {
+            setCookie('endevTutorial',guid);
+        }
+
+        endev.firebaseProvider = {
+            path: "https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Answers/" + guid + "/"
+        }
+
+        endev.app.config(['$routeProvider',
+            function($routeProvider) {
+                $routeProvider.
+                when('/start', {
+                    templateUrl: 'tutorial-00.html'
+                }).
+                when('/ch1', {
+                    templateUrl: 'tutorial-01.html'
+                }).
+                when('/ch2', {
+                    templateUrl: 'tutorial-02.html'
+                }).
+                when('/ch3', {
+                    templateUrl: 'tutorial-03.html'
+                }).
+                when('/ch4', {
+                    templateUrl: 'tutorial-04.html'
+                }).
+
+                otherwise({
+                    redirectTo: '/start'
+                });
+            }]);
+
+    </script>
+    <!-- start Mixpanel --><script type="text/javascript">(function(e,b){if(!b.__SV){var a,f,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable time_event track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.union people.track_charge people.clear_charges people.delete_user".split(" ");
+    for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=e.createElement("script");a.type="text/javascript";a.async=!0;a.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===e.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";f=e.getElementsByTagName("script")[0];f.parentNode.insertBefore(a,f)}})(document,window.mixpanel||[]);
+mixpanel.init("b0c17fb4dc200837c6f59c3e79217fff");
+    mixpanel.identify(guid);
+    mixpanel.people.set({
+        "$first_name": guid.substring(0,guid.length/2 -1),
+        "$last_name":guid.substring(guid.length/2)
+    })
+    mixpanel.track("Tutorial loaded");
+</script><!-- end Mixpanel -->
+    <style>
+        body {
+            color: #5b5b5b;
+        }
+
+        .c1 {
+            padding-top: 0pt;
+            line-height: 0.4;
+            orphans: 2;
+            widows: 2;
+            direction: ltr
+        }
+
+        .c5 {
+            font-size: 9pt;
+            font-family: "Consolas";
+            color: #528cc7
+        }
+
+        .c7 {
+            font-size: 9pt;
+            font-family: "Consolas";
+            color: #A7925A
+        }
+
+        .c15 {
+            font-size: 9pt;
+            color: #ddca7e
+        }
+
+        .c16 {
+            font-size: 9pt;
+            color: #797979
+        }
+
+        .c17 {
+            font-size: 9pt;
+            color: #69b361
+        }
+
+        .c0 {
+            padding: 0;
+            margin: 0
+        }
+
+        .c14 {
+            height: 11pt
+        }
+
+        .attribute {
+            font-weight: bold;
+            font-family: "Consolas";
+            color: #ce9a38
+        }
+
+        .statement {
+            font-weight: bold;
+            font-family: "Consolas";
+            color: #69b361
+        }
+
+        .c11 {
+            font-family: "Consolas"
+        }
+
+        .c20 {
+            font-style: italic
+        }
+
+        .code {
+            display: block;
+            padding: 9.5px;
+            margin: 0 0 10px;
+            background-color: #1D1F20;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .well {
+            background-color: #e6eefc;
+        }
+        #embed-codepen-logo {
+            display: inline-block;
+            width: 96px;
+            height: 17px;
+            -webkit-background-size: 96px 96px;
+            background-size: 96px;
+            margin-left: 5px;
+            vertical-align: top;
+        }
+        .cp-embed-logo {
+            fill: #ffffff !important;
+        }
+        .logo-wrap {
+            display: inline-block;
+            background-color: #3d3d3e;
+            padding: 8px 16px;
+        }
+        .logo-wrap span {
+            color: #ffffff;
+            font: 13px/1.4 "Lucida Grande", "Lucida Sans Unicode", Tahoma, sans-serif;
+        }
+        
+    </style>
+</head>
+<body class="container">
+<h1 id="start">Endev Tutorial</h1>
+<div ng-view></div>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/*! endev 0.2.4 2016-01-13 */
+/*! endev 0.2.4 2016-01-14 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -201,12 +201,17 @@ var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:
 
 
 var endevModule;
+var modulesToLoad = ["endev-templates","endev-data-tag"]
+if(window.endevAngularModulesToLoad && angular.isArray(window.endevAngularModulesToLoad)){
+  modulesToLoad = modulesToLoad.concat(window.endevAngularModulesToLoad);
+}
+
 //checking if angularFire is loaded
 try{ 
   angular.module("firebase")
-  endevModule = angular.module("Endev", ["endev-templates","endev-data-tag","firebase"]);  
+  endevModule = angular.module("Endev", modulesToLoad.concat("firebase"));
 } catch(err) {
-  endevModule = angular.module("Endev",["endev-templates","endev-data-tag"]);
+  endevModule = angular.module("Endev", modulesToLoad);
 }
 
 var $injector = angular.injector(["ng","Endev"]);
