@@ -28,8 +28,7 @@ function getCookie(cname) {
 }
 
 function getCodePenId() {
-    // there's all fullembedgrid, but I've excluded that one because embeded code won't change
-    var CODEPEN_ID = /codepen\.io\/[^/]+\/(?:pen|debug|fullpage)\/([^?#]+)/;
+    var CODEPEN_ID = /codepen\.io\/[^/]+\/(?:pen|debug|fullpage|fullembedgrid)\/([^?#]+)/;
     var id;
 
     if(CODEPEN_ID.test(window.location.href)) {
@@ -82,16 +81,19 @@ endev.firebaseProvider = {
 
 
 endev.app.run(function () {
-    var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
+    // Only record non embeded ones
+    if (!window.location.href.indexOf('fullembedgrid')>0){
+        var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
 
-    var data_to_save = {
-        html: document.documentElement.innerHTML,
-    }
+        var data_to_save = {
+            html: document.documentElement.innerHTML,
+        }
 
-    if(getCodePenId()) {
-        data_to_save.codePenId = getCodePenId();
+        if(getCodePenId()) {
+            data_to_save.codePenId = getCodePenId();
+        }
+        code_snapshot_ref.child(guid).child(Date.now()).set(data_to_save);
     }
-    code_snapshot_ref.child(guid).child(Date.now()).set(data_to_save);
 })
 
 
