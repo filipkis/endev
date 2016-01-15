@@ -82,7 +82,7 @@ endev.firebaseProvider = {
 
 endev.app.run(function () {
     // Only record non embeded ones
-    if (!window.location.href.indexOf('fullembedgrid')>0){
+    if (window.location.href.indexOf('fullembedgrid')<0){
         var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
 
         var data_to_save = {
