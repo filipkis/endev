@@ -61,16 +61,15 @@ var createGuid = function () {
 // Try to get the CodePen ID
 var guid;
 
-// Note that this means that even the Firebase code
-// will be browser dependent as each code instance run
-// in differnt browser (where the cookies is not set) will
-// connect to different document in Firebase.
-if(!guid) {
-    if (!getCookie('endevTutorial')) {
-        guid = createGuid();
-        setCookie('endevTutorial',guid);
-    } else {
-        guid = getCookie('endevTutorial');
+window.parent.parent.postMessage("getEndevTutorialId","*");
+
+window.addEventListener("message", receiveMessage, false);
+
+function receiveMessage(event)
+{
+    if(event.data && event.data.messageName == 'endevTutorialId') {
+        console.log('Got the message',getCodePenId());
+        guid = event.data.id;
     }
 }
 
@@ -81,6 +80,20 @@ endev.firebaseProvider = {
 
 
 endev.app.run(function () {
+    console.log("Entered Angular", getCodePenId());
+    // Note that this means that even the Firebase code
+    // will be browser dependent as each code instance run
+    // in differnt browser (where the cookies is not set) will
+    // connect to different document in Firebase.
+    if(!guid) {
+        if (!getCookie('endevTutorial')) {
+            guid = createGuid();
+            setCookie('endevTutorial',guid);
+        } else {
+            guid = getCookie('endevTutorial');
+        }
+    }
+
     // Only record non embeded ones
     if (window.location.href.indexOf('fullembedgrid')<0){
         var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
