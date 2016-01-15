@@ -109,6 +109,15 @@
             setCookie('endevTutorial',guid);
         }
 
+        window.addEventListener("message", receiveMessage, false);
+
+        function receiveMessage(event)
+        {
+            if(event.data == 'getEndevTutorialId') {
+                event.source.postMessage({messageName:'endevTutorialId',id:guid},"*");
+            }
+        }
+
         endev.firebaseProvider = {
             path: "https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Answers/" + guid + "/"
         }

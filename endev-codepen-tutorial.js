@@ -70,6 +70,7 @@ function receiveMessage(event)
     if(event.data && event.data.messageName == 'endevTutorialId') {
         console.log('Got the message',getCodePenId());
         guid = event.data.id;
+        setCookie('endevTutorial',guid);
     }
 }
 
