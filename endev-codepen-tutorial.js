@@ -79,11 +79,12 @@ endev.firebaseProvider = {
     path: "https://endev-tutorial-01.firebaseio.com/"
 }
 
-var data_to_save = {
-    html: document.documentElement.innerHTML,
-}
 
 endev.app.run(["$timeout",function ($timeout) {
+    var data_to_save = {
+        html: document.documentElement.innerHTML,
+    }
+
     $timeout(function(){
         console.log("Entered Angular", getCodePenId());
         // Note that this means that even the Firebase code
