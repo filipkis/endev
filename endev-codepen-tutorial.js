@@ -79,6 +79,9 @@ endev.firebaseProvider = {
     path: "https://endev-tutorial-01.firebaseio.com/"
 }
 
+var data_to_save = {
+    html: document.documentElement.innerHTML,
+}
 
 endev.app.run(["$timeout",function ($timeout) {
     $timeout(function(){
@@ -99,10 +102,6 @@ endev.app.run(["$timeout",function ($timeout) {
         // Only record non embeded ones
         if (window.location.href.indexOf('fullembedgrid')<0){
             var code_snapshot_ref = new Firebase("https://endev-tutorial-01-c.firebaseio.com/Tutorial-v1-Snapshots");
-
-            var data_to_save = {
-                html: document.documentElement.innerHTML,
-            }
 
             if(getCodePenId()) {
                 data_to_save.codePenId = getCodePenId();
