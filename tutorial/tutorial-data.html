@@ -6,8 +6,33 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="http://www.endevjs.org/endev.full.js"></script>
     <script>
+        endevAngularModulesToLoad = ["ngSanitize",'diff-match-patch'];
+    </script>
+    <script src="https://code.angularjs.org/1.3.13/angular.min.js"></script>
+    <script src="https://code.angularjs.org/1.3.13/angular-sanitize.js"></script>
+    <script src="//neil.fraser.name/software/diff_match_patch/svn/trunk/javascript/diff_match_patch.js"></script>
+    <script src="http://amweiss.github.io/angular-diff-match-patch/angular-diff-match-patch.js"></script>
+    <script src="http://underscorejs.org/underscore-min.js"></script>
+    <script src="https://cdn.firebase.com/js/client/2.3.2/firebase.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/1.1.3/angularfire.min.js"></script>
+    <!--<script src="http://www.endevjs.org/endev.full.js"></script>-->
+    <script src="http://www.endevjs.org/endev.js"></script>
+
+
+    <script>
+        var stripCode = function(html){
+            if(html) {
+                html = html.substring(html.indexOf('<body'))
+                html = html.substring(0, html.indexOf('<script'))
+                html = html.substring(html.match(/<body.+/)[0].length)
+                return html;
+            }else {
+                ""
+            }
+            return html;
+        }
+
         endev.firebaseProvider = {
             path: "https://endev-tutorial-01-c.firebaseio.com"
         }
@@ -31,28 +56,96 @@
                     case "obwWYm": return "Tutorial 3.2";
                     case "BjZyom": return "Tutorial 3.3";
                 }
-                return "Unknown";
+                return id || "Unknown";
 
-            }
+            },
+            diff: function(html,old){
+//                var diff = JsDiff.diffChars(html,old);
+                console.log(diffString(old,html));
+            },
+            stripCode:stripCode,
+            simpleOr:function(a,b) { return a || b}
         }
+
+
+
+        var esaceHtml = function(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+            endev.app.filter('formatcode',function($sce){
+                return function(html,other){
+                    html = stripCode(html);
+//                    if(angular.isString(other) && angular.isString(html)){
+//                        other = stripCode(other);
+////                        html = esaceHtml(html);
+////                        other = esaceHtml(other);
+//                        return $sce.trustAsHtml(diffString(other,html));
+//                    }
+                    return html;
+                }
+            })
+
     </script>
+    <style>
+        pre.hideDel del {
+            display: none;
+        }
+        pre.hideIns ins{
+            display:none;
+        }
+        ins {
+            color: #00ce00;
+            text-decoration: none;
+        }
+        del {
+            color:red;
+        }
+    </style>
 </head>
-<body>
+<body class="container">
 <div from="firebase:Tutorial-v1-Snapshots s" auto-update>
-    <h2><a href="#{{s.$id}}" data-toggle="collapse">{{s.name ? s.name :  s.$id}}</a></h2>
+    <h3><a href="#{{s.$id}}" data-toggle="collapse">{{s.name ? s.name :  s.$id}} <small ng-show="s.name">{{s.$id}}</small></a></h3>
     <div id="{{s.$id}}" class="collapse">
         <input data-value="s.name" placeholder="Enter name"><br>
-        <textarea data-value="s.notes" placeholder="Enter notes" rows="5" cols="40"></textarea>
-        <div from="s d" data-if="d.$id != 'name' && d.$id != 'notes'" auto-update>
-            <h3><a href="#{{d.$id}}" data-toggle="collapse">{{tutorialName(d.codePenId)}} <small>{{toDate(d.$id)}}</small></a></h3>
-            <div id="{{d.$id}}" class="collapse">
-                <textarea data-value="d.notes" placeholder="Enter notes" rows="3" cols="40"></textarea>
-<pre>
-{{d.html}}
-</pre>
-            </div>
+        <textarea data-value="s.notes" placeholder="Enter notes" rows="5" cols="40" class="form-control"></textarea>
+        <h4>Survey answers</h4>
+        <div from="https://spreadsheets.google.com/feeds/list/1U_Vq7VMjDje0SInAp4jgYn69Fj_PW8EjbOF2cC-8jiU/o70ja9i/public/values?alt=json sheet" where="sheet.feed.entry.gsx$id = ">
+            <ul from="sheet.feed.entry entry" where="entry.gsx$id.$t = s.$id">
+                <li><b>In what situation would you find it useful:</b> <pre>{{entry.gsx$inwhatsituationswouldyoufindendevuseful.$t}}</pre></li>
+                <li><b>How do you compare to other libs?</b> <pre>{{entry['gsx$howdoyoucompareendevtootherfront-endlibrariesthatyouhadexperienced'].$t}}</pre></li>
+                <li><b>What kind of apps?</b> <pre>{{entry.gsx$whatkindofappscanyouimaginebuildingwithendev.$t}}</pre></li>
+                <li><b>Comments/feedback?</b> <pre>{{entry.gsx$anyothercommentsthoughtsfeedback.$t}}</pre></li>
+            </ul>
         </div>
+        <h4>Exercise Answers</h4>
+        <ul>
+            <li from="firebase:Tutorial-v1-Answers/{{s.$id}}/Answers a1" where="a2.answer != null" >
+                <b>{{a1.id}}:</b> <pre>{{a1.answer}}</pre>
+            </li>
+            <!--This is needed for the replies that were before both had same ID-->
+            <li from="firebase:Tutorial-v1-Answers/{{s.answerId}}/Answers a2" where="a2.answer != null"  >
+                <b>{{a2.id}}:</b> <pre>{{a2.answer}}</pre>
+            </li>
+        </ul>
+        <h4>Code</h4>
+        <ul>
+            <li from="s d" data-if="d.$id != 'name' && d.$id != 'notes'" auto-update>
+                <a href="#{{d.$id}}" data-toggle="collapse">{{tutorialName(d.codePenId)}} </a><small>{{toDate(d.$id)}}</small>
+                <div id="{{d.$id}}" class="collapse">
+                    <textarea data-value="d.notes" placeholder="Enter notes" rows="3" cols="40" class="form-control"></textarea>
+                    <button ng-click="d.hideDel = !d.hideDel" class="btn btn-xs btn-default">{{d.hideDel ? 'Show' : 'Hide'}} <del ng-show="d.hideDel">deletions</del><span ng-show="!d.hideDel">deletions</span></button>
+                    <button ng-click="d.hideIns = !d.hideIns" class="btn btn-xs btn-default">{{d.hideIns ? 'Show' : 'Hide'}} <ins ng-show="d.hideIns">insertions</ins><span ng-show="!d.hideIns">insertions</span></button>
+                    <a href="http://codepen.io/anon/pen/{{d.codePenId}}" ng-show="tutorialName(d.codePenId).indexOf('Tutorial') != 0 && tutorialName(d.codePenId).indexOf('Unknown') != 0 " target="_blank" class="btn btn-xs btn-primary">See in CodePen</a>
+    <pre processing-diff right-obj="stripCode(d.html)" left-obj="stripCode($endevData_d[($index - 1) > 0 ? $index - 1 : 0].html)" ng-class="{hideDel:d.hideDel,hideIns:d.hideIns}">
+    </pre>
+                </div>
+            </li>
+        </ul>
     </div>
+    <hr>
 </div>
 
 </body>
