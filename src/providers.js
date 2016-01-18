@@ -333,7 +333,8 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer();
       if(attrs.parentLabel) {
-        var tmp = _.valueOnPath(attrs.parentObject, from, true)
+        var tmp = _.valueOnPath(attrs.parentObject, from, true);
+        tmp = generalDataFilter(tmp,attrs);
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       } else {

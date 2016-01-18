@@ -1,4 +1,4 @@
-/*! endev 0.2.4 2016-01-14 */
+/*! endev 0.2.5 2016-01-18 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -1277,7 +1277,8 @@ endevModule.service("$endevRest", ['$http','$interpolate','$q', function($http,$
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer();
       if(attrs.parentLabel) {
-        var tmp = _.valueOnPath(attrs.parentObject, from, true)
+        var tmp = _.valueOnPath(attrs.parentObject, from, true);
+        tmp = generalDataFilter(tmp,attrs);
         if(callback && angular.isFunction(callback)) callback(tmp)
         else result.resolve(tmp);
       } else {
