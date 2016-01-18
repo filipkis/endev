@@ -14,18 +14,18 @@
 <div class="row">
   <div class="col-md-4">
     <input placeholder="Enter new queue name" data-value="newQueueName"/>
-    <button data-insert-into="Queues" data-provider="firebase" data-click="insert({name: newQueueName})">Add new queue</button>
+    <button data-insert-into="firebase:Queues" data-click="insert({name: newQueueName})">Add new queue</button>
   </div>
 </div>
 <div class="row">
   <div class="col-md-4">
     Choose queue:
     <select data-value="queuename">
-      <option data-from="Queues queue1" data-provider="firebase" value="{{queue1.name}}">{{queue1.name}}</option>
+      <option data-from="firebase:Queues queue1" value="{{queue1.name}}">{{queue1.name}}</option>
     </select>
   </div>
 </div>
-<div data-provider="firebase" data-from="Queues queue2" where="queue2.name = queuename">
+<div data-from="firebase:Queues queue2" where="queue2.name = queuename">
   <div class="row">
     <div class="col-md-4">
       Queue: {{queue2.name}}
@@ -42,7 +42,7 @@
         </div>
         Search for avatar: <input data-value="query"/>
         <div data-if="query">
-          <div data-from="flickr.photos.search fps" provider="yql" where="fps.text=query AND fps.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'">
+          <div data-from="yql:flickr.photos.search fps" where="fps.text=query AND fps.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'">
             <div data-from="fps.photo photo">
               <img ng-src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg" style="max-height:100px;">
               <button data-click="myPosition.avatar = 'http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id + '_' + photo.secret + '.jpg' ">Choose</button>
