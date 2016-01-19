@@ -15,6 +15,33 @@
 <!--<p>Endev address these through two core principles: </p>-->
 <!--<p>First, <b>declarative annotations</b>&nbsp;hide the nitty-gritty aspects of writing code (that&rsquo;s often the same and repetitive) to access the data and instead lets you just say <b>what</b>&nbsp;data you want and <b>where</b>&nbsp;do you want it. </p>-->
 <!--<p>Second, by utilizing <b>cloud services </b>Endev removes certain configuration requirements (like installing a database to store your data) and overhead (programming a web server just so you can read APIs that don&rsquo;t support cross-origin resource sharing). </p>-->
+
+<p>By the end of the turoial you'll be able to build this app that allows you to search for photos on Flickr and store them in your private collection. Try it right now, search for photo and click on it to add it to your collection:</p>
+<style>
+    img {
+        display:inline-block;
+        max-width: 200px;
+        max-height: 100px;
+        height: auto;
+        border: 1px solid rgb(221, 221, 221);
+        padding: 4px;
+    }
+</style>
+<div class="well">
+    <div class="row">
+        <div class="col-xs-8">
+            <h4> Photo Collector App </h4>
+            Search: <input data-value="searchTerm"/>
+            <div from="yql:flickr.photos.search result" where="text = searchTerm AND api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'">
+                <img from="result.photo photo" src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg" insert-into="PhotoCollection" data-click="insert({url:'http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id +  '_' + photo.secret + '.jpg'})"  >
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <h4>My collection</h4>
+            <img from="PhotoCollection photo" src="{{photo.url}}" data-click="delete(photo)"/>
+        </div>
+    </div>
+</div>
 <h4>Table of contents</h4>
 <ol>
     <li><a href="#ch1">On-the-fly creation of own data</a></li>
