@@ -266,7 +266,7 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
 endevModule.service("$endevYql", ['$http','$q', function($http,$q){
   return {
-    query: _.throttle(function(attrs,extra,callback) {
+    query: function(attrs,extra,callback) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer()
       if(attrs.parentLabel){
@@ -301,7 +301,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
       }
       return result.promise
 
-    },100),
+    },
     desc: function(table){
       var result = $q.defer();
       $http.get("https://query.yahooapis.com/v1/public/yql?q="
