@@ -525,7 +525,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var unbind;
 
             var callback = function(data) {
-              $timeout(function(){
+              //$timeout(function(){
                 // if(!_.isEqual(scope["_data_"],data))
                 if(!angular.isArray(data)) data = [data];
                 if(unbind) unbind();
@@ -547,7 +547,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                 if(scope["$endevAnnotation"]){
                   scope.$emit("$endevData_" + label, data);
                 }
-              })
+              //})
             };
 
             var executionId = 0;
@@ -571,9 +571,9 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                 var id = ++executionId;
 
                 var executionCallback = function(data){
-                  if (id == executionId){
+                  //if (id == executionId){
                     callback(data);
-                  }
+                  //}
                 }
 
                 provider.query(queryParameters,null,executionCallback)
