@@ -1,4 +1,4 @@
-/*! endev 0.2.5 2016-01-18 */
+/*! endev 0.2.5 2016-01-19 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -408,7 +408,7 @@ endevModule.directive("endevItem",["$endevProvider","$interpolate",function($end
   }
 }]);
 
-endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$rootScope','Expr', function($interpolate,$endevProvider,$compile,$q,$rootScope,Expr){
+endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$rootScope','$timeout','Expr', function($interpolate,$endevProvider,$compile,$q,$rootScope,$timeout,Expr){
   function getRoot(element) {
     if(element[0].tagName === 'OPTION') {
       return element.parent();
@@ -525,27 +525,29 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
             var unbind;
 
             var callback = function(data) {
-              // if(!_.isEqual(scope["_data_"],data))
-              if(!angular.isArray(data)) data = [data];
-              if(unbind) unbind();
-              if((!data || !(data.length >0)) && attrs.default){
-              // if(!(_.keys(data).length >3) && attrs.default){
-                var def = scope.$eval(attrs.default);
-                if(angular.isFunction(data.$add) && attrs.autoInsert) {
-                  //TODO consider using where data as well
-                  data.$add(def);
+              $timeout(function(){
+                // if(!_.isEqual(scope["_data_"],data))
+                if(!angular.isArray(data)) data = [data];
+                if(unbind) unbind();
+                if((!data || !(data.length >0)) && attrs.default){
+                // if(!(_.keys(data).length >3) && attrs.default){
+                  var def = scope.$eval(attrs.default);
+                  if(angular.isFunction(data.$add) && attrs.autoInsert) {
+                    //TODO consider using where data as well
+                    data.$add(def);
+                  } else {
+                    data.push(def);
+                  }
+                  // data['default'] = def;
+                  scope['$isDefault'] = true;
                 } else {
-                  data.push(def);
+                  scope['$isDefault'] = false;
                 }
-                // data['default'] = def;
-                scope['$isDefault'] = true;
-              } else {
-                scope['$isDefault'] = false;
-              }
-              scope["$endevData_" + label] = data;
-              if(scope["$endevAnnotation"]){
-                scope.$emit("$endevData_" + label, data);
-              }
+                scope["$endevData_" + label] = data;
+                if(scope["$endevAnnotation"]){
+                  scope.$emit("$endevData_" + label, data);
+                }
+              })
             };
 
             var execute = _.throttle(function (){ 
@@ -1210,7 +1212,7 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
 endevModule.service("$endevYql", ['$http','$q', function($http,$q){
   return {
-    query: _.throttle(function(attrs,extra,callback) {
+    query: function(attrs,extra,callback) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
       var result = $q.defer()
       if(attrs.parentLabel){
@@ -1245,7 +1247,7 @@ endevModule.service("$endevYql", ['$http','$q', function($http,$q){
       }
       return result.promise
 
-    },100),
+    },
     desc: function(table){
       var result = $q.defer();
       $http.get("https://query.yahooapis.com/v1/public/yql?q="
