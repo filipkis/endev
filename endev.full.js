@@ -30973,7 +30973,9 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
               })
             };
 
-            var execute = _.throttle(function (){ 
+            var executionId = 0;
+
+            var execute = _.debounce(function (){
               console.log("Executed with params: ", params);
               if(provider){
 
@@ -30989,10 +30991,18 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                   queryParameters.parentData = scope["$endevData_" + parent];
                 }
 
-                provider.query(queryParameters,null,callback)
+                var id = ++executionId;
+
+                var executionCallback = function(data){
+                  if (id == executionId){
+                    callback(data);
+                  }
+                }
+
+                provider.query(queryParameters,null,executionCallback)
                   .then(function(data){
                     scope['$endevError'] = false;
-                    callback(data);
+                    executionCallback(data);
                   })
                   .catch(function(data){
                     scope['$endevError'] = true;
