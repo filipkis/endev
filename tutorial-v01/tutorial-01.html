@@ -1,0 +1,92 @@
+<h2><a></a>1. On-the-fly creation of own data</h2>
+<h4>1.1 The static WishList example</h4>
+<p>Let&rsquo;s imagine we want to create a small app to manage our birthday (or Christmas, wedding, etc.) wish list and to be able to share it with others. To start with we want to have a very simple interface, just to enter content into the list. Below you can see the interface and HTML code needed to create it.</p>
+<p data-height="300" data-theme-id="21624" data-slug-hash="LGyJzm" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/LGyJzm/'>Endev Tutorial: 1.1</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<h4>1.2 Insert and list the data</h4>
+<p>So far, so good. However, the interface at the moment does not do anything. Entering a new value and clicking on the button will not change anything. So how do we achieve that? Before we start adding functionality we need to think about what data we need to store. For this first version we only need a collection of all the wishes (let&rsquo;s call it <b>WishList</b>) where each item in the collection will have a <b>name</b>. Now let&rsquo;s add the first 4 annotations that will make the list dynamic and allow us to add new data to it. </p>
+<p data-height="300" data-theme-id="21624" data-slug-hash="KVmGaX" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/KVmGaX/'>Endev Tutorial: 1.2</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p><span class="
+glyphicon glyphicon-hand-up text-primary" data-toggle="tooltip" data-placement="bottom" title="Test the example"></span> Go ahead, play with it a bit and add some items.</p>
+<p>
+    <a href="#e12" data-toggle="collapse" class="btn btn-info btn-xs" ng-click="explain('e12')">Explain the example</a>
+    <div class="collapse" id="e12">
+        <div class="well">
+<p>Let&rsquo;s understand better what the new annotations represent: </p>
+<ul>
+    <li>with <span class="attribute">data-value</span>&nbsp;annotation we have declared a reference label <span class="statement">itemName</span>&nbsp;for the value entered into the input box. This allows us to reference that value in other places (as we will see soon).</li>
+    <li>with <span class="attribute">data-click</span>&nbsp;annotation we declare what should happen when the button is clicked. In this case <span class="statement">insert({name:itemName})</span>&nbsp;specifies that a new object should be inserted into a collection and that its name should be the value from the input box (referenced by itemName). But what collection does it get inserted in?</li>
+    <li>well that&rsquo;s what <span class="attribute">insert-into=</span><span class="statement">&quot;WishList&quot;</span>&nbsp;is for. This annotations specifies the collection where the data from the <span class="statement">&quot;insert(...)&quot;</span> operation is supposed to go. And this is our desired WishList collection.</li>
+    <li>finally, we replaced the two static list items (&lt;li&gt;..&lt;/li&gt;) we had before with one annotated with a <span class="attribute">from</span>&nbsp;annotation where we define the query to get the data. This way we have defined a template that will be duplicated for each element in the retrieved data. In our case we said <span class="statement">WishList item</span>&nbsp;meaning we want to get the data from <span class="statement">WishList</span>&nbsp;and <span class="statement">item</span><b>&nbsp;</b>label to reference the individual item (similar to how we used itemName earlier). We can see how the item is used inside the {{item.name}} where we just want to display the item&rsquo;s name. Double curly brackets are used whenever we want to just display data we have somehow retrieved or created through annotations.</li>
+</ul>
+</div>
+</div>
+</p>
+<p>Now if you have any experience with web you may think: &ldquo;This is a nice trick, but if I close my browser the data will be lost&rdquo;. Well, go ahead and try <span class="
+glyphicon glyphicon-hand-up text-primary" data-toggle="tooltip" data-placement="bottom" title="Test the example"></span>. Still there? If you opened the same browser&nbsp;your data should still be there. The catch is in &ldquo;the same browser&rdquo;. Endev use browser storage to dynamically create your data structure and store your data. It is similar to how cookies work and that is why the data is only local and in another browser or another computer you would not see it. But we will solve this issue soon. </p>
+<h4>1.3 Edit the existing items</h4>
+<p>Let&rsquo;s add a bit more functionality to our interface. For instance, how about if we want to edit the items on the list (in case we made a typo). To do this we simply need to change the list template in a way that we: put the name in the input box (instead of just displaying it as we did so far) and add a button to save the changes. Here&nbsp;is the updated code:</p>
+<p data-height="390" data-theme-id="21624" data-slug-hash="vLZYae" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/vLZYae/'>Endev Tutorial: 1.3</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e13" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e13')">Explain the example</a>
+    <div class="collapse" id="e13">
+        <div class="well">
+<p>The new <span class="statement">update(item)</span>&nbsp;statement associated with <span class="attribute">data-click</span> annotation works in a similar way to previously seen <span class="statement">insert</span>.</p>
+</div>
+</div>
+</p>
+<h4>1.4 Update as you type</h4>
+<p>Having an update button is a bit old-fashioned interaction method. Modern web applications today, instead, save your changes as soon as you make them. And as you might have guessed it, all it takes is one more annotation :) In fact, as we are going to remove the button it will actually be less code than previous example. Here it is:</p>
+<p data-height="370" data-theme-id="21624" data-slug-hash="xZrxmE" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/xZrxmE/'>Endev Tutorial: 1.4</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e14" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e14')">Explain the example</a>
+    <div class="collapse" id="e14">
+        <div class="well">
+<p>We have removed the button added in previous step, and instead added the annotation <span class="attribute">auto-update</span>&nbsp;on the same element where we have <span class="attribute">from</span>. This way we are declaring that any changes that happen in the interface to the items retrieved by the query should automatically be saved (i.e. the WishList should be updated).</p>
+</div>
+</div>
+</p>
+<h4>1.5 Remove items from the list</h4>
+<p>As a final step in this part of the tutorial let&rsquo;s add a feature to remove the items from the list. Let&rsquo;s use the link (with text &ldquo;X&rdquo;) instead of using those big buttons:</p>
+
+<p data-height="370" data-theme-id="21624" data-slug-hash="KVqKYj" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/KVqKYj/'>Endev Tutorial: 1.5</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e15" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e15')">Explain the example</a>
+    <div class="collapse" id="e15">
+        <div class="well">
+<p>Even though we used a different element (a link instead of a button)  the annotation that lets us delete the item is similar to what we have seen before when inserting new item - <span class="attribute">data-click=</span><span class="statement">&quot;delete(item)&quot;</span>. As simple as that.</p>
+</div>
+</div>
+</p>
+<h4><span class="glyphicon glyphicon-star text-primary" aria-hidden="true"></span> Do it yourself</h4>
+<p>To test your understanding and our design of Endev, here are some tasks for you to try yourself:</p>
+<ol>
+    <li><span class="glyphicon glyphicon-pencil text-primary" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" title="Do it yourself"></span> Add a input box for adding the price information  when creating an item on the list
+        <div from="firebase:Answers an" where="an.id = '1.1'" default="{'id':'1.1'}" auto-insert="true" auto-update>
+            <textarea data-value="an.answer" placeholder="Write comments to assignment if you have any" cols="50" class="form-control"></textarea>
+        </div><button class="btn btn-xs btn-primary" data-click="insert({'id':'1.1'})" insert-into="firebase:Answers">Add another</button>
+    </li>
+    <li><span class="glyphicon glyphicon-pencil text-primary" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" title="Do it yourself"></span> Add a input box so you can paste a link to a picture (when adding a new item) and display the picture in the list of items
+        <div from="firebase:Answers an" where="an.id = '1.2'" default="{'id':'1.2'}" auto-insert="true" auto-update>
+            <textarea data-value="an.answer" placeholder="Write comments to assignment if you have any" cols="50" class="form-control"></textarea>
+        </div><button class="btn btn-xs btn-primary" data-click="insert({'id':'1.2'})" insert-into="firebase:Answers">Add another</button></li>
+    <li><span class="glyphicon glyphicon-pencil text-primary" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" title="Do it yourself"></span> Add the possibility to add subitems for each existing item<div from="firebase:Answers an" where="an.id = '1.3'" default="{'id':'1.3'}" auto-insert="true" auto-update>
+        <textarea data-value="an.answer" placeholder="Write comments to assignment if you have any" cols="50" class="form-control"></textarea>
+    </div><button class="btn btn-xs btn-primary" data-click="insert({'id':'1.3'})" insert-into="firebase:Answers">Add another</button></li>
+
+</ol>
+<h4>Let&rsquo;s recap what we have learned in this part of the tutorial:</h4>
+<ul>
+    <li>Endev supports interactivity with data through HTML annotations</li>
+    <li><span class="attribute">from</span>&nbsp;annotation can be used to retrieve data from arbitrary collections (if one does not exist it will be created for you on-the-fly) and combined with <span class="attribute">auto-update</span>&nbsp;also saves any changes that the user does to the data through the interface</li>
+    <li><span class="attribute">data-click</span>annotations in combination with insert(...), update(...) or delete(...) statements can be used to do exactly that, insert, update or delete the data</li>
+    <li><span class="attribute">data-value</span>&nbsp;annotation is used to give as a reference to values in input elements</li>
+    <li>The data has, for now, been only stored in the browser</li>
+</ul>
+<hr>
+<div style="padding-bottom: 20px" class="text-center">
+    1/4
+    <a href="#start" class="btn btn-primary pull-left" ng-click="track('Back to Tutorial Start')">&lt; Previous</a>
+    <a href="#ch2" class="btn btn-primary pull-right" ng-click="track('Chapter 2 started')">Next &gt;</a>
+    <div class="clearfix"></div>
+</div>
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>

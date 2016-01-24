@@ -1,0 +1,93 @@
+<h2><a></a>2. Real-time applications and data in the cloud</h2>
+<p>In the previous chapter we have seen how to create a simple interactive application with real data that gets created on-the-fly. All of this was achieved using the Endev JavaScript library, but without writing a single line of JavaScript code. Instead of writing the code to tell our application <b>how </b>to get the data, we used annotations to declare <b>what</b>&nbsp;data we want and <b>where</b>&nbsp;we want it. Endev took care of the rest.</p>
+<p>Now let&rsquo;s see what else can Endev do for us. In fact, in all of our examples from the previous chapter there was an important feature that we didn&rsquo;t discuss. We already know that the data is stored in the browser and if we restart it, our data should not be lost. But what happens if you open this tutorial in two tabs of your browser and edit the data in one of them? Well, in fact, the data will be instantly synced to the other tab as well. <span class="
+glyphicon glyphicon-hand-up text-primary" data-toggle="tooltip" data-placement="bottom" title="Test the example"></span> Go ahead and try this on the last example from previous chapter:</p>
+<p data-height="370" data-theme-id="21624" data-slug-hash="KVqKYj" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/KVqKYj/'>Endev Tutorial: 1.5</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>This is a so called real-time synchronization technique and apps that support it are called <b>real-time apps</b>&nbsp;with most famous example being Google Docs.</p>
+<h4>2.1 Putting the data into the cloud</h4>
+<p>Our goal from the start was to be able to share the list with others. Currently, we have a big limitation in our  app - the data is stored only in the browser. So to share it, somebody would actually need to use our computer and that&rsquo;s, of course, not what we had in mind.</p>
+<p>To solve this Endev uses a cloud service called Firebase and taps into the power of real data storage that can be accessed from anywhere. And since it is a cloud service, it doesn&rsquo;t require complex setup and maintenance. In fact, for this tutorial you will need no setup at all. Let&rsquo;s see how we can &ldquo;turn on&rdquo; this feature in Endev. Here is our example from before, but now running with Firebase:</p>
+<p><b>Note:</b>&nbsp;Since from now on the data is stored in the cloud, it is shared with&nbsp;anybody taking this tutorial at the same time. Just so&nbsp;that&nbsp;you are not surprised if new things start appearing and disappearing from the list :)</p>
+<p data-height="370" data-theme-id="21624" data-slug-hash="BjZyoM" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/BjZyoM/'>Endev Tutorial: 2.1</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e21" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e21')">Explain the example</a>
+    <div class="collapse" id="e21">
+        <div class="well">
+<p>It looks almost the same. The only difference is that where we used <span class="statement">WishList</span>&nbsp;before now we have <span class="statement">firebase:WishList</span>. With this change we have told Endev that we do not want to anymore take the information from local browser storage, but instead from Firebase. In fact, the previous annotation we used for local storage was just a shortcut version, the full version would be <span class="statement">local:WishList</span>. We can already start to see a pattern here of how we define different services (providers). In the next chapter we will see two more services that we can use to access the data.</p>
+<p>As with local storage, Endev will create the WishList (or any other name you put there) collection in Firebase if one didn&rsquo;t exist before. </p>
+</div>
+</div>
+</p>
+<h4>2.2 Allowing the others to register for lists</h4>
+<p>Time to make our WishList app shareable. The interface we have built so far is for managing the wish list, however we do not want our friends or family to start adding or removing the items on the list. So let&rsquo;s create a new interface where they will only be able to see the list and choose what they want to get (before you do that, make sure you have some items in the list if you deleted them in previous step):</p>
+<p data-height="250" data-theme-id="21624" data-slug-hash="EPXazQ" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/EPXazQ/'>Endev Tutorial: 2.2</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e22" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e22')">Explain the example</a>
+    <div class="collapse" id="e22">
+        <div class="well">
+<p>This example shows already familiar <span class="attribute">from</span> and <span class="attribute">data-click</span>&nbsp;with <span class="statement">update(..)</span> annotations. However, there are two new things to notice here. </p>
+<p>First, a new annotation <span class="attribute">data-if</span>&nbsp;is used to make an element appear only when&nbsp;a specific condition&nbsp;is fulfilled. We wanted &ldquo;[reserved]&rdquo; to appear next to the items&nbsp;that somebody has already registered for. </p>
+<p>Second, we are using the <span class="statement">update</span> statement in a new way. The first argument (<span class="statement">item</span>), as before, tells us which object will be updated, but the second argument specifies what information to update. This is useful when we do not have input boxes or other similar controls but we still want to change some values. We could, for instance, say <span class="statement">update(item, { registered:true, when: $now() })</span>&nbsp;where we would also set item&rsquo;s <span class="statement">when</span>&nbsp;property to know when somebody registered. <span class="statement">$now()</span> is a special function in Endev that gives you the current date and time.</p>
+</div>
+</div>
+</p>
+<h4>2.3 Showing the list of items user registerd for</h4>
+<p>Now that the users can register for an item, it would be nice that they also know what they registred for. Remember, now that we use Firebase service, everybody will see the same list. So it might happen that somebody forgets what they decided to get. One way we could do this is having people sign up with their name (and maybe other information), but let&rsquo;s look at different way so we can explore another feature of Endev - possibility to combine data from different services. </p>
+<p>To achieve our goal, we can store the items that a user has registered for in the local browser storage. That way each user will see only their own list (of course, only if looking with the same browser, but for prototyping purpose we can be satisfied with that).</p>
+<p>Let&rsquo;s look how that can be achieved:</p>
+<p data-height="370" data-theme-id="21624" data-slug-hash="MKoweO" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/MKoweO/'>Endev Tutorial: 2.3</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e23" data-toggle="collapse" class="btn btn-info btn-xs" ng-click="explain('e23')">Explain the example</a>
+    <div class="collapse" id="e23">
+        <div class="well">
+<p>First, we decided to store the list of items the user is getting in the local <span class="statement">ToGetList</span> (note: we used <span class="statement">local:ToGetList</span> to make it more obvious when reading the code that it&rsquo;s the local storage, but <span class="statement">local:</span> prefix could have been omitted as it is the default). To do this we added extra statement to our <span class="attribute">data-click</span> annotation: <span class="statement">insert(item)</span>. However, insert statement requires insert-into annotation as well which specifies where the data is supposed to be inserted - in our case that is the <span class="statement">ToGetList</span>. Finally, we are displaying content of that list below the wish list.</p>
+</div>
+</div>
+</p>
+<h4>2.4 Hiding taken items from the main list</h4>
+<p>Now, instead of showing &ldquo;reserved&rdquo; next to the item that&rsquo;s been taken in the wish list, we could consider only showing the items that are not yet taken. In other words, we want to filter out the wish list:</p>
+<p data-height="370" data-theme-id="21624" data-slug-hash="JGJYjP" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/JGJYjP/'>Endev Tutorial: 2.4</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e24" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e24')">Explain the example</a>
+    <div class="collapse" id="e24">
+        <div class="well">
+<p>To filter any data, we use <span class="attribute">where</span> annotation in combination with <span class="attribute">from</span>. The statement of the where annotation specifies the condition. In our case the condition is <span class="statement">item.registered !=&nbsp;true</span>. If we want to specify several conditions we can separate them with <span class="statement">AND</span>. For instance, if we would have a price property of the item on the list and wanted to add also a condition that the price must be less than 100 the statement would look like <span class="statement">item.registered != true AND item.price &lt; 100</span>.</p>
+</div>
+</div>
+</p>
+<h4>2.5 Allowing users to remove themselves from an item</h4>
+<p>As a final task, let&rsquo;s add the remove button so the users can change their mind. Naturally, the item should then appear back in the list as not registered:</p>
+<p data-height="420" data-theme-id="21624" data-slug-hash="pgwjOm" data-default-tab="html" data-user="filipkis" class='codepen'>See the Pen <a href='http://codepen.io/filipkis/pen/pgwjOm/'>Endev Tutorial: 2.5</a> by Filip Kis (<a href='http://codepen.io/filipkis'>@filipkis</a>) on <a href='http://codepen.io'>CodePen</a>.</p>
+<p>
+    <a href="#e25" data-toggle="collapse" class="btn btn-info btn-xs"  ng-click="explain('e25')">Explain the example</a>
+    <div class="collapse" id="e25">
+        <div class="well">
+<p>The button needs to do two things: it needs to update the item in the <span class="statement">WishList</span>&nbsp;to make it not registered anymore and delete the item from the <span class="statement">ToGetList</span>. Both of these actions are described with the, by now, familiar <span class="attribute">data-click</span>&nbsp;annotation. However we needed extra <span class="attribute">from</span>&nbsp;and <span class="attribute">where</span>&nbsp;annotations on the button. The reason is that the update statement needed a reference to which item in the <span class="statement">WishList</span>&nbsp;to update. If we just wrote <span class="statement">update(getItem, ...)</span> the item in the <span class="statement">ToGetList</span>&nbsp;would be updated. If, on the other hand, we wrote <span class="statement">update(item, &hellip;)</span>, &nbsp;where item refers to &nbsp;the one from the list we used at the beginning of the code, that wouldn&rsquo;t do anything. Endev references that are defined by&nbsp;<span class="attribute">from</span>&nbsp;annotation are only available inside the element where they are defined. Therefore, we needed to use a new <span class="attribute">from</span>&nbsp;annotation and limit it, with the <span class="attribute">where</span>&nbsp;annotation, to those items that are the same as the item in our <span class="statement">ToGetList</span>.</p>
+</div>
+</div>
+</p>
+<p>This is what we call <b>nested queries</b>. In other words, queries where results from one query is used to effect the other query. The <span class="attribute">insert-into</span>&nbsp;part in this example is another such query, albeit a more simpler one.</p>
+<h4><span class="glyphicon glyphicon-star text-primary" aria-hidden="true"></span> Do it yourself</h4>
+<ol>
+    <li><span class="glyphicon glyphicon-pencil text-primary" aria-hidden="true" data-toggle="tooltip" data-placement="bottom" title="Do it yourself"></span> Add posibility to specify price in the list management interface (same as task 1.1 from the previous chapter) and then in the interface for sharing with the user allow them to filter by price (e.g. entering certain value and getting items in the list that are cheaper than specified)<div from="firebase:Answers an" where="an.id = '2.1'" default="{'id':'2.1'}" auto-insert="true" auto-update>
+        <textarea data-value="an.answer" placeholder="Write comments to assignment if you have any" cols="50" class="form-control"></textarea>
+    </div><button class="btn btn-xs btn-primary" data-click="insert({'id':'2.1'})" insert-into="firebase:Answers">Add another</button></li>
+</ol>
+<h4>Summary of what we have learned in this chapter</h4>
+<ul>
+    <li>Endev supports <b>real-time applications</b>, in other words, data in your interface is kept in sync between different users/instances of your application</li>
+    <li>You can use <b>Firebase</b>&nbsp;service to have the data stored in the cloud and accessible from anywhere</li>
+    <li><span class="attribute">where</span>&nbsp;annotation in combination with <span class="attribute">from</span>&nbsp;allows us to filter the results of the query</li>
+    <li>You can combine data coming from different data sources. For instance, adding data from one source to another or using the data from one source to filter the data in the other one. When doing so you will get the so-called <b>nested queries</b></li>
+    <li>The <span class="attribute">data-if</span> annotation can be used to show and hide elements depending on the value assigned to it</li>
+</ul>
+
+<hr>
+<div style="padding-bottom: 20px" class="text-center">
+    2/4
+    <a href="#ch1" class="btn btn-primary pull-left" ng-click="track('Back to Chapter 1')">&lt; Previous</a>
+    <a href="#ch3" class="btn btn-primary pull-right"ng-click="track('Chapter 3 started')">Next &gt;</a>
+    <div class="clearfix"></div>
+</div>
+
+<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
