@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<meta charset="UTF-8">
 		<title>EndevJS Weather Compare API Demo</title>
 		<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
 		<script src="../dist/endev.full.js"></script>
@@ -23,41 +24,62 @@
 				background: #FFCE9E;
 			}
 			.figure {	
-				font-size: 20px;	
-				font-weight: bold;			
+				font-size: 40px;
+				font-weight: bold;
+				display: inline-block;
+				font-size: inherit;
+				text-rendering: auto;
+				-webkit-font-smoothing: antialiased;
+				-moz-osx-font-smoothing: grayscale;
+			}
+			.figure:before {
+				font-size: 30px;
 			}
 
-			.figure.w {
+			.figure.white {
 				color: #fff;
 			}
-			.figure.b {
+			.figure.black {
 				color: #000;
+			}
+
+			.figure.p:before {
+				content: '♙';
+			}
+			.figure.r:before {
+				content: '♖';
+			}
+			.figure.k:before {
+				content: '♔';
+			}
+			.figure.q:before {
+				content: '♕';
+			}
+			.figure.b:before {
+				content: '♗';
+			}
+			.figure.n:before {
+				content: '♘';
 			}
 		</style>
 	</head>
 	<body class="container" import="Chess">
-	<!-- <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move)">
-		
-		<div ng-repeat="c in ['a','b','c','d','e','f','g','h']" class="chess-column">
-			Square
-			<div ng-repeat="r in [8,7,6,5,4,3,2,1]" class="square" ng-class="{white: $parent.$odd ? $odd : !$odd }">
-			Figure
-				<span drop-class="square" on-drop="chess.move({from: c+r, to:target.c + target.r})" class="figure {{chess.get(c + r).color}}">{{chess.get(c + r).type}}</span>
-			</div>
-		</div> -->
 		<h1>Endev.js Chess Demo</h1>
+		<div from="chess game" data-loaded="chess = Chess(game.fen)" default="{}">
+			Turn <b>{{chess.turn()=='w' ? 'white' : 'black'}}</b>
 
-		<div endev data-from="chess game" data-select="logic = Chess(game.fen)" data-update="game.fen = logic.fen()">
-		<!-- <div data-object="savedMoves = from('chess').findOrCreate('').$$testingMap(chess.move)"> -->
-		Move (in <a href="http://en.wikipedia.org/wiki/Algebraic_notation_%28chess%29">SAN</a>): <input ng-model="move" ng-model-options="{updateOn : 'change blur'}" ng-change="chess.move(move); game.update()" >
-		
-		<div ng-repeat="c in ['a','b','c','d','e','f','g','h']" class="chess-column">
-			<!-- Square -->
-			<div ng-repeat="r in [8,7,6,5,4,3,2,1]" class="square" ng-class="{white: $parent.$odd ? $odd : !$odd }">
-				<!-- Figure -->
-				<span drop-class="square" data-on-drop="chess.move({from: c+r, to:target.c + target.r})" class="figure {{chess.get(c + r).color}}" draggable="true">{{chess.get(c + r).type}}</span>
+			<div ng-repeat="column in ['a','b','c','d','e','f','g','h']" class="chess-column">
+				<!-- Square -->
+				<div ng-repeat="row in [8,7,6,5,4,3,2,1]" class="square" ng-class="{white: $parent.$odd ? $odd : !$odd }"
+					 data-can-drop="chess.valid({from:source.column+source.row, to:target.column+target.row})"
+					 data-drop="chess.move({from:source.column+source.row, to:target.column+target.row}); update(game,{fen:chess.fen()})">
+					<!-- Figure -->
+					<span
+							data-drag="{column:column, row:row}"
+							data-can-drag="chess.turn() == chess.get(column + row).color"
+							class="figure {{chess.get(column + row).color == 'b' ? 'black' : 'white'}} {{chess.get(column + row).type}}"></span>
+				</div>
 			</div>
 		</div>
-		<!-- </div> -->
 	</body>
 </html>
