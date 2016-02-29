@@ -1,4 +1,4 @@
-/*! endev 0.2.5 2016-01-19 */
+/*! endev 0.2.5 2016-02-26 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -347,6 +347,51 @@ endevModule.directive("else",['$compile',function($compile){
     }
   }
 }]);
+
+endevModule.directive("drag",['$compile',function($compile){
+  return {
+    link: function (scope,element,attrs) {
+      element.bind("dragstart", function(ev){
+        ev.dataTransfer.setData("text/plain", JSON.stringify(scope.$eval(attrs.drag)));
+        ev.dataTransfer.effectAllowed = "move";
+      })
+      // If can drag condition set
+      if(attrs.canDrag) {
+        scope.$watch(attrs.canDrag,function(newValue){
+          if(newValue){ // and condition ture
+            attrs.$set("draggable","true") // make it draggable
+          } else {
+            attrs.$set("draggable","false") // make it non-draggable
+          }
+        })
+      } else { // make it draggable
+        attrs.$set("draggable","true");
+      }
+    }
+  }
+}]);
+
+endevModule.directive("drop",['$compile',function($compile){
+  return {
+    link: function (scope,element,attrs) {
+      element.bind("dragover",function(ev){
+        ev.dataTransfer.effectAllowed = "move";
+        ev.preventDefault();
+        return false;
+      })
+      element.bind("drop", function(ev){
+        ev.preventDefault();
+        var data = JSON.parse(ev.dataTransfer.getData('text'));
+        var canDrop = attrs.canDrop ? scope.$eval(attrs.canDrop,{source:data,target:scope}) : true;
+        if(canDrop) {
+          scope.$eval(attrs.drop,{source:data,target:scope});
+          scope.$apply();
+        }
+      })
+    }
+  }
+}]);
+
 
 endevModule.directive("endevAnnotation",[function(){      
   return {
@@ -1126,10 +1171,14 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
   var update = function(path, updatedItem) {
     var collection = getData(path);
-    var copy = angular.copy(updatedItem);
-    _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
-    _.merge(collection[updatedItem.$$endevId], copy);
-    save(path);
+    if(updatedItem.$$endevId) {
+      var copy = angular.copy(updatedItem);
+      _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
+      _.merge(collection[updatedItem.$$endevId], copy);
+      save(path);
+    } else {
+      insert(path,updatedItem)
+    }
   }
 
   var insert = function(path,item) {
@@ -1402,12 +1451,20 @@ if ($injector.has('$firebaseObject')) {
       update: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
         var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
-        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
-          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
-          _.merge(object,attrs.updatedObject);
-          object.$save();
-          if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
-        });
+        if(objRef){
+          if(attrs.updatedObject.$id) {
+            $firebaseObject(objRef).$loaded().then(function(parent){
+              var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+              _.merge(object,attrs.updatedObject);
+              object.$save();
+              if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
+            });
+          } else {
+            $firebaseArray(objRef).$loaded().then(function(list){
+              list.$add(attrs.updatedObject);
+            })
+          }
+        }
       },
       insert: function(attrs) {
         var result = $q.defer();

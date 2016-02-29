@@ -170,10 +170,14 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
   var update = function(path, updatedItem) {
     var collection = getData(path);
-    var copy = angular.copy(updatedItem);
-    _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
-    _.merge(collection[updatedItem.$$endevId], copy);
-    save(path);
+    if(updatedItem.$$endevId) {
+      var copy = angular.copy(updatedItem);
+      _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
+      _.merge(collection[updatedItem.$$endevId], copy);
+      save(path);
+    } else {
+      insert(path,updatedItem)
+    }
   }
 
   var insert = function(path,item) {
@@ -446,12 +450,20 @@ if ($injector.has('$firebaseObject')) {
       update: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
         var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
-        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
-          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
-          _.merge(object,attrs.updatedObject);
-          object.$save();
-          if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
-        });
+        if(objRef){
+          if(attrs.updatedObject.$id) {
+            $firebaseObject(objRef).$loaded().then(function(parent){
+              var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+              _.merge(object,attrs.updatedObject);
+              object.$save();
+              if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
+            });
+          } else {
+            $firebaseArray(objRef).$loaded().then(function(list){
+              list.$add(attrs.updatedObject);
+            })
+          }
+        }
       },
       insert: function(attrs) {
         var result = $q.defer();
