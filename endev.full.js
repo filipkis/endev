@@ -1,4 +1,4 @@
-/*! endev 0.2.5 2016-01-19 */
+/*! endev 0.2.5 2016-09-05 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -30771,6 +30771,51 @@ endevModule.directive("else",['$compile',function($compile){
   }
 }]);
 
+endevModule.directive("drag",['$compile',function($compile){
+  return {
+    link: function (scope,element,attrs) {
+      element.bind("dragstart", function(ev){
+        ev.dataTransfer.setData("text/plain", JSON.stringify(scope.$eval(attrs.drag)));
+        ev.dataTransfer.effectAllowed = "move";
+      })
+      // If can drag condition set
+      if(attrs.canDrag) {
+        scope.$watch(attrs.canDrag,function(newValue){
+          if(newValue){ // and condition ture
+            attrs.$set("draggable","true") // make it draggable
+          } else {
+            attrs.$set("draggable","false") // make it non-draggable
+          }
+        })
+      } else { // make it draggable
+        attrs.$set("draggable","true");
+      }
+    }
+  }
+}]);
+
+endevModule.directive("drop",['$compile',function($compile){
+  return {
+    link: function (scope,element,attrs) {
+      element.bind("dragover",function(ev){
+        ev.dataTransfer.effectAllowed = "move";
+        ev.preventDefault();
+        return false;
+      })
+      element.bind("drop", function(ev){
+        ev.preventDefault();
+        var data = JSON.parse(ev.dataTransfer.getData('text'));
+        var canDrop = attrs.canDrop ? scope.$eval(attrs.canDrop,{source:data,target:scope}) : true;
+        if(canDrop) {
+          scope.$eval(attrs.drop,{source:data,target:scope});
+          scope.$apply();
+        }
+      })
+    }
+  }
+}]);
+
+
 endevModule.directive("endevAnnotation",[function(){      
   return {
     // scope: {
@@ -31024,6 +31069,18 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
   }
 }]);
 
+var cleanObject = function(object) {
+  if(angular.isObject(object)) {
+    for(var attr in object){
+      if(object[attr] == undefined) {
+        object[attr] = null;
+      } else {
+        cleanObject(object[attr]);
+      }
+    }
+  }
+}
+
 endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($interpolate,$endevProvider) {
   return {
     scope:true,
@@ -31035,6 +31092,8 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
 
       scope.insert = function(object) {
         console.log("Inserting:",object);
+
+        cleanObject(object);
 
         var queryParameters = {insertInto:insertInto,newObject:object};
 
@@ -31479,6 +31538,81 @@ endevModule.service("$endevProvider",['$injector', function($injector){
   }
 }]);
 
+endevModule.service("$endevSpacebrew",['$q',function($q){
+  var sb = new Spacebrew.Client("localhost",{reconnect:true});
+  sb.name('Endev Test')
+  sb.connect()
+
+  var dataCache = {};
+
+  var addSubscribe = function(name,type){
+    if(!_.findWhere(sb.client_config.subscribe.messages,{name:name, type:type})) {
+      sb.addSubscribe(name,type);
+      dataCache[name+ ":" + type] = [];
+    }
+  }
+
+  var addPublish = function(name,type) {
+    if(!_.findWhere(sb.client_config.publish.messages,{name:name, type:type})) {
+      sb.addPublish(name,type);
+    }
+  }
+
+  sb.onBooleanMessage = function(name,value) {
+    var from = name + ":boolean";
+    if(dataCache[from]) {
+      dataCache[from].push(value);
+    }
+  }
+
+  sb.onStringMessage = function(name,value) {
+    var from = name + ":string";
+    if(dataCache[from]) {
+      dataCache[from].push(value);
+    }
+  }
+
+  sb.onRangeMessage = function(name,value) {
+    var from = name + ":range";
+    if(dataCache[from]) {
+      dataCache[from].push(value);
+    }
+  }
+
+  var observers = {};
+
+
+  var $watch = function(type, fn) {
+    if (!observers[type]) observers[type] = [];
+    observers[type].push(fn);
+    return function(){
+      observers[type].splice(observers[type].indexOf(fn),1);
+    }
+  }
+
+  var unwatchCache = new UnwatchCache();
+
+  return {
+    query:function(attrs,extraAttrs,callback){
+      var from = attrs.from.slice(attrs.from.indexOf(":")+1);
+      addSubscribe(from.split(":")[0],from.split(":")[1]);
+      var result = $q.defer();
+      unwatchCache.unwatch(callback);
+      var object = dataCache[from];
+      //var object = generalDataFilter(data,attrs);
+      if(callback && angular.isFunction(callback)) callback(object);
+      else result.resolve(object);
+      unwatchCache.find(callback).unwatch = $watch(from, function(){
+        var object = dataCache[from];
+        //var data = copyCollection(path);
+        //var object = generalDataFilter(data,attrs);
+        if(callback && angular.isFunction(callback)) callback(object);
+      });
+      return result.promise;
+    }
+  }
+}]);
+
 endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window,$timeout){
 
   var observers = {};
@@ -31549,10 +31683,14 @@ endevModule.service("$endevLocal",['$q','$window','$timeout',function($q,$window
 
   var update = function(path, updatedItem) {
     var collection = getData(path);
-    var copy = angular.copy(updatedItem);
-    _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
-    _.merge(collection[updatedItem.$$endevId], copy);
-    save(path);
+    if(updatedItem.$$endevId) {
+      var copy = angular.copy(updatedItem);
+      _.each(_.keys(copy),function(key) { if(key.indexOf('$') == 0) delete copy[key]})
+      _.merge(collection[updatedItem.$$endevId], copy);
+      save(path);
+    } else {
+      insert(path,updatedItem)
+    }
   }
 
   var insert = function(path,item) {
@@ -31825,12 +31963,20 @@ if ($injector.has('$firebaseObject')) {
       update: function(attrs) {
         var from = attrs.from.slice(attrs.from.indexOf(":")+1);
         var objRef = getObjectRef(from,attrs.parentLabel,attrs.parentObject,attrs.parentData);
-        if(objRef) $firebaseObject(objRef).$loaded().then(function(parent){
-          var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
-          _.merge(object,attrs.updatedObject);
-          object.$save();
-          if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
-        });
+        if(objRef){
+          if(attrs.updatedObject.$id) {
+            $firebaseObject(objRef).$loaded().then(function(parent){
+              var object = $firebaseObject(parent.$ref().child(attrs.updatedObject.$id));
+              _.merge(object,attrs.updatedObject);
+              object.$save();
+              if(object.$$endevCallback && angular.isFunction(object.$$endevCallback)) object.$$endevCallback(object);
+            });
+          } else {
+            $firebaseArray(objRef).$loaded().then(function(list){
+              list.$add(attrs.updatedObject);
+            })
+          }
+        }
       },
       insert: function(attrs) {
         var result = $q.defer();
