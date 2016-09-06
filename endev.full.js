@@ -31012,7 +31012,7 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                   scope['$isDefault'] = false;
                 }
                 if(angular.isArray(data) && attrs.limit){
-                  data = data.slice(attrs.limit);
+                  data = data.slice(0,parseInt(attrs.limit)-1);
                 }
                 scope["$endevData_" + label] = data;
                 if(scope["$endevAnnotation"]){
