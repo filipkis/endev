@@ -1,4 +1,4 @@
-/*! endev 0.2.5 2016-09-05 */
+/*! endev 0.2.5 2016-09-06 */
 /**
  * @license AngularJS v1.3.15
  * (c) 2010-2014 Google, Inc. http://angularjs.org
@@ -31010,6 +31010,9 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                   scope['$isDefault'] = true;
                 } else {
                   scope['$isDefault'] = false;
+                }
+                if(angular.isArray(data) && attrs.limit){
+                  data = data.slice(attrs.limit);
                 }
                 scope["$endevData_" + label] = data;
                 if(scope["$endevAnnotation"]){
