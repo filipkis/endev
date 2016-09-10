@@ -4,14 +4,16 @@
 <meta charset="UTF-8">
 <title>Queue System</title>
 <script src="http://www.endevjs.org/endev.full.js"></script>
+<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
 </head>
-<body>
+<body class="container">
+<h1>Queue System</h1>
 <div data-provider="firebase" data-from="Queues queue" data-where="queue.name = 'workshop'">
-  Queue: {{queue.name}}
-  <div data-from="queue.positions myPosition" data-where="myPosition.username = 'ben'" data-default="{username:'ben',name:'Ben Johansson'}" auto-update="true">
-    Name: <input data-value="myPosition.name"/>
-    <br>
-    Location: <input data-value="myPosition.location"/>
+  <!-- Queue: {{queue.name}} -->
+  <div class="form" data-from="queue.positions myPosition" data-where="myPosition.username = 'ben'" data-default="{username:'ben',name:'Ben Johansson'}" auto-update="true">
+    Name: <input class="form-control" data-value="myPosition.name"/>
+    Location: <input class="form-control" data-value="myPosition.location"/>
+    Comment: <textarea class="form-control" data-value="myPosition.comment"></textarea>
     <br>
     <div data-new>
       <button data-insert-into="queue.positions" data-click="insert(myPosition)">Join queue</button>
@@ -20,11 +22,10 @@
       <button data-remove-from="queue.positions" data-click="remove(myPosition)">Leave</button>
     </div>
   </div>
-  <table>
+  <table class="table">
     <thead>
       <tr>
         <th>#</th>
-        <th>Avatar</th>
         <th>User</th>
         <th>Location</th>
         <th>Comment</th>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>An Endev Blog</title>
+<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+<script src="../dist/endev.full.js"></script>
+<script>
+  endev.logic = {
+    newItem: {}
+  }
+</script>
+</head>
+<body class="container">
+<h3> Wish List <small>powerd by Endev</small></h3>
+<div class="row">
+<div class="col-xs-6">
+<h4>Current list</h4>
+<div data-from="firebase:WishList item" auto-update="true" data-drop="item.image = source.image" class="row">
+  <div class="col-sm-6">
+  <input data-value="item.name" class="form-control"/>
+  </div>
+  <div class="col-sm-4">
+  <img ng-src="{{item.image}}" class="img-responsive img-thumbnail"/>
+    </div>
+  <div class="col-sm-2">
+  <button data-click="remove(item)" class="form-control btn btn-danger">X</button> 
+  </div>
+  </div>
+</div>
+<div class="col-xs-6">
+<h4>Add item to list</h4>
+<div class="row">
+  <div class="col-sm-6">
+<input data-value="newItem.name" class="form-control"/>
+  </div>
+  <div class="col-sm-4">
+<img ng-src="{{newItem.image}}" class="img-responsive img-thumbnail"/>
+  </div>
+  <div class="col-sm-2">
+<button data-insert-into="firebase:WishList" data-click="insert(newItem)" class="form-control btn btn-primary">Add</button> 
+  </div>
+</div>
+<h4>Search for an image</h4>
+  <input data-value="searchTerm" class="form-control"/>
+  <div data-if="searchTerm" data-from="flickr.photos.search photos" data-where="text= searchTerm AND api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" class="row">
+    <div data-from="photos.photo photo" class="col-sm-4">
+      <img src="http://farm{{photo.farm}}.staticflickr.com/{{photo.server}}/{{photo.id}}_{{photo.secret}}.jpg" class="img-responsive img-thumbnail" data-insert-into="PhotoCollection" data-provider="firebase" data-click="newItem.image='http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id +  '_' + photo.secret + '.jpg'" data-drag="{image: 'http://farm' + photo.farm + '.staticflickr.com/' + photo.server + '/' + photo.id +  '_' + photo.secret + '.jpg'}">
+      <small data-from="flickr.people.info2 people" data-where="people.user_id = photo.owner AND people.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" class="pull-right">
+        by {{people.person.username}}
+      </small>
+    </div>
+  </div>
+</div>
+</div>
+</body>
+</html>

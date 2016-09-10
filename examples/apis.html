@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Testing apis</title>
+    <link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
+    <script src="../dist/endev.full.js"></script>
+</head>
+<body>
+    <h2><a href="http://www.omdbapi.com/">The Open Movie Database</a></h2>
+    <input type="text" data-value="title" placeholder="Enter movie title"/>
+    <div from="http://www.omdbapi.com/?plot=short&r=json movie" where="t = title">
+        {{movie.Title}}, released: {{movie.Released}}
+    </div>
+    <h2><a href="http://docs.apis.is/">Icelandic APIs</a> <small>lottery example</small></h2>
+    <div from="http://apis.is/lottery lottery" explain="lottery">
+        <div from="lottery.results result">
+            {{result.date}}: {{result.lotto}}
+        </div>
+    </div>
+    <div data-from="flickr.photos.search photos" data-where="photos.text= searchTerm AND photos.api_key = '8ed78f6ad69cdaf8412b4ea2d7dbbe47'" data-provider="yql" class="row" data-describe="flickr.photos.search">
+        </div>
+
+</body>
+</html>
