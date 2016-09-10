@@ -392,6 +392,9 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                 } else {
                   scope['$isDefault'] = false;
                 }
+                if(angular.isArray(data) && attrs.limit){
+                  data = data.slice(0,parseInt(attrs.limit));
+                }
                 scope["$endevData_" + label] = data;
                 if(scope["$endevAnnotation"]){
                   scope.$emit("$endevData_" + label, data);
