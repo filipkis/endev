@@ -1,4 +1,4 @@
-/*! endev 0.2.5 2016-02-26 */
+/*! endev 0.2.5 2016-09-10 */
 //! authors: Filip Kis
 //! license: MIT 
 
@@ -588,6 +588,9 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
                 } else {
                   scope['$isDefault'] = false;
                 }
+                if(angular.isArray(data) && attrs.limit){
+                  data = data.slice(0,parseInt(attrs.limit));
+                }
                 scope["$endevData_" + label] = data;
                 if(scope["$endevAnnotation"]){
                   scope.$emit("$endevData_" + label, data);
@@ -646,6 +649,18 @@ endevModule.directive("from",['$interpolate','$endevProvider','$compile','$q','$
   }
 }]);
 
+var cleanObject = function(object) {
+  if(angular.isObject(object)) {
+    for(var attr in object){
+      if(object[attr] == undefined) {
+        object[attr] = null;
+      } else {
+        cleanObject(object[attr]);
+      }
+    }
+  }
+}
+
 endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($interpolate,$endevProvider) {
   return {
     scope:true,
@@ -657,6 +672,8 @@ endevModule.directive("insertInto", ['$interpolate','$endevProvider', function($
 
       scope.insert = function(object) {
         console.log("Inserting:",object);
+
+        cleanObject(object);
 
         var queryParameters = {insertInto:insertInto,newObject:object};
 
