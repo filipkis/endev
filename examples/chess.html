@@ -5,7 +5,6 @@
 		<title>EndevJS Weather Compare API Demo</title>
 		<link rel="stylesheet" href="../bower_components/bootstrap/dist/css/bootstrap.css">
 		<script src="../dist/endev.full.js"></script>
-		<script src="lib/chess.js"></script>
 		<style>
 			.chess-column {
 				float: left;
@@ -63,7 +62,7 @@
 			}
 		</style>
 	</head>
-	<body class="container" import="Chess">
+	<body class="container" import="bower:Chess">
 		<h1>Endev.js Chess Demo</h1>
 		<div from="chess game" data-loaded="chess = Chess(game.fen)" default="{}">
 			Turn <b>{{chess.turn()=='w' ? 'white' : 'black'}}</b>
