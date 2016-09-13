@@ -40690,7 +40690,7 @@ angular.forEach(['deleteFrom','removeFrom'], function(name){
 });
 
 
-},{"./../utils.js":33,"angular":2}],10:[function(require,module,exports){
+},{"./../utils.js":34,"angular":2}],10:[function(require,module,exports){
 var angular = require('angular');
 
 angular.module('Endev').directive("describe",['$endevProvider',function($endevProvider){
@@ -40809,6 +40809,22 @@ angular.module('Endev').directive("else",['$compile',function($compile){
 }]);
 },{"angular":2}],15:[function(require,module,exports){
 var angular = require('angular');
+
+angular.module('Endev').directive('enter',function(){
+  return function (scope, element, attrs) {
+    element.bind("keydown keypress", function (event) {
+      if(event.which === 13) {
+        scope.$apply(function (){
+          scope.$eval(attrs.enter);
+        });
+
+        event.preventDefault();
+      }
+    });
+  };
+});
+},{"angular":2}],16:[function(require,module,exports){
+var angular = require('angular');
 var utils = require('./../utils');
 
 angular.module('Endev').directive("explain",function(){
@@ -40822,7 +40838,7 @@ angular.module('Endev').directive("explain",function(){
     }
   }
 })
-},{"./../utils":33,"angular":2}],16:[function(require,module,exports){
+},{"./../utils":34,"angular":2}],17:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
 
@@ -41085,7 +41101,7 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
 }]);
 
 
-},{"./../utils":33,"angular":2}],17:[function(require,module,exports){
+},{"./../utils":34,"angular":2}],18:[function(require,module,exports){
 var angular = require('angular');
 var jquery = require('jquery');
 
@@ -41175,7 +41191,7 @@ module.exports = {
     ready();
   }
 }
-},{"angular":2,"jquery":6}],18:[function(require,module,exports){
+},{"angular":2,"jquery":6}],19:[function(require,module,exports){
 var angular = require('angular');
 
 var cleanObject = function(object) {
@@ -41221,7 +41237,7 @@ angular.module('Endev').directive("insertInto", ['$interpolate','$endevProvider'
     }
   }
 }]);
-},{"angular":2}],19:[function(require,module,exports){
+},{"angular":2}],20:[function(require,module,exports){
 var angular = require('angular');
 
 angular.module('Endev').directive("new",['$compile',function($compile){
@@ -41240,10 +41256,10 @@ angular.module('Endev').directive("new",['$compile',function($compile){
     }
   }
 }]);
-},{"angular":2}],20:[function(require,module,exports){
+},{"angular":2}],21:[function(require,module,exports){
 var angular = require('angular');
 
-angular.module('Endev').directive("value",['$compile',function($compile){
+angular.module('Endev').directive("value",['$compile','$rootScope',function($compile,$rootScope){
   return {
     priority: 1000,
     terminal:true,
@@ -41251,6 +41267,16 @@ angular.module('Endev').directive("value",['$compile',function($compile){
       if(tAttributes.$attr["value"]==="data-value"){
         tElement.attr("ng-model", tAttributes.value);
         tElement.removeAttr("data-value");
+        if(tAttributes.value.indexOf(".") > 0) {
+          var label = tAttributes.value.substr(0,tAttributes.value.indexOf(0));
+          if($rootScope[label] === undefined){
+            $rootScope[label] = {};
+          }
+        } else {
+          if($rootScope[tAttributes.value] === undefined){
+            $rootScope[tAttributes.value] = "";
+          }
+        }
       }
       return {
         pre: function preLink(scope, iElement, iAttrs, controller) {  },
@@ -41263,7 +41289,7 @@ angular.module('Endev').directive("value",['$compile',function($compile){
     }
   }
 }]);
-},{"angular":2}],21:[function(require,module,exports){
+},{"angular":2}],22:[function(require,module,exports){
 var angular = require('angular');
 var _ = require('underscore');
 
@@ -41285,13 +41311,11 @@ _.each([['if','ng-show'],['click','ng-click']],function(pair){
     }
   }]);
 },this);
-},{"angular":2,"underscore":7}],22:[function(require,module,exports){
+},{"angular":2,"underscore":7}],23:[function(require,module,exports){
 var angular = require('angular');
 
 var endevModule;
-// Load templates
-//require('./../tmp/templates.js');
-var modulesToLoad = ["endev-templates"];
+var modulesToLoad = [];
 if(window.endevAngularModulesToLoad && angular.isArray(window.endevAngularModulesToLoad)){
   modulesToLoad = modulesToLoad.concat(window.endevAngularModulesToLoad);
 }
@@ -41305,7 +41329,6 @@ try{
   endevModule = angular.module("Endev", modulesToLoad);
 }
 
-
 // Load factories
 require('./factories/expr.js')
 
@@ -41316,6 +41339,7 @@ require('./attributes/drag.js')
 require('./attributes/drop.js')
 require('./attributes/edit.js')
 require('./attributes/else.js')
+require('./attributes/enter.js')
 require('./attributes/explain.js')
 require('./attributes/from.js')
 require('./attributes/import.js')
@@ -41348,7 +41372,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
     $rootScope.$endevShowHelper = true;
   }
 }]);
-},{"./attributes/deleteFrom.js":9,"./attributes/describe.js":10,"./attributes/drag.js":11,"./attributes/drop.js":12,"./attributes/edit.js":13,"./attributes/else.js":14,"./attributes/explain.js":15,"./attributes/from.js":16,"./attributes/import.js":17,"./attributes/insertInto.js":18,"./attributes/new.js":19,"./attributes/value.js":20,"./attributes/wrappers.js":21,"./factories/expr.js":23,"./providers/firebase":25,"./providers/local.js":28,"./providers/provider.js":29,"./providers/rest.js":30,"./providers/yql.js":31,"./templates/annotations.html":32,"angular":2,"angularfire":4}],23:[function(require,module,exports){
+},{"./attributes/deleteFrom.js":9,"./attributes/describe.js":10,"./attributes/drag.js":11,"./attributes/drop.js":12,"./attributes/edit.js":13,"./attributes/else.js":14,"./attributes/enter.js":15,"./attributes/explain.js":16,"./attributes/from.js":17,"./attributes/import.js":18,"./attributes/insertInto.js":19,"./attributes/new.js":20,"./attributes/value.js":21,"./attributes/wrappers.js":22,"./factories/expr.js":24,"./providers/firebase":26,"./providers/local.js":29,"./providers/provider.js":30,"./providers/rest.js":31,"./providers/yql.js":32,"./templates/annotations.html":33,"angular":2,"angularfire":4}],24:[function(require,module,exports){
 var angular = require('angular');
 
 var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
@@ -41375,7 +41399,7 @@ angular.module('Endev').factory("Expr",[function(){
   }
   return Expr;
 }]);
-},{"angular":2}],24:[function(require,module,exports){
+},{"angular":2}],25:[function(require,module,exports){
 var endev = window.endev || {};
 endev.app = require('./endev');
 var utils = require('./utils');
@@ -41392,7 +41416,7 @@ angular.element(document).ready(function() {
 
 
 module.exports = endev;
-},{"./attributes/import":17,"./endev":22,"./utils":33}],25:[function(require,module,exports){
+},{"./attributes/import":18,"./endev":23,"./utils":34}],26:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
 var unwatch = require('./helpers/unwatchCache.js');
@@ -41504,7 +41528,7 @@ angular.module('Endev').service("$endevFirebase",['$q','$firebaseObject','$fireb
 
   }
 }]);
-},{"./../utils":33,"./helpers/generalDataFilter.js":26,"./helpers/unwatchCache.js":27,"angular":2,"firebase":5}],26:[function(require,module,exports){
+},{"./../utils":34,"./helpers/generalDataFilter.js":27,"./helpers/unwatchCache.js":28,"angular":2,"firebase":5}],27:[function(require,module,exports){
 var _ = require('underscore');
 var utils = require('./../../utils');
 
@@ -41557,7 +41581,7 @@ module.exports = function (data, attrs) {
   });
   return results;
 }
-},{"./../../utils":33,"underscore":7}],27:[function(require,module,exports){
+},{"./../../utils":34,"underscore":7}],28:[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = function() {
@@ -41581,7 +41605,7 @@ module.exports = function() {
     if (fn.unwatch) fn.unwatch();
   }
 }
-},{"underscore":7}],28:[function(require,module,exports){
+},{"underscore":7}],29:[function(require,module,exports){
 var angular = require('angular');
 var _ = require('underscore');
 var utils = require('./../utils');
@@ -41755,7 +41779,7 @@ angular.module('Endev').service("$endevLocal",['$q','$window','$timeout',functio
     }
   }
 }]);
-},{"./../utils":33,"./helpers/generalDataFilter.js":26,"./helpers/unwatchCache.js":27,"angular":2,"underscore":7}],29:[function(require,module,exports){
+},{"./../utils":34,"./helpers/generalDataFilter.js":27,"./helpers/unwatchCache.js":28,"angular":2,"underscore":7}],30:[function(require,module,exports){
 var angular = require('angular');
 
 var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
@@ -41787,7 +41811,7 @@ angular.module('Endev').service("$endevProvider",['$injector', function($injecto
     }
   }
 }]);
-},{"angular":2}],30:[function(require,module,exports){
+},{"angular":2}],31:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils.js')
 var X2JS = require("x2js");
@@ -41849,7 +41873,7 @@ angular.module('Endev').service("$endevRest", ['$http','$interpolate','$q', func
     }
   }
 }]);
-},{"./../utils.js":33,"./helpers/generalDataFilter.js":26,"angular":2,"x2js":8}],31:[function(require,module,exports){
+},{"./../utils.js":34,"./helpers/generalDataFilter.js":27,"angular":2,"x2js":8}],32:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
 
@@ -41907,10 +41931,10 @@ angular.module('Endev').service("$endevYql", ['$http','$q', function($http,$q){
 
   }
 }]);
-},{"./../utils":33,"angular":2}],32:[function(require,module,exports){
+},{"./../utils":34,"angular":2}],33:[function(require,module,exports){
 module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n</style>\n<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>";
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 _ = require('underscore');
 
 var utils = {}
@@ -42020,7 +42044,7 @@ utils.removeFn = function(removeFrom,object,parent,scope,provider) {
 }
 
 module.exports = utils
-},{"underscore":7}]},{},[24])(undefined)
+},{"underscore":7}]},{},[25])(undefined)
 });
 
 
