@@ -121,7 +121,7 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
               exp.setValue(scope.$eval(exp.rhs));
               return exp;
             }) : [];
-            var context = $endevProvider.getContext(attrs.provider,attrFrom,element,scope);
+            var context = $endevProvider.getContext(attrs.provider,from,element,scope);
             var provider = context.provider;
             var parent = context.parent;
 

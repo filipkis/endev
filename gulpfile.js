@@ -48,7 +48,8 @@ gulp.task("watch",function(){
       }))
       .pipe(ngAnnotate())
       .pipe(sourcemaps.write("./"))
-      .pipe(gulp.dest("./dist"));
+      .pipe(gulp.dest("./dist"))
+      .on('end', gutil.log.bind(gutil,'Done!'));
   }
 
   watchifyBundle.on('update',bundle);

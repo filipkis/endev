@@ -90,24 +90,16 @@ angular.module('Endev').service("$endevFirebase",['$q','$firebaseObject','$fireb
       var result = $q.defer();
       var insertInto = attrs.insertInto.slice(attrs.insertInto.indexOf(":")+1);
       var objRef = getObjectRef(insertInto,attrs.parentLabel,attrs.parentObject,attrs.parentData);
-
-      $firebaseArray(objRef).$loaded().then(function(list){
-        list.$add(attrs.newObject).then(function(ref){
-          $firebaseArray(ref).$loaded().then(function(value){
-            result.resolve(value);
-          });
-        });
-      })
+      
+      objRef.push(attrs.newObject).once('value',function(value){
+        result.resolve(value.val());
+      });
       return result.promise;
     },
     remove: function(attrs) {
-      console.log("Removing:",attrs.newObject);
       var removeFrom = attrs.removeFrom.slice(attrs.removeFrom.indexOf(":")+1);
       var objRef = getObjectRef(removeFrom,attrs.parentLabel,attrs.parentObject,attrs.parentData);
-      $firebaseObject(objRef).$loaded().then(function(object){
-        // var key = _.findKey(object,function(value){return utils.isMatchDeep(value,attrs.newObject)})
-        $firebaseObject(object.$ref().child(attrs.newObject.$id)).$remove();
-      })
+      objRef.child(attrs.newObject.$id).remove();
     },
     bind: function(attrs) {
       var from = attrs.from.slice(attrs.from.indexOf(":")+1);
