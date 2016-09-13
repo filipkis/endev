@@ -1,6 +1,6 @@
 var angular = require('angular');
 var utils = require('./../utils.js')
-var pixlxml = require("pixl-xml");
+var X2JS = require("x2js");
 var generalDataFilter = require('./helpers/generalDataFilter.js');
 
 angular.module('Endev').service("$endevRest", ['$http','$interpolate','$q', function($http,$interpolate,$q){
@@ -34,7 +34,8 @@ angular.module('Endev').service("$endevRest", ['$http','$interpolate','$q', func
             angular.isObject(attrs.headers) ? attrs.headers : undefined,
           transformResponse: prependTransform($http.defaults.transformResponse, function(data, headersGetter) {
             if (headersGetter()['content-type']=="application/atom+xml") {
-              return pixlxml.parse(data);
+              var x2js = new X2JS();
+              return x2js.xml_str2json(data);
             } else {
               return data;
             }

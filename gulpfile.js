@@ -12,17 +12,29 @@ var uglify = require('gulp-uglify');
 var watchify = require('watchify');
 var gutil = require('gulp-util');
 var spawn = require('child_process').spawn;
+var gulpif = require('gulp-if');
+var ghPages = require('gulp-gh-pages');
 
 gulp.task("default", ["package"], function() {});
 
-var buildBundle  = browserify({
+var fullBundle  = browserify({
   entries: ["src/index.js"],
   cache: {},
   packageCache: {},
   debug: true,
   transform: stringify(),
-  standalone: "endev"
+  standalone: "endev",
+  ignoreTransform: ["browserify-shim"]
 });
+
+var bundle  = browserify({
+  entries: ["src/index.js"],
+  cache: {},
+  packageCache: {},
+  debug: true,
+  transform: stringify(),
+  standalone: "endev",
+}); 
 
 var p = null
 var spawnChildren = function(){
@@ -31,7 +43,7 @@ var spawnChildren = function(){
 }
  
 gulp.task("watch",function(){
-  var watchifyBundle = watchify(buildBundle);
+  var watchifyBundle = watchify(fullBundle);
   
   var bundle = function(file){
     if(file) {
@@ -57,17 +69,37 @@ gulp.task("watch",function(){
   return bundle();
 })
 
-
-gulp.task("build", function() {
-  return buildBundle.bundle()
-    .pipe(source("endev.full.js"))
+var build = function(full, minify) {
+  var name = "endev" + (full ? '.full' : '') + (minify ? '.min' : '') + ".js";
+  var b = full ? fullBundle : bundle;
+  return b.bundle()
+    .pipe(source(name))
     .pipe(buffer())
     .pipe(sourcemaps.init({
       loadMaps: true
     }))
-    //.pipe(ngAnnotate())
+    .pipe(ngAnnotate())
+    .pipe(gulpif(minify,uglify()))
     .pipe(sourcemaps.write("./"))
     .pipe(gulp.dest("./dist"));
+}
+
+gulp.task("full", function() {
+  return build(true);
+});
+
+gulp.task("small", function() {
+  return build(false);
+});
+
+gulp.task("build",['full','small','uglifyFull','uglifySmall']);
+
+gulp.task("uglifyFull", function() {
+  return build(true,true);
+});
+
+gulp.task("uglifySmall", function() {
+  return build(true,true);
 });
 
 gulp.task("package", ["build"], function() {
@@ -98,4 +130,12 @@ gulp.task("bump", function(){
   gulp.src(['./package.json','./bower.json'])
     .pipe(bump())
     .pipe(gulp.dest('./'));
+});
+
+gulp.task('deploy', ['build'],  function() {
+  return gulp.src('./dist/**/*')
+    .pipe(ghPages({
+      remove: false,
+      cacheDir: "../gh-pages",
+    }));
 });

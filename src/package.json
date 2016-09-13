@@ -1,0 +1,15 @@
+{
+  "private": true,
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "angular": "global:angular",
+    "underscore": "global:_",
+    "angularfire": "global:angularfire",
+    "firebase": "global:Firebase",
+    "jquery": "global:jquery"
+  }
+}

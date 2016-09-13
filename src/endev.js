@@ -1,9 +1,7 @@
 var angular = require('angular');
 
 var endevModule;
-// Load templates
-require('./../tmp/templates.js');
-var modulesToLoad = ["endev-templates"];
+var modulesToLoad = [];
 if(window.endevAngularModulesToLoad && angular.isArray(window.endevAngularModulesToLoad)){
   modulesToLoad = modulesToLoad.concat(window.endevAngularModulesToLoad);
 }
@@ -16,7 +14,6 @@ try{
 } catch(err) {
   endevModule = angular.module("Endev", modulesToLoad);
 }
-
 
 // Load factories
 require('./factories/expr.js')

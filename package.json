@@ -1,6 +1,6 @@
 {
   "name": "endev",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "The simplest way to work with data",
   "repository": {
     "type": "git",
@@ -17,11 +17,13 @@
     "angularfire": "^1.0.0",
     "firebase": "^2.2.3",
     "jquery": "^3.1.0",
-    "underscore": "1.8.x"
+    "underscore": "1.8.x",
+    "x2js": "git://github.com/abdmob/x2js.git"
   },
   "devDependencies": {
     "browserify-shim": "^3.8.12",
     "child_process": "^1.0.2",
+    "exposify": "^0.5.0",
     "grunt": "~0.4.4",
     "grunt-bump": "^0.7.0",
     "grunt-coffeelint": "0.0.10",
@@ -33,18 +35,19 @@
     "grunt-contrib-nodeunit": "~0.3.3",
     "grunt-contrib-uglify": "~0.4.0",
     "grunt-contrib-watch": "~0.6.1",
-    "grunt-gh-pages": "^1.0.0",
     "grunt-html2js": "^0.3.0",
     "grunt-notify": "^0.4.1",
     "gulp-bump": "^2.4.0",
+    "gulp-gh-pages": "git://github.com/sharvit/gulp-gh-pages.git",
     "gulp-html2js": "^0.4.2",
+    "gulp-if": "^2.0.1",
+    "gulp-rename": "^1.2.2",
     "gulp-uglify": "^2.0.0",
     "gulp-util": "^3.0.7",
     "karma": "^0.12.16",
     "karma-chrome-launcher": "^0.1.4",
     "karma-jasmine": "^0.1.5",
     "karma-phantomjs-launcher": "^0.1.4",
-    "pixl-xml": "^1.0.7",
     "watchify": "^3.7.0"
   }
 }
