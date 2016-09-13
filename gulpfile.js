@@ -132,7 +132,7 @@ gulp.task("bump", function(){
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('deploy', ['build'],  function() {
+gulp.task('deploy',  function() {
   return gulp.src('./dist/**/*')
     .pipe(ghPages({
       remove: false,

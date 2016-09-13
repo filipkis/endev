@@ -27,7 +27,7 @@ angular.forEach(['deleteFrom','removeFrom'], function(name){
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils.js":26}],3:[function(require,module,exports){
+},{"./../utils.js":27}],3:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -162,6 +162,25 @@ angular.module('Endev').directive("else",['$compile',function($compile){
 },{}],8:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
+
+angular.module('Endev').directive('enter',function(){
+  return function (scope, element, attrs) {
+    element.bind("keydown keypress", function (event) {
+      if(event.which === 13) {
+        scope.$apply(function (){
+          scope.$eval(attrs.enter);
+        });
+
+        event.preventDefault();
+      }
+    });
+  };
+});
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
+},{}],9:[function(require,module,exports){
+(function (global){
+var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var utils = require('./../utils');
 
 angular.module('Endev').directive("explain",function(){
@@ -177,7 +196,7 @@ angular.module('Endev').directive("explain",function(){
 })
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils":26}],9:[function(require,module,exports){
+},{"./../utils":27}],10:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var utils = require('./../utils');
@@ -443,7 +462,7 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils":26}],10:[function(require,module,exports){
+},{"./../utils":27}],11:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var jquery = (typeof window !== "undefined" ? window['jquery'] : typeof global !== "undefined" ? global['jquery'] : null);
@@ -536,7 +555,7 @@ module.exports = {
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -585,7 +604,7 @@ angular.module('Endev').directive("insertInto", ['$interpolate','$endevProvider'
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -607,11 +626,11 @@ angular.module('Endev').directive("new",['$compile',function($compile){
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
-angular.module('Endev').directive("value",['$compile',function($compile){
+angular.module('Endev').directive("value",['$compile','$rootScope',function($compile,$rootScope){
   return {
     priority: 1000,
     terminal:true,
@@ -619,6 +638,16 @@ angular.module('Endev').directive("value",['$compile',function($compile){
       if(tAttributes.$attr["value"]==="data-value"){
         tElement.attr("ng-model", tAttributes.value);
         tElement.removeAttr("data-value");
+        if(tAttributes.value.indexOf(".") > 0) {
+          var label = tAttributes.value.substr(0,tAttributes.value.indexOf(0));
+          if($rootScope[label] === undefined){
+            $rootScope[label] = {};
+          }
+        } else {
+          if($rootScope[tAttributes.value] === undefined){
+            $rootScope[tAttributes.value] = "";
+          }
+        }
       }
       return {
         pre: function preLink(scope, iElement, iAttrs, controller) {  },
@@ -633,7 +662,7 @@ angular.module('Endev').directive("value",['$compile',function($compile){
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
@@ -658,7 +687,7 @@ _.each([['if','ng-show'],['click','ng-click']],function(pair){
 },this);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -677,7 +706,6 @@ try{
   endevModule = angular.module("Endev", modulesToLoad);
 }
 
-
 // Load factories
 require('./factories/expr.js')
 
@@ -688,6 +716,7 @@ require('./attributes/drag.js')
 require('./attributes/drop.js')
 require('./attributes/edit.js')
 require('./attributes/else.js')
+require('./attributes/enter.js')
 require('./attributes/explain.js')
 require('./attributes/from.js')
 require('./attributes/import.js')
@@ -722,7 +751,7 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./attributes/deleteFrom.js":2,"./attributes/describe.js":3,"./attributes/drag.js":4,"./attributes/drop.js":5,"./attributes/edit.js":6,"./attributes/else.js":7,"./attributes/explain.js":8,"./attributes/from.js":9,"./attributes/import.js":10,"./attributes/insertInto.js":11,"./attributes/new.js":12,"./attributes/value.js":13,"./attributes/wrappers.js":14,"./factories/expr.js":16,"./providers/firebase":18,"./providers/local.js":21,"./providers/provider.js":22,"./providers/rest.js":23,"./providers/yql.js":24,"./templates/annotations.html":25}],16:[function(require,module,exports){
+},{"./attributes/deleteFrom.js":2,"./attributes/describe.js":3,"./attributes/drag.js":4,"./attributes/drop.js":5,"./attributes/edit.js":6,"./attributes/else.js":7,"./attributes/enter.js":8,"./attributes/explain.js":9,"./attributes/from.js":10,"./attributes/import.js":11,"./attributes/insertInto.js":12,"./attributes/new.js":13,"./attributes/value.js":14,"./attributes/wrappers.js":15,"./factories/expr.js":17,"./providers/firebase":19,"./providers/local.js":22,"./providers/provider.js":23,"./providers/rest.js":24,"./providers/yql.js":25,"./templates/annotations.html":26}],17:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -752,7 +781,7 @@ angular.module('Endev').factory("Expr",[function(){
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 var endev = window.endev || {};
 endev.app = require('./endev');
 var utils = require('./utils');
@@ -769,7 +798,7 @@ angular.element(document).ready(function() {
 
 
 module.exports = endev;
-},{"./attributes/import":10,"./endev":15,"./utils":26}],18:[function(require,module,exports){
+},{"./attributes/import":11,"./endev":16,"./utils":27}],19:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var utils = require('./../utils');
@@ -884,7 +913,7 @@ angular.module('Endev').service("$endevFirebase",['$q','$firebaseObject','$fireb
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils":26,"./helpers/generalDataFilter.js":19,"./helpers/unwatchCache.js":20}],19:[function(require,module,exports){
+},{"./../utils":27,"./helpers/generalDataFilter.js":20,"./helpers/unwatchCache.js":21}],20:[function(require,module,exports){
 (function (global){
 var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
 var utils = require('./../../utils');
@@ -940,7 +969,7 @@ module.exports = function (data, attrs) {
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../../utils":26}],20:[function(require,module,exports){
+},{"./../../utils":27}],21:[function(require,module,exports){
 (function (global){
 var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
 
@@ -967,7 +996,7 @@ module.exports = function() {
 }
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
@@ -1144,7 +1173,7 @@ angular.module('Endev').service("$endevLocal",['$q','$window','$timeout',functio
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils":26,"./helpers/generalDataFilter.js":19,"./helpers/unwatchCache.js":20}],22:[function(require,module,exports){
+},{"./../utils":27,"./helpers/generalDataFilter.js":20,"./helpers/unwatchCache.js":21}],23:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -1179,7 +1208,7 @@ angular.module('Endev').service("$endevProvider",['$injector', function($injecto
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var utils = require('./../utils.js')
@@ -1244,7 +1273,7 @@ angular.module('Endev').service("$endevRest", ['$http','$interpolate','$q', func
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils.js":26,"./helpers/generalDataFilter.js":19,"x2js":1}],24:[function(require,module,exports){
+},{"./../utils.js":27,"./helpers/generalDataFilter.js":20,"x2js":1}],25:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 var utils = require('./../utils');
@@ -1305,10 +1334,10 @@ angular.module('Endev').service("$endevYql", ['$http','$q', function($http,$q){
 }]);
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./../utils":26}],25:[function(require,module,exports){
+},{"./../utils":27}],26:[function(require,module,exports){
 module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n</style>\n<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>";
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 (function (global){
 _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
 
@@ -1421,7 +1450,7 @@ utils.removeFn = function(removeFrom,object,parent,scope,provider) {
 module.exports = utils
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}]},{},[17])(17)
+},{}]},{},[18])(18)
 });
 
 
