@@ -40938,8 +40938,8 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
         tAttributes.$set("endev-item",tAttributes.from);
-        tAttributes.$set("ng-mouseover",'endevHighlight($event)');
-        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ')');
+        tAttributes.$set("ng-mouseover",'endevHighlight($event);' + (tAttributes.mouseover ? tAttributes.mouseover : ''));
+        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ');' + (tAttributes.click ? tAttributes.click : ''));
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
@@ -40964,8 +40964,8 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
               if(scope.$root.$endevSelector){
                 scope.$root.$endevCurrentAnnotation = "FROM " + from + (attrs.where ? " WHERE " + attrs.where : "");
                 scope.$root.$endevCurrentObject = value;
+                event.stopPropagation();
               }
-              event.stopPropagation();
             }
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
               var exp = new Expr(expr,label);
