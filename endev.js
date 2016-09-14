@@ -872,7 +872,8 @@ angular.module('Endev').factory("Expr",[function(){
 var endev = window.endev || {};
 endev.app = require('./endev');
 var utils = require('./utils');
-var importTag = require('./attributes/import')
+var importTag = require('./attributes/import');
+window.endev = endev;
 
 angular.element(document).ready(function() {
 
