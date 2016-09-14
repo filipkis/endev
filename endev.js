@@ -836,6 +836,8 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
     }
   });
 }]);
+
+module.exports = endevModule;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./attributes/deleteFrom.js":2,"./attributes/describe.js":3,"./attributes/drag.js":4,"./attributes/drop.js":5,"./attributes/edit.js":6,"./attributes/else.js":7,"./attributes/enter.js":8,"./attributes/explain.js":9,"./attributes/from.js":10,"./attributes/import.js":12,"./attributes/insertInto.js":13,"./attributes/new.js":14,"./attributes/value.js":15,"./attributes/wrappers.js":16,"./factories/expr.js":18,"./providers/firebase":20,"./providers/local.js":23,"./providers/provider.js":24,"./providers/rest.js":25,"./providers/yql.js":26,"./templates/annotations.html":27}],18:[function(require,module,exports){

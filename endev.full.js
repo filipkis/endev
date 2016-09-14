@@ -41456,6 +41456,8 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
     }
   });
 }]);
+
+module.exports = endevModule;
 },{"./attributes/deleteFrom.js":9,"./attributes/describe.js":10,"./attributes/drag.js":11,"./attributes/drop.js":12,"./attributes/edit.js":13,"./attributes/else.js":14,"./attributes/enter.js":15,"./attributes/explain.js":16,"./attributes/from.js":17,"./attributes/import.js":19,"./attributes/insertInto.js":20,"./attributes/new.js":21,"./attributes/value.js":22,"./attributes/wrappers.js":23,"./factories/expr.js":25,"./providers/firebase":27,"./providers/local.js":30,"./providers/provider.js":31,"./providers/rest.js":32,"./providers/yql.js":33,"./templates/annotations.html":34,"angular":2,"angularfire":4}],25:[function(require,module,exports){
 var angular = require('angular');
 
