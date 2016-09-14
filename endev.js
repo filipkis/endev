@@ -482,7 +482,7 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
 
 },{"./../utils":28,"./highlight":11}],11:[function(require,module,exports){
 (function (global){
-var $ = (typeof window !== "undefined" ? window['jquery'] : typeof global !== "undefined" ? global['jquery'] : null);
+var $ = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null);
 
 var elements = null;
 var $target;
@@ -544,7 +544,7 @@ module.exports = this;
 },{}],12:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
-var jquery = (typeof window !== "undefined" ? window['jquery'] : typeof global !== "undefined" ? global['jquery'] : null);
+var jquery = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null);
 
 angular.module('Endev').directive("import",["$rootScope", "$http", "$compile", function($rootScope,$http,$compile) {
   return {
