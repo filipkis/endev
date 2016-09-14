@@ -53,7 +53,18 @@
     margin-top: -1px; 
   }
   ._endev_json_ {
-
+    overflow: auto;
+    display: block;
+    padding: 2px;
+    margin: 0 0 10px;
+    font-size: 10px;
+    line-height: 1.42857143;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: transparent;
+    border: none;
+    border-radius: 0;
   }
   ._endev_json_number_ {
     color: forestgreen;
@@ -70,9 +81,51 @@
   ._endev_json_null_ {
     color: dimgray;
   }
+  #__endev_selector__ {
+    border: 1px solid rgba(255,66,30,0.5);
+    /*height:1px;*/
+    position: fixed;
+    transition:all 150ms ease;
+  }
+  
+  #__endev_selector_top__, #__endev_selector_bottom__ {
+    background: rgba(255,66,30,0.5);
+    height:1px;
+    position: fixed;
+    transition:all 150ms ease;
+  }
+  #__endev_selector_left__, #__endev_selector_right__ {
+    background: rgba(255,66,30,0.5);
+    width: 1px;
+    position: fixed;
+    transition:all 150ms ease;
+  }
+  #__endev_selector_details__ {
+    color: rgb(255,66,30);
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+    padding: 2px;
+    position: fixed;
+    font-size: 10px;
+    background: rgba(245,245,220,0.9);
+    overflow: hidden;
+  }
+  
 </style>
 <div id="__endev_helper__" ng-if="$endevShowHelper">
   Endev Tools:
-  <button ng-click="$endevAnnotation = !$endevAnnotation">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>
+  <!--<button ng-click="$endevAnnotation = !$endevAnnotation">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>-->
+  <button ng-click="$root.$endevSelector = !$root.$endevSelector">Inspect {{$root.$endevSelector ? 'off' : 'on'}}</button>
   <span style="color:red">{{$endevErrors[$endevErrors.length-1].description}}</span>
+</div>
+<div id="__endev_selector__" ng-show="$endevSelector">
+  <div id="__endev_selector_top__"></div>
+  <div id="__endev_selector_right__"></div>
+  <div id="__endev_selector_bottom__"></div>
+  <div id="__endev_selector_left__"></div>
+  <div id="__endev_selector_details__" ng-show="$root.$endevCurrentAnnotation">
+    <div style="position:relative;">
+      {{$root.$endevCurrentAnnotation}}
+      <div explain="$root.$endevCurrentObject"></div>
+    </div>
+  </div>
 </div>

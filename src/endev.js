@@ -49,7 +49,8 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
     return new Date();
   }
   $rootScope.$endevAnnotation = false;
-  $rootScope.$endevErrors = []
+  $rootScope.$endevSelector = false;
+  $rootScope.$endevErrors = [];
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body)
     .attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}")
@@ -57,4 +58,11 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   if(!(window.endev && !window.endev.showHelper)){
     $rootScope.$endevShowHelper = true;
   }
+  angular.element($document[0]).on('click',function(){
+    if($rootScope.$endevCurrentAnnotation){
+      $rootScope.$endevCurrentAnnotation = null;
+      $rootScope.$endevCurrentObject = null;
+      $rootScope.$apply();
+    }
+  });
 }]);

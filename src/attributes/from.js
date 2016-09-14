@@ -1,5 +1,6 @@
 var angular = require('angular');
 var utils = require('./../utils');
+var highlight = require('./highlight');
 
 var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
 
@@ -95,14 +96,16 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         // tElement.parent().prepend("<span endev-annotation='" + annotation + "' endev-annotation-data='endevData_" + label + "'></span>");
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
-        tAttributes.$set("endev-item",tAttributes.from)
+        tAttributes.$set("endev-item",tAttributes.from);
+        tAttributes.$set("ng-mouseover",'endevHighlight($event)');
+        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ')');
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
         }else {
           getRoot(tElement).wrap("<span class='__endev_annotated__'></span>").parent().prepend("<span class='__endev_annotation__'>" + annotation + "</span>");
         }
-        // tElement.parent().prepend("<span></span>")
+         tElement.parent().prepend("<span></span>")
 
       }
       tElement.removeAttr("data-from");
@@ -116,6 +119,13 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
               throw new Error("Conflicting object " + label + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
             var type = from.split(",")[0].split(" ")[0];
+            scope.endevHighlightDetails = function(event,value){
+              if(scope.$root.$endevSelector){
+                scope.$root.$endevCurrentAnnotation = "FROM " + from + (attrs.where ? " WHERE " + attrs.where : "");
+                scope.$root.$endevCurrentObject = value;
+              }
+              event.stopPropagation();
+            }
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
               var exp = new Expr(expr,label);
               exp.setValue(scope.$eval(exp.rhs));
@@ -251,9 +261,17 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         }
       }
     },
-    controller: function($scope, $element, $attrs){
+    controller: function($scope){
       $scope.count = function(object){
         return _.size(object);
+      }
+      $scope.endevHighlight = function(event){
+        if($scope.$root.$endevSelector){
+          $scope.$root.$endevCurrentAnnotation = null;
+          $scope.$root.$endevCurrentObject = null;
+          highlight.select(event.currentTarget);
+          event.stopPropagation();
+        } 
       }
     }
   }

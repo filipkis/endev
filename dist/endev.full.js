@@ -40690,7 +40690,7 @@ angular.forEach(['deleteFrom','removeFrom'], function(name){
 });
 
 
-},{"./../utils.js":34,"angular":2}],10:[function(require,module,exports){
+},{"./../utils.js":35,"angular":2}],10:[function(require,module,exports){
 var angular = require('angular');
 
 angular.module('Endev').directive("describe",['$endevProvider',function($endevProvider){
@@ -40838,9 +40838,10 @@ angular.module('Endev').directive("explain",function(){
     }
   }
 })
-},{"./../utils":34,"angular":2}],17:[function(require,module,exports){
+},{"./../utils":35,"angular":2}],17:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
+var highlight = require('./highlight');
 
 var OPERATORS_REGEX = new RegExp(/ AND | OR  /i);
 
@@ -40936,14 +40937,16 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         // tElement.parent().prepend("<span endev-annotation='" + annotation + "' endev-annotation-data='endevData_" + label + "'></span>");
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
-        tAttributes.$set("endev-item",tAttributes.from)
+        tAttributes.$set("endev-item",tAttributes.from);
+        tAttributes.$set("ng-mouseover",'endevHighlight($event)');
+        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ')');
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
         }else {
           getRoot(tElement).wrap("<span class='__endev_annotated__'></span>").parent().prepend("<span class='__endev_annotation__'>" + annotation + "</span>");
         }
-        // tElement.parent().prepend("<span></span>")
+         tElement.parent().prepend("<span></span>")
 
       }
       tElement.removeAttr("data-from");
@@ -40957,6 +40960,13 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
               throw new Error("Conflicting object " + label + " defined by:", element);
             var from = $interpolate(attrFrom,false,null,true)(scope);
             var type = from.split(",")[0].split(" ")[0];
+            scope.endevHighlightDetails = function(event,value){
+              if(scope.$root.$endevSelector){
+                scope.$root.$endevCurrentAnnotation = "FROM " + from + (attrs.where ? " WHERE " + attrs.where : "");
+                scope.$root.$endevCurrentObject = value;
+              }
+              event.stopPropagation();
+            }
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
               var exp = new Expr(expr,label);
               exp.setValue(scope.$eval(exp.rhs));
@@ -41092,16 +41102,82 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         }
       }
     },
-    controller: ["$scope", "$element", "$attrs", function($scope, $element, $attrs){
+    controller: ["$scope", function($scope){
       $scope.count = function(object){
         return _.size(object);
+      }
+      $scope.endevHighlight = function(event){
+        if($scope.$root.$endevSelector){
+          $scope.$root.$endevCurrentAnnotation = null;
+          $scope.$root.$endevCurrentObject = null;
+          highlight.select(event.currentTarget);
+          event.stopPropagation();
+        } 
       }
     }]
   }
 }]);
 
 
-},{"./../utils":34,"angular":2}],18:[function(require,module,exports){
+},{"./../utils":35,"./highlight":18,"angular":2}],18:[function(require,module,exports){
+var $ = require('jquery');
+
+var elements = null;
+var $target;
+var _this = this;
+
+$(document).scroll(function(){
+  if($target){
+    _this.select($target);
+  }
+});
+
+this.select = function(target){
+  $target = $(target);
+  targetOffset = $target[0].getBoundingClientRect(),
+    targetHeight = targetOffset.height,
+    targetWidth  = targetOffset.width;
+
+  if(elements == null) {
+    elements = {
+      annotation: $('#__endev_selector_details__'),
+      top: $('#__endev_selector_top__'),
+      left: $('#__endev_selector_left__'),
+      right: $('#__endev_selector_right__'),
+      bottom: $('#__endev_selector_bottom__')
+    }
+  }
+  
+  elements.annotation.css({
+    top:   (targetOffset.top - 2),
+    left:  (targetOffset.left - 1),
+  })
+  
+  elements.top.css({
+    left:  (targetOffset.left - 1),
+    top:   (targetOffset.top - 2),
+    width: (targetWidth + 2)
+  });
+  elements.bottom.css({
+    top:   (targetOffset.top + targetHeight + 1),
+    left:  (targetOffset.left  - 1),
+    width: (targetWidth + 2)  
+  });
+  elements.left.css({
+    left:   (targetOffset.left  - 2),
+    top:    (targetOffset.top  - 2),
+    height: (targetHeight + 4)
+  });
+  elements.right.css({
+    left:   (targetOffset.left + targetWidth + 1),
+    top:    (targetOffset.top  - 2),
+    height: (targetHeight + 4)
+  });
+};
+
+
+module.exports = this;
+},{"jquery":6}],19:[function(require,module,exports){
 var angular = require('angular');
 var jquery = require('jquery');
 
@@ -41191,7 +41267,7 @@ module.exports = {
     ready();
   }
 }
-},{"angular":2,"jquery":6}],19:[function(require,module,exports){
+},{"angular":2,"jquery":6}],20:[function(require,module,exports){
 var angular = require('angular');
 
 var cleanObject = function(object) {
@@ -41237,7 +41313,7 @@ angular.module('Endev').directive("insertInto", ['$interpolate','$endevProvider'
     }
   }
 }]);
-},{"angular":2}],20:[function(require,module,exports){
+},{"angular":2}],21:[function(require,module,exports){
 var angular = require('angular');
 
 angular.module('Endev').directive("new",['$compile',function($compile){
@@ -41256,7 +41332,7 @@ angular.module('Endev').directive("new",['$compile',function($compile){
     }
   }
 }]);
-},{"angular":2}],21:[function(require,module,exports){
+},{"angular":2}],22:[function(require,module,exports){
 var angular = require('angular');
 
 angular.module('Endev').directive("value",['$compile','$rootScope',function($compile,$rootScope){
@@ -41289,7 +41365,7 @@ angular.module('Endev').directive("value",['$compile','$rootScope',function($com
     }
   }
 }]);
-},{"angular":2}],22:[function(require,module,exports){
+},{"angular":2}],23:[function(require,module,exports){
 var angular = require('angular');
 var _ = require('underscore');
 
@@ -41311,7 +41387,7 @@ _.each([['if','ng-show'],['click','ng-click']],function(pair){
     }
   }]);
 },this);
-},{"angular":2,"underscore":7}],23:[function(require,module,exports){
+},{"angular":2,"underscore":7}],24:[function(require,module,exports){
 var angular = require('angular');
 
 var endevModule;
@@ -41363,7 +41439,8 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
     return new Date();
   }
   $rootScope.$endevAnnotation = false;
-  $rootScope.$endevErrors = []
+  $rootScope.$endevSelector = false;
+  $rootScope.$endevErrors = [];
   if(window.endev && window.endev.logic) angular.extend($rootScope,window.endev.logic);
   angular.element($document[0].body)
     .attr("ng-class","{'__endev_annotation_on__':$endevAnnotation}")
@@ -41371,8 +41448,15 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
   if(!(window.endev && !window.endev.showHelper)){
     $rootScope.$endevShowHelper = true;
   }
+  angular.element($document[0]).on('click',function(){
+    if($rootScope.$endevCurrentAnnotation){
+      $rootScope.$endevCurrentAnnotation = null;
+      $rootScope.$endevCurrentObject = null;
+      $rootScope.$apply();
+    }
+  });
 }]);
-},{"./attributes/deleteFrom.js":9,"./attributes/describe.js":10,"./attributes/drag.js":11,"./attributes/drop.js":12,"./attributes/edit.js":13,"./attributes/else.js":14,"./attributes/enter.js":15,"./attributes/explain.js":16,"./attributes/from.js":17,"./attributes/import.js":18,"./attributes/insertInto.js":19,"./attributes/new.js":20,"./attributes/value.js":21,"./attributes/wrappers.js":22,"./factories/expr.js":24,"./providers/firebase":26,"./providers/local.js":29,"./providers/provider.js":30,"./providers/rest.js":31,"./providers/yql.js":32,"./templates/annotations.html":33,"angular":2,"angularfire":4}],24:[function(require,module,exports){
+},{"./attributes/deleteFrom.js":9,"./attributes/describe.js":10,"./attributes/drag.js":11,"./attributes/drop.js":12,"./attributes/edit.js":13,"./attributes/else.js":14,"./attributes/enter.js":15,"./attributes/explain.js":16,"./attributes/from.js":17,"./attributes/import.js":19,"./attributes/insertInto.js":20,"./attributes/new.js":21,"./attributes/value.js":22,"./attributes/wrappers.js":23,"./factories/expr.js":25,"./providers/firebase":27,"./providers/local.js":30,"./providers/provider.js":31,"./providers/rest.js":32,"./providers/yql.js":33,"./templates/annotations.html":34,"angular":2,"angularfire":4}],25:[function(require,module,exports){
 var angular = require('angular');
 
 var COMPARISON_REGEX = new RegExp(/[=!><]+| (?:NOT )?LIKE | (?:NOT )?IN | IS (?:NOT )?NULL | (?:NOT )?MATCHES /);
@@ -41399,7 +41483,7 @@ angular.module('Endev').factory("Expr",[function(){
   }
   return Expr;
 }]);
-},{"angular":2}],25:[function(require,module,exports){
+},{"angular":2}],26:[function(require,module,exports){
 var endev = window.endev || {};
 endev.app = require('./endev');
 var utils = require('./utils');
@@ -41416,7 +41500,7 @@ angular.element(document).ready(function() {
 
 
 module.exports = endev;
-},{"./attributes/import":18,"./endev":23,"./utils":34}],26:[function(require,module,exports){
+},{"./attributes/import":19,"./endev":24,"./utils":35}],27:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
 var unwatch = require('./helpers/unwatchCache.js');
@@ -41528,7 +41612,7 @@ angular.module('Endev').service("$endevFirebase",['$q','$firebaseObject','$fireb
 
   }
 }]);
-},{"./../utils":34,"./helpers/generalDataFilter.js":27,"./helpers/unwatchCache.js":28,"angular":2,"firebase":5}],27:[function(require,module,exports){
+},{"./../utils":35,"./helpers/generalDataFilter.js":28,"./helpers/unwatchCache.js":29,"angular":2,"firebase":5}],28:[function(require,module,exports){
 var _ = require('underscore');
 var utils = require('./../../utils');
 
@@ -41581,7 +41665,7 @@ module.exports = function (data, attrs) {
   });
   return results;
 }
-},{"./../../utils":34,"underscore":7}],28:[function(require,module,exports){
+},{"./../../utils":35,"underscore":7}],29:[function(require,module,exports){
 var _ = require('underscore');
 
 module.exports = function() {
@@ -41605,7 +41689,7 @@ module.exports = function() {
     if (fn.unwatch) fn.unwatch();
   }
 }
-},{"underscore":7}],29:[function(require,module,exports){
+},{"underscore":7}],30:[function(require,module,exports){
 var angular = require('angular');
 var _ = require('underscore');
 var utils = require('./../utils');
@@ -41779,7 +41863,7 @@ angular.module('Endev').service("$endevLocal",['$q','$window','$timeout',functio
     }
   }
 }]);
-},{"./../utils":34,"./helpers/generalDataFilter.js":27,"./helpers/unwatchCache.js":28,"angular":2,"underscore":7}],30:[function(require,module,exports){
+},{"./../utils":35,"./helpers/generalDataFilter.js":28,"./helpers/unwatchCache.js":29,"angular":2,"underscore":7}],31:[function(require,module,exports){
 var angular = require('angular');
 
 var PATH_ROOT_REGEX = new RegExp(/^[a-zA-Z_$][0-9a-zA-Z_$]*/);
@@ -41811,7 +41895,7 @@ angular.module('Endev').service("$endevProvider",['$injector', function($injecto
     }
   }
 }]);
-},{"angular":2}],31:[function(require,module,exports){
+},{"angular":2}],32:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils.js')
 var X2JS = require("x2js");
@@ -41873,7 +41957,7 @@ angular.module('Endev').service("$endevRest", ['$http','$interpolate','$q', func
     }
   }
 }]);
-},{"./../utils.js":34,"./helpers/generalDataFilter.js":27,"angular":2,"x2js":8}],32:[function(require,module,exports){
+},{"./../utils.js":35,"./helpers/generalDataFilter.js":28,"angular":2,"x2js":8}],33:[function(require,module,exports){
 var angular = require('angular');
 var utils = require('./../utils');
 
@@ -41931,10 +42015,10 @@ angular.module('Endev').service("$endevYql", ['$http','$q', function($http,$q){
 
   }
 }]);
-},{"./../utils":34,"angular":2}],33:[function(require,module,exports){
-module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n</style>\n<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>";
+},{"./../utils":35,"angular":2}],34:[function(require,module,exports){
+module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n    overflow: auto;\n    display: block;\n    padding: 2px;\n    margin: 0 0 10px;\n    font-size: 10px;\n    line-height: 1.42857143;\n    color: #333;\n    word-break: break-all;\n    word-wrap: break-word;\n    background-color: transparent;\n    border: none;\n    border-radius: 0;\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n  #__endev_selector__ {\n    border: 1px solid rgba(255,66,30,0.5);\n    /*height:1px;*/\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  \n  #__endev_selector_top__, #__endev_selector_bottom__ {\n    background: rgba(255,66,30,0.5);\n    height:1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_left__, #__endev_selector_right__ {\n    background: rgba(255,66,30,0.5);\n    width: 1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_details__ {\n    color: rgb(255,66,30);\n    font-family: Menlo, Monaco, Consolas, \"Courier New\", monospace;\n    padding: 2px;\n    position: fixed;\n    font-size: 10px;\n    background: rgba(245,245,220,0.9);\n    overflow: hidden;\n  }\n  \n</style>\n<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <!--<button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>-->\n  <button ng-click=\"$root.$endevSelector = !$root.$endevSelector\">Inspect {{$root.$endevSelector ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>\n<div id=\"__endev_selector__\" ng-show=\"$endevSelector\">\n  <div id=\"__endev_selector_top__\"></div>\n  <div id=\"__endev_selector_right__\"></div>\n  <div id=\"__endev_selector_bottom__\"></div>\n  <div id=\"__endev_selector_left__\"></div>\n  <div id=\"__endev_selector_details__\" ng-show=\"$root.$endevCurrentAnnotation\">\n    <div style=\"position:relative;\">\n      {{$root.$endevCurrentAnnotation}}\n      <div explain=\"$root.$endevCurrentObject\"></div>\n    </div>\n  </div>\n</div>";
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 _ = require('underscore');
 
 var utils = {}
@@ -42044,7 +42128,7 @@ utils.removeFn = function(removeFrom,object,parent,scope,provider) {
 }
 
 module.exports = utils
-},{"underscore":7}]},{},[25])(25)
+},{"underscore":7}]},{},[26])(26)
 });
 
 
