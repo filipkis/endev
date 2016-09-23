@@ -41128,7 +41128,8 @@ var elements = null;
 var $target;
 var _this = this;
 
-var CONTENT_SELECTOR = '*:not(.__endev__ *, .__endev__, style, script)';
+var REMOVE_SELECTOR = '.__endev__ *, .__endev__, style, script';
+var CONTENT_SELECTOR = '*:not(' + +REMOVE_SELECTOR+ ')';
 
 $(document).scroll(function(){
   if($target){
@@ -41256,6 +41257,7 @@ angular.module('Endev').controller('EndevPopup',['$scope','$compile', '$rootScop
 }]);
 
 var updateCodePen = function(){
+  bodyClone.find(REMOVE_SELECTOR).remove();
   if(window.location.hostname == 's.codepen.io'){
     window.parent.postMessage({messageName:'endevCodeUpdate', html:bodyClone.html()},'*');
   }
