@@ -7,7 +7,7 @@ var $target;
 var _this = this;
 
 var REMOVE_SELECTOR = '.__endev__ *, .__endev__, style, script';
-var CONTENT_SELECTOR = '*:not(' + +REMOVE_SELECTOR+ ')';
+var CONTENT_SELECTOR = '*:not(' +REMOVE_SELECTOR+ ')';
 
 $(document).scroll(function(){
   if($target){
