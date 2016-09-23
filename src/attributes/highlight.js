@@ -6,6 +6,8 @@ var elements = null;
 var $target;
 var _this = this;
 
+var CONTENT_SELECTOR = '*:not(.__endev__ *, .__endev__, style, script)';
+
 $(document).scroll(function(){
   if($target){
     _this.select($target);
@@ -111,12 +113,12 @@ angular.module('Endev').controller('EndevPopup',['$scope','$compile', '$rootScop
     }
     updateCodePen();
     elScope = angular.element(element).scope();
-    $('body').children().remove('*:not(.__endev__ *, .__endev__, style)');
+    $('body').children().remove(CONTENT_SELECTOR);
     $('body').prepend(bodyClone.clone().children());
-    $('body').find('*:not(.__endev__ *, .__endev__, style)').each(function(index, element){
+    $('body').find(CONTENT_SELECTOR).each(function(index, element){
       $(element).attr('endev-html-inner',index);
     });
-    $compile($('body').children('*:not(.__endev__ *, .__endev__, style)'))(elScope.$root);
+    $compile($('body').children(CONTENT_SELECTOR))(elScope.$root);
     //var newEl = $(original).clone();
     //$(newEl).attr('endev-html-inner',$(element).attr('endev-html-inner'));
     //element.replaceWith($compile(newEl)(elScope));
@@ -148,13 +150,13 @@ var annotateWithExpressions = function(element){
 var bodyClone;
 
 var getOriginal = function(id){
-  return bodyClone.find('*:not(.__endev__ *, .__endev__, style)')[id];
+  return bodyClone.find(CONTENT_SELECTOR)[id];
 };
 
 angular.module('Endev').run([function(){
   bodyClone = $('body').clone();
   //console.log(bodyClone.find('*:not(.__endev__ *, .__endev__)'));
-  $('body').find('*:not(.__endev__ *, .__endev__, style)').each(function(index, element){
+  $('body').find(CONTENT_SELECTOR).each(function(index, element){
     $(element).attr('endev-html-inner',index);
   });
 }]);
