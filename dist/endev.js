@@ -621,7 +621,7 @@ angular.module('Endev').controller('EndevPopup',['$scope','$compile', '$rootScop
 var updateCodePen = function(){
   if(window.location.hostname == 's.codepen.io'){
     var html = bodyClone.clone().find(REMOVE_SELECTOR).remove().end();
-    window.parent.postMessage({messageName:'endevCodeUpdate', html:bodyClone.html()},'*');
+    window.parent.postMessage({messageName:'endevCodeUpdate', html:html.html()},'*');
   }
 }
 
