@@ -14,6 +14,7 @@ var gutil = require('gulp-util');
 var spawn = require('child_process').spawn;
 var gulpif = require('gulp-if');
 var ghPages = require('gulp-gh-pages');
+var runSequence = require('run-sequence');
 
 gulp.task("default", ["package"], function() {});
 
@@ -92,7 +93,11 @@ gulp.task("small", function() {
   return build(false);
 });
 
-gulp.task("build",['full','small','uglifyFull','uglifySmall']);
+gulp.task("build",function(done){
+  runSequence('full','small','uglifyFull','uglifySmall',function(err){
+    done(err);
+  });
+});
 
 gulp.task("uglifyFull", function() {
   return build(true,true);
@@ -132,10 +137,18 @@ gulp.task("bump", function(){
     .pipe(gulp.dest('./'));
 });
 
-gulp.task('deploy',  function() {
+gulp.task('push-gh-pages',function(){
   return gulp.src('./dist/**/*')
     .pipe(ghPages({
       remove: false,
       cacheDir: "../gh-pages",
     }));
+});
+
+
+
+gulp.task('deploy',  function(done) {
+  runSequence('build','push-gh-pages',function(err){
+    done(err);
+  });
 });

@@ -1,4 +1,5 @@
 var angular = require('angular');
+var $ = require('jquery');
 
 var endevModule;
 var modulesToLoad = [];
@@ -40,9 +41,11 @@ require('./providers/local.js')
 require('./providers/yql.js')
 require('./providers/rest.js')
 
+var highlight = require('./attributes/highlight') 
+
 
 //The basic run
-endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
+endevModule.run(["$rootScope","$document","$templateCache","$compile",function($rootScope,$document,$templateCache,$compile){
   $rootScope.Date = Date;
   $rootScope.Math = Math;
   $rootScope.$now = function() {
@@ -65,4 +68,24 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
       $rootScope.$apply();
     }
   });
+  $rootScope.$endevRecompileElement = function(element) {
+    $compile(element)(angular.element(element).scope())
+    $rootScope.$apply();
+  }
+  var lastelem;
+  document.onmouseover = function(e){
+    if($rootScope.$endevSelector){
+      var event = e || window.event;
+      $rootScope.$endevCurrentAnnotation = null;
+      $rootScope.$endevCurrentObject = null;
+      var target = event.target || event.srcElement;
+      if(!$(target).hasClass('__endev__') && $(target).parents('.__endev__').length === 0){
+        highlight.select(target);
+        $rootScope.$apply();
+      }
+      event.stopPropagation();
+    }
+  }
 }]);
+
+module.exports = endevModule;

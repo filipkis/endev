@@ -10,6 +10,6 @@
     "underscore": "global:_",
     "angularfire": "global:angularfire",
     "firebase": "global:Firebase",
-    "jquery": "global:jquery"
+    "jquery": "global:jQuery"
   }
 }

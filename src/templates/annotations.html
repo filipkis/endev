@@ -86,6 +86,7 @@
     /*height:1px;*/
     position: fixed;
     transition:all 150ms ease;
+    z-index: 10000;
   }
   
   #__endev_selector_top__, #__endev_selector_bottom__ {
@@ -103,29 +104,66 @@
   #__endev_selector_details__ {
     color: rgb(255,66,30);
     font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-    padding: 2px;
+    padding: 2px; 
     position: fixed;
     font-size: 10px;
     background: rgba(245,245,220,0.9);
     overflow: hidden;
+    z-index: 10000;
+  }
+  #__endev_popup__{
+    position: fixed;
+    z-index: 10001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+  }
+
+  #__endev_popup_content__ {
+    background-color: #fefefe;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
   }
   
 </style>
-<div id="__endev_helper__" ng-if="$endevShowHelper">
+<div id="__endev_helper__" class="__endev__" ng-if="$endevShowHelper">
   Endev Tools:
   <!--<button ng-click="$endevAnnotation = !$endevAnnotation">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>-->
   <button ng-click="$root.$endevSelector = !$root.$endevSelector">Inspect {{$root.$endevSelector ? 'off' : 'on'}}</button>
   <span style="color:red">{{$endevErrors[$endevErrors.length-1].description}}</span>
 </div>
-<div id="__endev_selector__" ng-show="$endevSelector">
+<div id="__endev_popup__" ng-controller="EndevPopup" class="__endev__" ng-show="show" ng-click="close()">
+  <div id="__endev_popup_content__" ng-click="prevent($event)">
+    <div ng-if="isInput">
+      <input ng-model="elementOpts.value"/>
+    </div>
+    <div ng-repeat="expression in expressions track by $index">
+      <textarea ng-model="expression.expr" ng-if="isValid(expression)"></textarea>
+      <div ng-if="expression.expr == '__element__'">...</div>
+    </div>
+    <div ng-repeat="item in objects">
+      {{item.name}}:{{item.value}}
+    </div>
+    <button ng-click="apply()">Apply</button>
+  </div>
+</div>
+<div id="__endev_selector__" class="__endev__" ng-show="$endevSelector">
   <div id="__endev_selector_top__"></div>
   <div id="__endev_selector_right__"></div>
   <div id="__endev_selector_bottom__"></div>
   <div id="__endev_selector_left__"></div>
   <div id="__endev_selector_details__" ng-show="$root.$endevCurrentAnnotation">
     <div style="position:relative;">
-      {{$root.$endevCurrentAnnotation}}
-      <div explain="$root.$endevCurrentObject"></div>
+      <div style="max-height: 400px; overflow: auto">
+        {{$root.$endevCurrentAnnotation}}
+        <div explain="$root.$endevCurrentObject"></div>
+      </div>
     </div>
   </div>
 </div>

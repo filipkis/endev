@@ -297,8 +297,8 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
         // tAttributes.$set("ng-class","{'__endev_list_item_annotated__':$annotation}")
         tAttributes.$set("ng-repeat",label + " in $endevData_" + label + " track by $endevId(" + label + ",$id)" );
         tAttributes.$set("endev-item",tAttributes.from);
-        tAttributes.$set("ng-mouseover",'endevHighlight($event)');
-        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ')');
+        tAttributes.$set("ng-mouseover",'endevHighlight($event);' + (tAttributes.mouseover ? tAttributes.mouseover : ''));
+        tAttributes.$set("ng-click",'endevHighlightDetails($event,'+ label + ');' + (tAttributes.click ? tAttributes.click : ''));
         if(tElement.parent().length > 0 && ["TBODY"].indexOf(tElement.parent()[0].tagName)>=0) {
           tElement.parent().addClass("__endev_annotated__");
           tElement.parent().append("<span class='__endev_annotation__'>" + annotation + "</span>");
@@ -323,8 +323,8 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
               if(scope.$root.$endevSelector){
                 scope.$root.$endevCurrentAnnotation = "FROM " + from + (attrs.where ? " WHERE " + attrs.where : "");
                 scope.$root.$endevCurrentObject = value;
+                event.stopPropagation();
               }
-              event.stopPropagation();
             }
             var params = attrs.where ? attrs.where.split(OPERATORS_REGEX).map( function(expr) {
               var exp = new Expr(expr,label);
@@ -482,7 +482,9 @@ angular.module('Endev').directive("from",['$interpolate','$endevProvider','$comp
 
 },{"./../utils":28,"./highlight":11}],11:[function(require,module,exports){
 (function (global){
-var $ = (typeof window !== "undefined" ? window['jquery'] : typeof global !== "undefined" ? global['jquery'] : null);
+var $ = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null);
+var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
+var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
 
 var elements = null;
 var $target;
@@ -536,6 +538,110 @@ this.select = function(target){
     height: (targetHeight + 4)
   });
 };
+angular.module('Endev').directive("endevHtmlInner",[function(){
+  return function (scope, element, attrs) {
+    element.on('click',function(event){
+      if(scope.$root.$endevSelector){
+        //var contents = JSON.parse(attrs.endevHtmlInner.replace("__{__{__","{{"));
+        scope.$root.$broadcast('_endevShowPopup_',element);
+        scope.$apply();
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    })
+  }
+}]);
+angular.module('Endev').controller('EndevPopup',['$scope','$compile', '$rootScope',function($scope,$compile){
+  var original;
+  var element;
+  $scope.$on('_endevShowPopup_',function(event, parent, expressions){
+    element = parent;
+    $scope.elementOpts = {};
+    $scope.expressions = undefined;
+    var elScope = angular.element(element).scope();
+    $scope.objects = _.map(_.filter(Object.getOwnPropertyNames(elScope),function(item){
+      return item.indexOf('$') !== 0 && item.trim().length !== 0;
+    }),function(item){
+      return {name:item, value:elScope[item]};
+    });
+    $scope.isInput = $(element).is('input, select, textarea');
+    original = getOriginal($(element).attr('endev-html-inner'));
+    if($scope.isInput) {
+      $scope.elementOpts.value = $(element).attr('data-value');
+    }else {
+      var expressions = $(original).contents().map(function(index, item){
+        if (item.nodeType == 3) return item.nodeValue;
+        return "__element__";
+      },[]).toArray();
+      $scope.expressions = _.map(expressions,function(item){
+        return {expr:item.trim()}
+      });
+    }
+    $scope.show = true;
+  });
+  $scope.isValid = function(expr){
+    return expr.expr != '__element__' && !!expr.expr.match(/\S+/);
+  }
+  $scope.apply = function(){
+    if($scope.isInput){
+      $(original).attr('data-value',$scope.elementOpts.value);
+    }else {
+      $(original).contents().each(function(index,item){
+        if(item.nodeType === 3){
+          item.nodeValue = $scope.expressions[index].expr;
+        }
+      })
+      //annotateWithExpressions(original);
+    }
+    updateCodePen();
+    elScope = angular.element(element).scope();
+    $('body').children().remove('*:not(.__endev__ *, .__endev__, style)');
+    $('body').prepend(bodyClone.clone().children());
+    $('body').find('*:not(.__endev__ *, .__endev__, style)').each(function(index, element){
+      $(element).attr('endev-html-inner',index);
+    });
+    $compile($('body').children('*:not(.__endev__ *, .__endev__, style)'))(elScope.$root);
+    //var newEl = $(original).clone();
+    //$(newEl).attr('endev-html-inner',$(element).attr('endev-html-inner'));
+    //element.replaceWith($compile(newEl)(elScope));
+    
+    $scope.show = false;
+  }
+  $scope.close = function(){
+    $scope.show = false;
+  }
+  $scope.prevent = function(event){
+    event.stopPropagation();
+  }
+}]);
+
+var updateCodePen = function(){
+  if(window.location.hostname == 's.codepen.io'){
+    window.parent.postMessage({messageName:'endevCodeUpdate', html:bodyClone.html()},'*');
+  }
+}
+
+var annotateWithExpressions = function(element){
+  var text = JSON.stringify($(element).contents().map(function(index, item){
+    if (item.nodeType == 3) return item.nodeValue;
+    return "__element__";
+  },[]).toArray());
+  $(element).attr('endev-html-inner',text.replace("{{",'__{__{__'));
+}
+
+var bodyClone;
+
+var getOriginal = function(id){
+  return bodyClone.find('*:not(.__endev__ *, .__endev__, style)')[id];
+};
+
+angular.module('Endev').run([function(){
+  bodyClone = $('body').clone();
+  //console.log(bodyClone.find('*:not(.__endev__ *, .__endev__)'));
+  $('body').find('*:not(.__endev__ *, .__endev__, style)').each(function(index, element){
+    $(element).attr('endev-html-inner',index);
+  });
+}]);
 
 
 module.exports = this;
@@ -544,7 +650,7 @@ module.exports = this;
 },{}],12:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
-var jquery = (typeof window !== "undefined" ? window['jquery'] : typeof global !== "undefined" ? global['jquery'] : null);
+var jquery = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null);
 
 angular.module('Endev').directive("import",["$rootScope", "$http", "$compile", function($rootScope,$http,$compile) {
   return {
@@ -769,6 +875,7 @@ _.each([['if','ng-show'],['click','ng-click']],function(pair){
 },{}],17:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
+var $ = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null);
 
 var endevModule;
 var modulesToLoad = [];
@@ -810,9 +917,11 @@ require('./providers/local.js')
 require('./providers/yql.js')
 require('./providers/rest.js')
 
+var highlight = require('./attributes/highlight') 
+
 
 //The basic run
-endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$document,$templateCache){
+endevModule.run(["$rootScope","$document","$templateCache","$compile",function($rootScope,$document,$templateCache,$compile){
   $rootScope.Date = Date;
   $rootScope.Math = Math;
   $rootScope.$now = function() {
@@ -835,10 +944,30 @@ endevModule.run(["$rootScope","$document","$templateCache",function($rootScope,$
       $rootScope.$apply();
     }
   });
+  $rootScope.$endevRecompileElement = function(element) {
+    $compile(element)(angular.element(element).scope())
+    $rootScope.$apply();
+  }
+  var lastelem;
+  document.onmouseover = function(e){
+    if($rootScope.$endevSelector){
+      var event = e || window.event;
+      $rootScope.$endevCurrentAnnotation = null;
+      $rootScope.$endevCurrentObject = null;
+      var target = event.target || event.srcElement;
+      if(!$(target).hasClass('__endev__') && $(target).parents('.__endev__').length === 0){
+        highlight.select(target);
+        $rootScope.$apply();
+      }
+      event.stopPropagation();
+    }
+  }
 }]);
+
+module.exports = endevModule;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"./attributes/deleteFrom.js":2,"./attributes/describe.js":3,"./attributes/drag.js":4,"./attributes/drop.js":5,"./attributes/edit.js":6,"./attributes/else.js":7,"./attributes/enter.js":8,"./attributes/explain.js":9,"./attributes/from.js":10,"./attributes/import.js":12,"./attributes/insertInto.js":13,"./attributes/new.js":14,"./attributes/value.js":15,"./attributes/wrappers.js":16,"./factories/expr.js":18,"./providers/firebase":20,"./providers/local.js":23,"./providers/provider.js":24,"./providers/rest.js":25,"./providers/yql.js":26,"./templates/annotations.html":27}],18:[function(require,module,exports){
+},{"./attributes/deleteFrom.js":2,"./attributes/describe.js":3,"./attributes/drag.js":4,"./attributes/drop.js":5,"./attributes/edit.js":6,"./attributes/else.js":7,"./attributes/enter.js":8,"./attributes/explain.js":9,"./attributes/from.js":10,"./attributes/highlight":11,"./attributes/import.js":12,"./attributes/insertInto.js":13,"./attributes/new.js":14,"./attributes/value.js":15,"./attributes/wrappers.js":16,"./factories/expr.js":18,"./providers/firebase":20,"./providers/local.js":23,"./providers/provider.js":24,"./providers/rest.js":25,"./providers/yql.js":26,"./templates/annotations.html":27}],18:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
 
@@ -869,10 +998,13 @@ angular.module('Endev').factory("Expr",[function(){
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{}],19:[function(require,module,exports){
+(function (global){
 var endev = window.endev || {};
 endev.app = require('./endev');
 var utils = require('./utils');
-var importTag = require('./attributes/import')
+var importTag = require('./attributes/import');
+window.endev = endev;
+window.$ = (typeof window !== "undefined" ? window['jQuery'] : typeof global !== "undefined" ? global['jQuery'] : null)
 
 angular.element(document).ready(function() {
 
@@ -885,6 +1017,8 @@ angular.element(document).ready(function() {
 
 
 module.exports = endev;
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+
 },{"./attributes/import":12,"./endev":17,"./utils":28}],20:[function(require,module,exports){
 (function (global){
 var angular = (typeof window !== "undefined" ? window['angular'] : typeof global !== "undefined" ? global['angular'] : null);
@@ -1422,7 +1556,7 @@ angular.module('Endev').service("$endevYql", ['$http','$q', function($http,$q){
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
 },{"./../utils":28}],27:[function(require,module,exports){
-module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n    overflow: auto;\n    display: block;\n    padding: 2px;\n    margin: 0 0 10px;\n    font-size: 10px;\n    line-height: 1.42857143;\n    color: #333;\n    word-break: break-all;\n    word-wrap: break-word;\n    background-color: transparent;\n    border: none;\n    border-radius: 0;\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n  #__endev_selector__ {\n    border: 1px solid rgba(255,66,30,0.5);\n    /*height:1px;*/\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  \n  #__endev_selector_top__, #__endev_selector_bottom__ {\n    background: rgba(255,66,30,0.5);\n    height:1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_left__, #__endev_selector_right__ {\n    background: rgba(255,66,30,0.5);\n    width: 1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_details__ {\n    color: rgb(255,66,30);\n    font-family: Menlo, Monaco, Consolas, \"Courier New\", monospace;\n    padding: 2px;\n    position: fixed;\n    font-size: 10px;\n    background: rgba(245,245,220,0.9);\n    overflow: hidden;\n  }\n  \n</style>\n<div id=\"__endev_helper__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <!--<button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>-->\n  <button ng-click=\"$root.$endevSelector = !$root.$endevSelector\">Inspect {{$root.$endevSelector ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>\n<div id=\"__endev_selector__\" ng-show=\"$endevSelector\">\n  <div id=\"__endev_selector_top__\"></div>\n  <div id=\"__endev_selector_right__\"></div>\n  <div id=\"__endev_selector_bottom__\"></div>\n  <div id=\"__endev_selector_left__\"></div>\n  <div id=\"__endev_selector_details__\" ng-show=\"$root.$endevCurrentAnnotation\">\n    <div style=\"position:relative;\">\n      {{$root.$endevCurrentAnnotation}}\n      <div explain=\"$root.$endevCurrentObject\"></div>\n    </div>\n  </div>\n</div>";
+module.exports = "<style>\n  #__endev_helper__ {  \n    position: fixed;  \n    bottom: 0;  \n    left: 0;  \n    right: 0;  \n    background: #E0E0E0;  \n    border-top: 1px solid #929292;  \n    padding: 5px;  \n    font-family: sans-serif;  \n    font-size: 12px;  \n  }  \n\n  .__endev_annotation_on__ .__endev_annotated__ { \n    outline: 1px solid rgba(255,0,0,0.5); \n    /*border: 1px solid rgba(255,0,0,0.5); */\n    padding-top: 15px; \n    margin-top:5px;\n    display:block; \n  } \n\n  .__endev_annotation_on__ tbody.__endev_annotated__ {\n    display: table-row-group;\n  }\n  .__endev_annotation__ { \n    display: none; \n  }\n  .__endev_annotation_on__ .__endev_annotated__ > .__endev_annotation__ { \n    display: block; \n    position: absolute; \n    margin-top: -22px; \n    font-size: 10px; \n    font-family: monospace; \n    background: #FFFFD1; \n    color: #666; \n    padding: 1px 3px; \n    border: 1px dashed rgba(255,0,0,0.5); \n    margin-left: 5px; \n    cursor: pointer; \n  } \n  .__endev_annotated__ > .__endev_annotation__:hover { \n    background: rgba(255,255,125,0.9); \n  } \n  .__endev_annotated__ > .__endev_list_item_annotated__ { \n    outline: 1px dashed rgba(255,0,0,0.5); \n  } \n  table.__endev_annotated__, thead.__endev_annotated__, tbody.__endev_annotated__, tfoot.__endev_annotated__  { \n    /*border: 1px solid red;*/\n    padding-top: 10px; \n    margin-top: 10px; \n  } \n  table .__endev_annotated__ > .__endev_annotation__ { \n    margin-top: -1px; \n  }\n  ._endev_json_ {\n    overflow: auto;\n    display: block;\n    padding: 2px;\n    margin: 0 0 10px;\n    font-size: 10px;\n    line-height: 1.42857143;\n    color: #333;\n    word-break: break-all;\n    word-wrap: break-word;\n    background-color: transparent;\n    border: none;\n    border-radius: 0;\n  }\n  ._endev_json_number_ {\n    color: forestgreen;\n  }\n  ._endev_json_key_ {\n    color: darkorange;\n  }\n  ._endev_json_string_ {\n    color: darkseagreen;\n  }\n  ._endev_json_boolean_ {\n    color: green;\n  }\n  ._endev_json_null_ {\n    color: dimgray;\n  }\n  #__endev_selector__ {\n    border: 1px solid rgba(255,66,30,0.5);\n    /*height:1px;*/\n    position: fixed;\n    transition:all 150ms ease;\n    z-index: 10000;\n  }\n  \n  #__endev_selector_top__, #__endev_selector_bottom__ {\n    background: rgba(255,66,30,0.5);\n    height:1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_left__, #__endev_selector_right__ {\n    background: rgba(255,66,30,0.5);\n    width: 1px;\n    position: fixed;\n    transition:all 150ms ease;\n  }\n  #__endev_selector_details__ {\n    color: rgb(255,66,30);\n    font-family: Menlo, Monaco, Consolas, \"Courier New\", monospace;\n    padding: 2px; \n    position: fixed;\n    font-size: 10px;\n    background: rgba(245,245,220,0.9);\n    overflow: hidden;\n    z-index: 10000;\n  }\n  #__endev_popup__{\n    position: fixed;\n    z-index: 10001;\n    left: 0;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    overflow: auto;\n    background-color: rgb(0,0,0);\n    background-color: rgba(0,0,0,0.4);\n  }\n\n  #__endev_popup_content__ {\n    background-color: #fefefe;\n    margin: 15% auto; /* 15% from the top and centered */\n    padding: 20px;\n    border: 1px solid #888;\n    width: 80%; /* Could be more or less, depending on screen size */\n  }\n  \n</style>\n<div id=\"__endev_helper__\" class=\"__endev__\" ng-if=\"$endevShowHelper\">\n  Endev Tools:\n  <!--<button ng-click=\"$endevAnnotation = !$endevAnnotation\">Annotations {{$endevAnnotation ? 'off' : 'on'}}</button>-->\n  <button ng-click=\"$root.$endevSelector = !$root.$endevSelector\">Inspect {{$root.$endevSelector ? 'off' : 'on'}}</button>\n  <span style=\"color:red\">{{$endevErrors[$endevErrors.length-1].description}}</span>\n</div>\n<div id=\"__endev_popup__\" ng-controller=\"EndevPopup\" class=\"__endev__\" ng-show=\"show\" ng-click=\"close()\">\n  <div id=\"__endev_popup_content__\" ng-click=\"prevent($event)\">\n    <div ng-if=\"isInput\">\n      <input ng-model=\"elementOpts.value\"/>\n    </div>\n    <div ng-repeat=\"expression in expressions track by $index\">\n      <textarea ng-model=\"expression.expr\" ng-if=\"isValid(expression)\"></textarea>\n      <div ng-if=\"expression.expr == '__element__'\">...</div>\n    </div>\n    <div ng-repeat=\"item in objects\">\n      {{item.name}}:{{item.value}}\n    </div>\n    <button ng-click=\"apply()\">Apply</button>\n  </div>\n</div>\n<div id=\"__endev_selector__\" class=\"__endev__\" ng-show=\"$endevSelector\">\n  <div id=\"__endev_selector_top__\"></div>\n  <div id=\"__endev_selector_right__\"></div>\n  <div id=\"__endev_selector_bottom__\"></div>\n  <div id=\"__endev_selector_left__\"></div>\n  <div id=\"__endev_selector_details__\" ng-show=\"$root.$endevCurrentAnnotation\">\n    <div style=\"position:relative;\">\n      <div style=\"max-height: 400px; overflow: auto\">\n        {{$root.$endevCurrentAnnotation}}\n        <div explain=\"$root.$endevCurrentObject\"></div>\n      </div>\n    </div>\n  </div>\n</div>";
 
 },{}],28:[function(require,module,exports){
 (function (global){
